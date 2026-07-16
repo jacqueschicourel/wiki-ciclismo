@@ -239,20 +239,122 @@ def coletar_notas(notas_dir: Path):
 
 
 # --------------------------------------------------------------------------
+# Parser dos arquivos de revisao (_revisao/baixa-confianca, conflitos,
+# modelos-concorrentes) — formato livre em markdown, nao segue o esquema
+# de frontmatter das notas atomicas. Dois estilos observados:
+#
+#   Estilo A (frontmatter curto):
+#     ---
+#     titulo: "..." | nota: nota-XXXX
+#     notas_envolvidas: [nota-0001, nota-0002] | confianca: 0.NN
+#     status: revisar
+#     ---
+#     corpo em markdown...
+#
+#   Estilo B (markdown puro, sem frontmatter):
+#     # Titulo do arquivo (H1)
+#     **Campo:** valor
+#     **Notas envolvidas:** nota-0001, nota-0002 (...)
+#     resto do corpo...
+# --------------------------------------------------------------------------
+
+ID_PATTERN = re.compile(r"nota-\d{4}")
+CONF_PATTERN = re.compile(r"confian[cç]a\s+([0-9]*\.?[0-9]+)", re.IGNORECASE)
+
+
+def parse_revisao_file(path: Path, tipo: str):
+    text = path.read_text(encoding="utf-8")
+    notas_ids = []
+    confianca = None
+    titulo = None
+    body = text.strip()
+
+    if text.lstrip().startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) >= 3:
+            fm = parse_frontmatter(parts[1])
+            body = parts[2].strip()
+            titulo = fm.get("titulo")
+            if fm.get("notas_envolvidas"):
+                notas_ids = list(fm["notas_envolvidas"])
+            elif fm.get("nota"):
+                notas_ids = [fm["nota"]]
+            if fm.get("confianca") not in (None, ""):
+                try:
+                    confianca = float(fm["confianca"])
+                except (TypeError, ValueError):
+                    confianca = None
+            if not titulo and fm.get("motivo"):
+                body = fm["motivo"]
+    else:
+        lines = text.strip().split("\n")
+        if lines and lines[0].startswith("#"):
+            titulo = lines[0].lstrip("#").strip()
+            body = "\n".join(lines[1:]).strip()
+        m = CONF_PATTERN.search(text)
+        if m:
+            try:
+                confianca = float(m.group(1))
+            except ValueError:
+                confianca = None
+        env_match = re.search(r"\*\*Notas envolvidas:?\*\*\s*(.+)", text)
+        if env_match:
+            notas_ids = ID_PATTERN.findall(env_match.group(1))
+        motivo_match = re.search(r"\*\*Motivo:?\*\*\s*(.+)", text, re.DOTALL)
+        if motivo_match:
+            body = motivo_match.group(1).strip()
+
+    if not notas_ids:
+        notas_ids = sorted(set(ID_PATTERN.findall(text)))
+    if not titulo:
+        titulo = path.stem
+
+    return {
+        "tipo": tipo,
+        "titulo": titulo,
+        "notas": notas_ids,
+        "body": body,
+        "confianca": confianca,
+    }
+
+
+def coletar_revisoes(revisao_dir: Path):
+    if not revisao_dir.exists():
+        return []
+    tipo_map = {
+        "baixa-confianca": "baixa-confianca",
+        "conflitos": "conflito",
+        "modelos-concorrentes": "modelo-concorrente",
+    }
+    revisoes = []
+    for subdir, tipo in tipo_map.items():
+        pasta = revisao_dir / subdir
+        if not pasta.exists():
+            continue
+        for md_path in sorted(pasta.glob("*.md")):
+            revisoes.append(parse_revisao_file(md_path, tipo))
+    return revisoes
+
+
+# --------------------------------------------------------------------------
 # Geracao do HTML
 # --------------------------------------------------------------------------
 
-def build_html(notas, titulo_wiki="Base de Conhecimento — Ciclismo"):
+def build_html(notas, revisoes=None, titulo_wiki="Base de Conhecimento — Ciclismo"):
+    if revisoes is None:
+        revisoes = []
     notas_json = json.dumps(notas, ensure_ascii=False)
     doms_json = json.dumps(
         {k: {"nm": v, "c": DOMINIO_COLOR_VAR[k]} for k, v in DOMINIO_LABELS.items()},
         ensure_ascii=False,
     )
     dom_order_json = json.dumps(DOMINIO_ORDER, ensure_ascii=False)
+    revisoes_json = json.dumps(revisoes, ensure_ascii=False)
     html = HTML_TEMPLATE.replace("__TITULO__", titulo_wiki)
     html = html.replace("__NOTAS_JSON__", notas_json)
     html = html.replace("__DOMS_JSON__", doms_json)
     html = html.replace("__DOM_ORDER_JSON__", dom_order_json)
+    html = html.replace("__REVISOES_JSON__", revisoes_json)
     return html
 
 
@@ -405,6 +507,26 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .ncard .mini{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;color:#fff}
   .ncard .miniline{font-size:10.5px;color:var(--muted);font-family:var(--mono)}
   .empty{color:var(--muted);font-size:14px;padding:30px 0}
+  .revsection{margin-top:30px}
+  .revhead{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-weight:700;font-size:19px;letter-spacing:-.01em}
+  .revdot{width:11px;height:11px;border-radius:50%;flex:none}
+  .revdot.baixa-confianca{background:#C9A227}
+  .revdot.conflito{background:#B23A55}
+  .revdot.modelo-concorrente{background:#8A6DB0}
+  .revcount{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:400;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:2px 9px}
+  .revlist{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .revcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .revtop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .revnotas{display:flex;gap:6px;flex-wrap:wrap}
+  .relitem-mini{font-family:var(--mono);font-size:11px;border:1px solid var(--line-strong);background:var(--paper);
+    color:var(--ink);border-radius:20px;padding:2px 9px;cursor:pointer}
+  .relitem-mini:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .revtitle{font-family:var(--serif);font-weight:600;font-size:15.5px;line-height:1.3;margin-bottom:8px}
+  .revbody{font-size:14px;color:#33363D}
+  .revbody p{margin:0 0 10px}
+  .revflag{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#FBF3DD;border:1px solid #E8D9A6;
+    border-radius:10px;padding:10px 14px;margin:0 0 16px;font-size:13.5px;color:#6b5511}
+  .revflag button{font-family:var(--mono);font-size:11.5px;border:0;background:none;cursor:pointer;color:#6b5511;text-decoration:underline;padding:0}
   @media(max-width:720px){.app{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.wrap{padding:26px 20px 60px}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -416,6 +538,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <input class="search" id="search" placeholder="Buscar nota, conceito, métrica…" autocomplete="off">
     <div>
       <button class="navlink active" id="nav-map" onclick="go({v:'home'})">Mapa de relações</button>
+      <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
     </div>
     <div>
       <div class="lbl">Domínios</div>
@@ -431,11 +554,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <script id="notas-data" type="application/json">__NOTAS_JSON__</script>
 <script id="doms-data" type="application/json">__DOMS_JSON__</script>
 <script id="dom-order-data" type="application/json">__DOM_ORDER_JSON__</script>
+<script id="revisoes-data" type="application/json">__REVISOES_JSON__</script>
 
 <script>
 const NOTES = JSON.parse(document.getElementById('notas-data').textContent);
 const DOMS = JSON.parse(document.getElementById('doms-data').textContent);
 const DOM_ORDER = JSON.parse(document.getElementById('dom-order-data').textContent);
+const REVISOES = JSON.parse(document.getElementById('revisoes-data').textContent);
+const REV_LABELS = {'baixa-confianca':'Baixa confiança','conflito':'Conflito','modelo-concorrente':'Modelo concorrente'};
 
 NOTES.forEach(n => { n.rel = n.relacionadas || []; n.tipo = n.tipo_nota; n.dom = n.dominio; n.conf = n.confianca; });
 
@@ -545,6 +671,7 @@ let state = {v:'home'};
 function go(s){ state=s; render(); window.scrollTo(0,0); syncNav(); }
 function syncNav(){
   document.getElementById('nav-map').classList.toggle('active', state.v==='home');
+  document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
 }
 
 function sidebar(){
@@ -568,6 +695,7 @@ document.getElementById('search').addEventListener('input', e=>{
 
 function render(){
   if(state.v==='home') return renderHome();
+  if(state.v==='revisao') return renderRevisao();
   if(state.v==='note') return renderNote(state.id);
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
@@ -685,9 +813,41 @@ function wireGraph(){
   }, {passive:false});
 }
 
+function renderRevisao(){
+  const groups = {'baixa-confianca':[], 'conflito':[], 'modelo-concorrente':[]};
+  REVISOES.forEach(r=>{ if(groups[r.tipo]) groups[r.tipo].push(r); });
+  const labels = {'baixa-confianca':'Baixa confiança','conflito':'Conflitos','modelo-concorrente':'Modelos concorrentes'};
+  const descs = {
+    'baixa-confianca':'Notas mantidas no cânone mas com confiança rebaixada — geralmente por vir de estudo único, amostra pequena, ou depender de dado não coletável pelo Strava. Cada uma tem uma decisão humana pendente.',
+    'conflito':'Divergências numéricas encontradas entre notas ou dentro da mesma fonte — registradas em vez de resolvidas unilateralmente.',
+    'modelo-concorrente':'Frameworks conceituais que descrevem o mesmo fenômeno de formas diferentes, sem consenso único no cânone sobre qual usar.'
+  };
+  let html = `<div class="h-eyebrow">Revisão pendente</div>
+    <h1>O que ainda não está fechado</h1>
+    <p class="lede">Nem tudo no cânone é definitivo. Esta seção reúne o que foi extraído com ressalvas: notas de confiança baixa, números que se contradizem entre si, e modelos conceituais concorrentes — tudo aguardando decisão humana antes de virar regra automática de feedback.</p>`;
+  ['baixa-confianca','conflito','modelo-concorrente'].forEach(tipo=>{
+    const items = groups[tipo];
+    if(!items.length) return;
+    html += `<div class="revsection"><div class="revhead"><span class="revdot ${tipo}"></span>${labels[tipo]}<span class="revcount">${items.length}</span></div>
+      <p class="hint">${descs[tipo]}</p>
+      <div class="revlist">` +
+      items.map(r=>`<div class="revcard">
+        <div class="revtop">
+          ${r.confianca!=null?`<span class="chip line">confiança ${r.confianca.toFixed(2).replace('.',',')}</span>`:'<span></span>'}
+          <div class="revnotas">${r.notas.map(id=>`<button class="relitem-mini" onclick="go({v:'note',id:'${id}'})">${id.replace('nota-','#')}</button>`).join('')}</div>
+        </div>
+        <div class="revtitle">${escapeHtml(r.titulo)}</div>
+        <div class="revbody">${mdToHtml(r.body)}</div>
+      </div>`).join('') +
+      `</div></div>`;
+  });
+  view.innerHTML = html;
+}
+
 function renderNote(id){
   const n=byId[id]; if(!n){ go({v:'home'}); return; }
   const inc=incoming(id);
+  const revFlags = REVISOES.filter(r=>r.notas.includes(id));
   const relOut = (n.rel||[]).map(r=>relItem(r.id, r.tipo, r.justificativa)).join('') || '<div class="hint">Nenhuma.</div>';
   const relIn  = inc.map(r=>relItem(r.from, r.tipo, r.just)).join('') || '<div class="hint">Nenhuma.</div>';
   const {main, apply} = splitBody(n.body);
@@ -695,6 +855,7 @@ function renderNote(id){
   const fontesHtml = (n.fontes||[]).map(f=>`<div class="src"><span class="bk">${escapeHtml(f.arquivo||'')}</span>${f.pagina?` · <span class="pg">p. ${escapeHtml(f.pagina)}</span>`:''}${f.trecho?`<div class="q">${escapeHtml(f.trecho)}</div>`:''}</div>`).join('') || '<div class="hint">—</div>';
   view.innerHTML = `
     <button class="back" onclick="go({v:'home'})">← mapa de relações</button>
+    ${revFlags.length?`<div class="revflag">⚠ Marcada para revisão (${revFlags.map(r=>REV_LABELS[r.tipo]).join(', ')}). <button onclick="go({v:'revisao'})">ver detalhes →</button></div>`:''}
     <div class="badges">
       <span class="tag-id">${n.id}</span>
       ${chip(shortDom(n.dom), domColor(n.dom))}
@@ -756,6 +917,8 @@ def main():
     script_dir = Path(__file__).resolve().parent
     parser.add_argument("--notas-dir", default=str(script_dir.parent / "notas"),
                          help="Pasta contendo as notas (default: ../notas relativo a este script)")
+    parser.add_argument("--revisao-dir", default=str(script_dir.parent / "_revisao"),
+                         help="Pasta contendo as anotacoes de revisao (default: ../_revisao)")
     parser.add_argument("--saida", default=str(script_dir / "index.html"),
                          help="Arquivo HTML de saida (default: index.html nesta pasta)")
     args = parser.parse_args()
@@ -774,10 +937,13 @@ def main():
         return int(m.group(1)) if m else 0
     notas.sort(key=id_key)
 
-    html = build_html(notas)
+    revisao_dir = Path(args.revisao_dir)
+    revisoes = coletar_revisoes(revisao_dir)
+
+    html = build_html(notas, revisoes)
     saida = Path(args.saida)
     saida.write_text(html, encoding="utf-8")
-    print(f"OK: {len(notas)} notas processadas. Wiki gerado em: {saida}")
+    print(f"OK: {len(notas)} notas e {len(revisoes)} anotacoes de revisao processadas. Wiki gerado em: {saida}")
 
 
 if __name__ == "__main__":
