@@ -141,6 +141,51 @@ def parse_list_item(item_lines):
     return d
 
 
+def parse_inline_dict(s):
+    """Faz parse de um dict inline estilo YAML flow, ex.: {id: nota-0062, uso: "texto, com virgula"}.
+    Usado pelo frontmatter das skills (notas_usadas / skills_relacionadas), que usa
+    flow-mapping por item de lista — diferente do estilo multi-linha das notas (fontes/relacionadas)."""
+    s = s.strip()
+    if s.startswith("- "):
+        s = s[2:].strip()
+    if not (s.startswith("{") and s.endswith("}")):
+        return {}
+    inner = s[1:-1]
+    pairs = []
+    current = ""
+    in_quotes = False
+    quote_char = ""
+    depth = 0
+    for ch in inner:
+        if in_quotes:
+            current += ch
+            if ch == quote_char:
+                in_quotes = False
+        elif ch in ('"', "'"):
+            in_quotes = True
+            quote_char = ch
+            current += ch
+        elif ch in "{[":
+            depth += 1
+            current += ch
+        elif ch in "}]":
+            depth -= 1
+            current += ch
+        elif ch == "," and depth == 0:
+            pairs.append(current)
+            current = ""
+        else:
+            current += ch
+    if current.strip():
+        pairs.append(current)
+    d = {}
+    for p in pairs:
+        if ":" in p:
+            k, _, v = p.partition(":")
+            d[k.strip()] = strip_quotes(v.strip())
+    return d
+
+
 def parse_frontmatter(text):
     lines = text.split("\n")
     data = {}
@@ -163,6 +208,12 @@ def parse_frontmatter(text):
                     i += 1
                     while i < n and lines[i].strip().startswith("- "):
                         item_indent = len(lines[i]) - len(lines[i].lstrip(" "))
+                        first_stripped = lines[i].strip()
+                        if first_stripped[2:].lstrip().startswith("{"):
+                            # flow-mapping inline (formato usado nas skills), item cabe numa linha
+                            items.append(parse_inline_dict(first_stripped))
+                            i += 1
+                            continue
                         item_lines = [lines[i]]
                         i += 1
                         while i < n and lines[i].strip() and (
@@ -236,6 +287,72 @@ def coletar_notas(notas_dir: Path):
         if parsed:
             notas.append(parsed)
     return notas
+
+
+# --------------------------------------------------------------------------
+# Parser das skills (skills/<id>/skill.md) — mesmo esquema de frontmatter
+# ---, mas com notas_usadas / skills_relacionadas em flow-mapping inline
+# (ex.: "- {id: nota-0062, uso: \"...\"}") em vez do estilo multi-linha
+# usado por fontes/relacionadas nas notas atomicas.
+# --------------------------------------------------------------------------
+
+def parse_skill_file(path: Path):
+    text = path.read_text(encoding="utf-8")
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        print(f"[aviso] {path} nao tem frontmatter valido (---...---), ignorada.", file=sys.stderr)
+        return None
+    frontmatter_text = parts[1]
+    body = parts[2].strip()
+    data = parse_frontmatter(frontmatter_text)
+    data["body"] = body
+
+    data.setdefault("id", path.parent.name)
+    data.setdefault("numero", "")
+    data.setdefault("titulo", data.get("id", path.stem))
+    data.setdefault("dominio", "")
+    data.setdefault("tipo_skill", "")
+    data.setdefault("notas_usadas", [])
+    data.setdefault("skills_relacionadas", [])
+    data.setdefault("dados_necessarios", [])
+    data.setdefault("condicao_nao_calculavel", "")
+    data.setdefault("status", "")
+    try:
+        data["confianca_herdada"] = float(data.get("confianca_herdada") or 0)
+    except (TypeError, ValueError):
+        data["confianca_herdada"] = None
+
+    if not isinstance(data["notas_usadas"], list):
+        data["notas_usadas"] = []
+    if not isinstance(data["skills_relacionadas"], list):
+        data["skills_relacionadas"] = []
+    if not isinstance(data["dados_necessarios"], list):
+        data["dados_necessarios"] = []
+
+    data["arquivo_origem"] = str(path.as_posix())
+    return data
+
+
+def coletar_skills(skills_dir: Path):
+    skills = []
+    if not skills_dir.exists():
+        return skills
+    # 2026-08-02: corrigido de skills_dir.glob("*/skill.md") (só 1 nível) para
+    # rglob (qualquer profundidade) — as skills atuais moram em subpastas de
+    # categoria aninhadas (ex.: skills/gerais/ambiente-termico/skill.md,
+    # skills/por-tipo-de-treino/vo2max/vo2max-janela-e-volume/skill.md), então
+    # o glob de 1 nível não encontrava nenhum arquivo.
+    for md_path in sorted(skills_dir.rglob("skill.md")):
+        # No Windows, rglob é case-insensitive: "skill.md" também casa com
+        # skills/analisar-treino/SKILL.md, que é o descritor do plugin Claude
+        # Code (frontmatter diferente: name/description, sem numero/dominio),
+        # não uma skill do cânone. Excluir explicitamente por nome exato.
+        if md_path.name != "skill.md":
+            continue
+        parsed = parse_skill_file(md_path)
+        if parsed and parsed.get("numero", "").startswith("skill-"):
+            skills.append(parsed)
+    return skills
 
 
 # --------------------------------------------------------------------------
@@ -340,9 +457,11 @@ def coletar_revisoes(revisao_dir: Path):
 # Geracao do HTML
 # --------------------------------------------------------------------------
 
-def build_html(notas, revisoes=None, titulo_wiki="Base de Conhecimento — Ciclismo"):
+def build_html(notas, revisoes=None, skills=None, titulo_wiki="Base de Conhecimento — Ciclismo"):
     if revisoes is None:
         revisoes = []
+    if skills is None:
+        skills = []
     notas_json = json.dumps(notas, ensure_ascii=False)
     doms_json = json.dumps(
         {k: {"nm": v, "c": DOMINIO_COLOR_VAR[k]} for k, v in DOMINIO_LABELS.items()},
@@ -350,11 +469,13 @@ def build_html(notas, revisoes=None, titulo_wiki="Base de Conhecimento — Cicli
     )
     dom_order_json = json.dumps(DOMINIO_ORDER, ensure_ascii=False)
     revisoes_json = json.dumps(revisoes, ensure_ascii=False)
+    skills_json = json.dumps(skills, ensure_ascii=False)
     html = HTML_TEMPLATE.replace("__TITULO__", titulo_wiki)
     html = html.replace("__NOTAS_JSON__", notas_json)
     html = html.replace("__DOMS_JSON__", doms_json)
     html = html.replace("__DOM_ORDER_JSON__", dom_order_json)
     html = html.replace("__REVISOES_JSON__", revisoes_json)
+    html = html.replace("__SKILLS_JSON__", skills_json)
     return html
 
 
@@ -437,8 +558,16 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .edge.con{stroke:#B23A55;stroke-width:1.6}
   .edge.alt{stroke:#8A6DB0;stroke-dasharray:2 4}
   .gnode{cursor:pointer}
-  .gnode circle{transition:transform .15s;transform-origin:center}
-  .gnode:hover circle,.gnode:focus circle{stroke:var(--ink);stroke-width:2.4px}
+  .gnode circle,.gnode rect{transition:transform .15s;transform-origin:center}
+  .gnode:hover circle,.gnode:focus circle,.gnode:hover rect,.gnode:focus rect{stroke:var(--ink);stroke-width:2.4px}
+  .edge.spre{stroke:var(--d-metricas)}
+  .edge.scons{stroke:var(--signal);stroke-dasharray:5 5}
+  .edge.scomp{stroke:var(--line-strong);stroke-dasharray:2 4}
+  .edge.sdesp{stroke:var(--d-metodologia);stroke-width:1.8}
+  .lg-line.spre{border-top:2px solid var(--d-metricas)}
+  .lg-line.scons{border-top:2px dashed var(--signal)}
+  .lg-line.scomp{border-top:2px dotted var(--line-strong)}
+  .lg-line.sdesp{border-top:2px solid var(--d-metodologia)}
   .gnode text.tag{font-family:var(--mono);font-size:8.5px;fill:#fff;font-weight:700;text-anchor:middle;pointer-events:none}
   .dim .edge{stroke-opacity:.08}
   .dim .gnode{opacity:.2}
@@ -529,6 +658,34 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   .revflag button{font-family:var(--mono);font-size:11.5px;border:0;background:none;cursor:pointer;color:#6b5511;text-decoration:underline;padding:0}
   @media(max-width:720px){.app{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.wrap{padding:26px 20px 60px}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  .body h3{font-family:var(--serif);font-weight:700;font-size:18px;margin:22px 0 8px;max-width:66ch}
+  .body h4{font-family:var(--serif);font-weight:600;font-size:15px;margin:16px 0 6px;max-width:66ch}
+  .body pre{background:#1E2027;color:#E7E6E1;border-radius:10px;padding:13px 15px;overflow-x:auto;
+    font-family:var(--mono);font-size:12px;line-height:1.5;margin:0 0 14px;max-width:66ch}
+  .body pre code{background:none;padding:0;color:inherit}
+  .body code{background:#EDEBE2;border-radius:4px;padding:1px 5px;font-family:var(--mono);font-size:13px}
+  .skillbadge{background:#F1EDF7;border-left:3px solid var(--d-metodologia);border-radius:0 8px 8px 0;
+    padding:12px 16px;margin:16px 0;font-size:14px;max-width:66ch;color:#2c2438}
+  .skillbadge.fb{background:#EAF1F5;border-left-color:var(--d-avaliacao)}
+  .skillbadge .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+    color:#5b4a86;display:block;margin-bottom:4px}
+  .skillbadge.fb .k{color:#2f5a72}
+  .dnlist{display:flex;flex-direction:column;gap:10px}
+  .dnrow{border:1px solid var(--line);border-radius:10px;padding:10px 13px}
+  .dnrow .dnhead{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .dncampo{font-family:var(--mono);font-size:12.5px;color:var(--ink);font-weight:600}
+  .dntag{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:2px 8px;border-radius:20px;color:#fff;font-weight:700}
+  .dntag.bruto{background:var(--d-metricas)}
+  .dntag.calculado{background:var(--d-fisiologia)}
+  .dntag.estimado{background:var(--d-tipos)}
+  .dntag.manual{background:var(--d-metodologia)}
+  .dnreq{font-family:var(--mono);font-size:10px;color:var(--muted)}
+  .dnfonte{font-size:13px;color:#33363D;margin-top:5px}
+  .dnobs{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:4px}
+  .idlink{color:var(--signal);text-decoration:none;border-bottom:1px dotted var(--signal);
+    cursor:pointer;font-weight:600}
+  .idlink:hover{background:#FBEAE6}
 </style>
 </head>
 <body>
@@ -538,6 +695,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <input class="search" id="search" placeholder="Buscar nota, conceito, métrica…" autocomplete="off">
     <div>
       <button class="navlink active" id="nav-map" onclick="go({v:'home'})">Mapa de relações</button>
+      <button class="navlink" id="nav-skills" onclick="go({v:'skills'})">Skills (raciocínio)</button>
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
     </div>
     <div>
@@ -556,19 +714,44 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <script id="dom-order-data" type="application/json">__DOM_ORDER_JSON__</script>
 <script id="revisoes-data" type="application/json">__REVISOES_JSON__</script>
 
+<script id="skills-data" type="application/json">__SKILLS_JSON__</script>
 <script>
 const NOTES = JSON.parse(document.getElementById('notas-data').textContent);
 const DOMS = JSON.parse(document.getElementById('doms-data').textContent);
 const DOM_ORDER = JSON.parse(document.getElementById('dom-order-data').textContent);
 const REVISOES = JSON.parse(document.getElementById('revisoes-data').textContent);
 const REV_LABELS = {'baixa-confianca':'Baixa confiança','conflito':'Conflito','modelo-concorrente':'Modelo concorrente'};
+const SKILLS = JSON.parse(document.getElementById('skills-data').textContent);
 
 NOTES.forEach(n => { n.rel = n.relacionadas || []; n.tipo = n.tipo_nota; n.dom = n.dominio; n.conf = n.confianca; });
+SKILLS.forEach(s => { s.notasUsadas = s.notas_usadas || []; s.skillsRel = s.skills_relacionadas || []; s.dom = s.dominio; });
+const skillById = Object.fromEntries(SKILLS.map(s=>[s.id,s]));
+const NOTA_TO_SKILLS = {};
+SKILLS.forEach(s => (s.notasUsadas||[]).forEach(nu => {
+  (NOTA_TO_SKILLS[nu.id] = NOTA_TO_SKILLS[nu.id] || []).push({skillId: s.id, uso: nu.uso});
+}));
+function skillsUsingNota(id){ return NOTA_TO_SKILLS[id] || []; }
+function skillIncomingRel(id){
+  return SKILLS.filter(s => (s.skillsRel||[]).some(r=>r.id===id))
+    .map(s => ({from: s.id, tipo: (s.skillsRel.find(r=>r.id===id)||{}).tipo}));
+}
 
 const EDGES = [];
 NOTES.forEach(n => (n.rel||[]).forEach(r => EDGES.push({from:n.id, to:r.id, tipo:r.tipo, just:r.justificativa})));
 const byId = Object.fromEntries(NOTES.map(n=>[n.id,n]));
 function incoming(id){ return EDGES.filter(e=>e.to===id).map(e=>({from:e.from,tipo:e.tipo,just:e.just})); }
+
+/* ---------------- Auto-link de nota-XXXX / skill-... mencionados dentro de texto livre ---------------- */
+const SKILL_ID_SORTED = SKILLS.map(s=>s.id).sort((a,b)=>b.length-a.length);
+const SKILL_ID_RE = SKILL_ID_SORTED.length
+  ? new RegExp('(' + SKILL_ID_SORTED.map(id=>id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'g')
+  : null;
+const NOTA_ID_RE = /nota-\d{4}/g;
+function linkifyIds(html){
+  html = html.replace(NOTA_ID_RE, m => byId[m] ? `<a href="javascript:void(0)" class="idlink" onclick="go({v:'note',id:'${m}'})">${m}</a>` : m);
+  if(SKILL_ID_RE) html = html.replace(SKILL_ID_RE, m => skillById[m] ? `<a href="javascript:void(0)" class="idlink" onclick="go({v:'skill',id:'${m}'})">${m}</a>` : m);
+  return html;
+}
 
 const TIPO = {
   "regra-interpretacao":"Regra de interpretação",
@@ -578,7 +761,7 @@ const TIPO = {
 function domColor(d){ return DOMS[d]?DOMS[d].c:'#999'; }
 function shortDom(d){ return DOMS[d]?DOMS[d].nm:d; }
 function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function inlineMd(s){ s=escapeHtml(s); s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); s=s.replace(/`([^`]+)`/g,'<code>$1</code>'); return s; }
+function inlineMd(s){ s=escapeHtml(s); s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); s=s.replace(/`([^`]+)`/g,'<code>$1</code>'); s=linkifyIds(s); return s; }
 function renderTable(lines){
   const rows = lines.filter(l=>!/^\|[\s\-:|]+\|$/.test(l));
   if(!rows.length) return '';
@@ -598,6 +781,16 @@ function mdToHtml(md){
   while(i<lines.length){
     const line=lines[i], t=line.trim();
     if(t===''){ flushP(); flushL(); i++; continue; }
+    if(t.startsWith('```')){
+      flushP(); flushL(); i++;
+      const code=[];
+      while(i<lines.length && !lines[i].trim().startsWith('```')){ code.push(lines[i]); i++; }
+      i++;
+      html += '<pre><code>'+escapeHtml(code.join('\n'))+'</code></pre>';
+      continue;
+    }
+    if(t.startsWith('### ')){ flushP(); flushL(); html+='<h4>'+inlineMd(t.slice(4))+'</h4>'; i++; continue; }
+    if(t.startsWith('## ')){ flushP(); flushL(); html+='<h3>'+inlineMd(t.slice(3))+'</h3>'; i++; continue; }
     if(t.startsWith('|')){ flushP(); flushL(); const tl=[]; while(i<lines.length && lines[i].trim().startsWith('|')){ tl.push(lines[i].trim()); i++; } html+=renderTable(tl); continue; }
     if(t.startsWith('- ')||t.startsWith('* ')){ flushP(); items.push(t.slice(2)); i++; continue; }
     if(/^\d+\.\s/.test(t)){ flushP(); items.push(t.replace(/^\d+\.\s/,'')); i++; continue; }
@@ -665,12 +858,146 @@ const DEGREE = {};
 NOTES.forEach(n=>DEGREE[n.id]=0);
 EDGES.forEach(e=>{ DEGREE[e.from]=(DEGREE[e.from]||0)+1; DEGREE[e.to]=(DEGREE[e.to]||0)+1; });
 
+/* ---------------- GRAFO DE SKILLS (mapa de relacoes, mesma logica do grafo de notas) ---------------- */
+const SKILL_EDGES = [];
+SKILLS.forEach(s => (s.skillsRel||[]).forEach(r => SKILL_EDGES.push({from:s.id, to:r.id, tipo:r.tipo})));
+const SKILL_DEGREE = {};
+SKILLS.forEach(s=>SKILL_DEGREE[s.id]=0);
+SKILL_EDGES.forEach(e=>{ SKILL_DEGREE[e.from]=(SKILL_DEGREE[e.from]||0)+1; SKILL_DEGREE[e.to]=(SKILL_DEGREE[e.to]||0)+1; });
+
+let POS_SKILL = {};
+function computeSkillLayout(){
+  const nodes = SKILLS;
+  const n = nodes.length;
+  const idx = {}; nodes.forEach((nd,i)=>idx[nd.id]=i);
+  const domList = DOM_ORDER.filter(d => nodes.some(nd=>nd.dom===d));
+  const domAngle = {}; domList.forEach((d,i)=> domAngle[d] = (i/domList.length)*2*Math.PI);
+  const W=1400, H=1000, R=380;
+  const pos = nodes.map(nd=>{
+    const a = domAngle[nd.dom] || 0;
+    const cx = W/2 + Math.cos(a)*R, cy = H/2 + Math.sin(a)*R;
+    return {x: cx + (Math.random()-0.5)*160, y: cy + (Math.random()-0.5)*160};
+  });
+  const vel = nodes.map(()=>({x:0,y:0}));
+  const edgeIdx = SKILL_EDGES.map(e=>({a:idx[e.from], b:idx[e.to]})).filter(e=>e.a!==undefined && e.b!==undefined);
+  const iterations = 200, k = 60;
+  for(let it=0; it<iterations; it++){
+    for(let i=0;i<n;i++){
+      let fx=0, fy=0;
+      for(let j=0;j<n;j++){
+        if(i===j) continue;
+        let dx=pos[i].x-pos[j].x, dy=pos[i].y-pos[j].y;
+        let d2=dx*dx+dy*dy || 0.01, d=Math.sqrt(d2);
+        let force=(k*k)/d2*0.5;
+        fx+=(dx/d)*force; fy+=(dy/d)*force;
+      }
+      vel[i].x=(vel[i].x+fx)*0.82; vel[i].y=(vel[i].y+fy)*0.82;
+    }
+    edgeIdx.forEach(e=>{
+      let dx=pos[e.b].x-pos[e.a].x, dy=pos[e.b].y-pos[e.a].y;
+      let d=Math.sqrt(dx*dx+dy*dy)||0.01;
+      let force=(d-k)/k*2.0;
+      let fx=(dx/d)*force, fy=(dy/d)*force;
+      vel[e.a].x+=fx; vel[e.a].y+=fy; vel[e.b].x-=fx; vel[e.b].y-=fy;
+    });
+    for(let i=0;i<n;i++){
+      vel[i].x += (W/2-pos[i].x)*0.0012;
+      vel[i].y += (H/2-pos[i].y)*0.0012;
+      pos[i].x += vel[i].x*0.035;
+      pos[i].y += vel[i].y*0.035;
+    }
+  }
+  nodes.forEach((nd,i)=> POS_SKILL[nd.id]=pos[i]);
+}
+function skillEdgeCls(tipo){
+  if(tipo==='pre-requisito') return 'spre';
+  if(tipo==='consumida-por') return 'scons';
+  if(tipo==='complementar') return 'scomp';
+  if(tipo==='despachada-para') return 'sdesp';
+  return 'spre';
+}
+let skillZoom = {s:1, tx:0, ty:0};
+function skillGraphSVG(){
+  if(Object.keys(POS_SKILL).length===0) computeSkillLayout();
+  const edges = SKILL_EDGES.map((e,i)=>{
+    const a=POS_SKILL[e.from], b=POS_SKILL[e.to]; if(!a||!b) return '';
+    return `<line class="edge ${skillEdgeCls(e.tipo)}" data-i="${i}" data-a="${e.from}" data-b="${e.to}"
+      x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"></line>`;
+  }).join('');
+  const nodes = SKILLS.map(s=>{
+    const p = POS_SKILL[s.id]; if(!p) return '';
+    const deg = SKILL_DEGREE[s.id]||0;
+    const r = Math.min(7 + deg*1.6, 18);
+    const numshort = s.numero.replace('skill-','').replace(/^0+/,'');
+    return `<g class="gnode" data-id="${s.id}" tabindex="0" role="button"
+        aria-label="${escapeHtml(s.titulo)}"
+        onclick="go({v:'skill',id:'${s.id}'})"
+        onkeydown="if(event.key==='Enter')go({v:'skill',id:'${s.id}'})">
+      <title>${escapeHtml(s.titulo)}</title>
+      <rect x="${(p.x-r).toFixed(1)}" y="${(p.y-r).toFixed(1)}" width="${(r*2).toFixed(1)}" height="${(r*2).toFixed(1)}" rx="4" fill="${domColor(s.dom)}"></rect>
+      ${r>=10?`<text class="tag" x="${p.x.toFixed(1)}" y="${(p.y+2.8).toFixed(1)}">${numshort}</text>`:''}
+    </g>`;
+  }).join('');
+  return `<svg class="graph" id="skillGraphSvg" viewBox="0 0 1400 1000" preserveAspectRatio="xMidYMid meet">
+    <g id="skillViewport" transform="translate(${skillZoom.tx},${skillZoom.ty}) scale(${skillZoom.s})">
+    <g>${edges}</g><g>${nodes}</g></g></svg>`;
+}
+function skillZoomBy(f){ skillZoom.s = Math.max(0.35, Math.min(4, skillZoom.s*f)); applySkillZoom(); }
+function skillZoomReset(){ skillZoom={s:1,tx:0,ty:0}; applySkillZoom(); }
+function applySkillZoom(){
+  const vp = document.getElementById('skillViewport');
+  if(vp) vp.setAttribute('transform', `translate(${skillZoom.tx},${skillZoom.ty}) scale(${skillZoom.s})`);
+}
+function wireSkillGraph(){
+  const svg=view.querySelector('svg#skillGraphSvg');
+  if(!svg) return;
+  const nodes=[...svg.querySelectorAll('.gnode')];
+  const edges=[...svg.querySelectorAll('.edge')];
+  nodes.forEach(g=>{
+    g.addEventListener('mouseenter',()=>hot(g.dataset.id,true));
+    g.addEventListener('mouseleave',()=>hot(null,false));
+    g.addEventListener('focus',()=>hot(g.dataset.id,true));
+    g.addEventListener('blur',()=>hot(null,false));
+  });
+  function hot(id,on){
+    if(!on||!id){ svg.classList.remove('dim'); edges.forEach(e=>e.classList.remove('hot')); nodes.forEach(n=>n.classList.remove('hot','nb')); return; }
+    svg.classList.add('dim');
+    const nb=new Set([id]);
+    edges.forEach(e=>{
+      if(e.dataset.a===id||e.dataset.b===id){ e.classList.add('hot'); nb.add(e.dataset.a); nb.add(e.dataset.b); }
+      else e.classList.remove('hot');
+    });
+    nodes.forEach(n=>n.classList.toggle('hot', nb.has(n.dataset.id)));
+  }
+  let dragging=false, sx=0, sy=0, ostx=0, osty=0;
+  svg.addEventListener('mousedown', e=>{ dragging=true; svg.classList.add('panning'); sx=e.clientX; sy=e.clientY; ostx=skillZoom.tx; osty=skillZoom.ty; });
+  window.addEventListener('mouseup', ()=>{ dragging=false; svg.classList.remove('panning'); });
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    skillZoom.tx = ostx + (e.clientX-sx)/skillZoom.s;
+    skillZoom.ty = osty + (e.clientY-sy)/skillZoom.s;
+    applySkillZoom();
+  });
+  svg.addEventListener('wheel', e=>{
+    e.preventDefault();
+    skillZoomBy(e.deltaY<0?1.1:0.9);
+  }, {passive:false});
+}
+
 /* ---------------- RENDER ---------------- */
 const view = document.getElementById('view');
 let state = {v:'home'};
-function go(s){ state=s; render(); window.scrollTo(0,0); syncNav(); }
+function go(s){
+  state=s; render(); window.scrollTo(0,0); syncNav();
+  history.pushState(s, '', location.pathname + location.search);
+}
+window.addEventListener('popstate', e=>{
+  state = e.state || {v:'home'};
+  render(); window.scrollTo(0,0); syncNav();
+});
 function syncNav(){
   document.getElementById('nav-map').classList.toggle('active', state.v==='home');
+  document.getElementById('nav-skills').classList.toggle('active', state.v==='skills'||state.v==='skill');
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
 }
 
@@ -684,7 +1011,7 @@ function sidebar(){
       <span class="nm">${DOMS[d].nm}</span><span class="ct">${c}</span></button>`;
   }).join('');
   document.getElementById('foot').innerHTML =
-    `Base de conhecimento atômica — <b>${NOTES.length} notas</b> extraídas do cânone de 4 obras sobre treino de ciclismo, organizadas por domínio, com relações explícitas entre si.`;
+    `Base de conhecimento atômica — <b>${NOTES.length} notas</b> extraídas do cânone de 4 obras sobre treino de ciclismo, organizadas por domínio, com relações explícitas entre si. <b>${SKILLS.length} skills</b> traduzem essas notas em procedimentos de cálculo.`;
 }
 
 document.getElementById('search').addEventListener('input', e=>{
@@ -697,14 +1024,142 @@ function render(){
   if(state.v==='home') return renderHome();
   if(state.v==='revisao') return renderRevisao();
   if(state.v==='note') return renderNote(state.id);
+  if(state.v==='skills') return renderSkillsList();
+  if(state.v==='skill') return renderSkill(state.id);
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
     const q=state.q;
-    const res=NOTES.filter(n=>(n.titulo+' '+n.id+' '+(n.sinais||[]).join(' ')+' '+(n.body||'')).toLowerCase().includes(q));
-    return renderList(res, `Busca: "${state.q}"`, 'var(--ink)', 'busca');
+    const resNotes=NOTES.filter(n=>(n.titulo+' '+n.id+' '+(n.sinais||[]).join(' ')+' '+(n.body||'')).toLowerCase().includes(q));
+    const resSkills=SKILLS.filter(s=>(s.titulo+' '+s.id+' '+s.numero+' '+(s.body||'')).toLowerCase().includes(q));
+    return renderSearchCombined(resNotes, resSkills, state.q);
   }
 }
 function chip(txt,bg,cls){ return `<span class="chip ${cls||''}" style="${bg?`background:${bg}`:''}">${txt}</span>`; }
+function noteCard(n){
+  return `<button class="ncard" onclick="go({v:'note',id:'${n.id}'})">
+    <div class="top"><span class="cid">${n.id.replace('nota-','#')}</span>
+      <span class="miniline">${TIPO[n.tipo]||n.tipo}</span></div>
+    <div class="tt">${escapeHtml(n.titulo)}</div>
+    <div class="mt"><span class="mini" style="background:${domColor(n.dom)}">${shortDom(n.dom)}</span></div>
+  </button>`;
+}
+function skillCard(s){
+  return `<button class="ncard" onclick="go({v:'skill',id:'${s.id}'})">
+    <div class="top"><span class="cid">${s.numero}</span>
+      <span class="miniline">${s.tipo_skill}</span></div>
+    <div class="tt">${escapeHtml(s.titulo)}</div>
+    <div class="mt"><span class="mini" style="background:${domColor(s.dom)}">${shortDom(s.dom)}</span></div>
+  </button>`;
+}
+function renderSearchCombined(resNotes, resSkills, q){
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="listhead"><span class="dot" style="background:var(--ink)"></span>Busca: "${escapeHtml(q)}"</div>
+    <div class="listsub">${resNotes.length} nota(s) · ${resSkills.length} skill(s).</div>
+    ${resNotes.length?`<div class="lbl" style="margin:18px 0 8px">Notas</div><div class="cards">${resNotes.map(noteCard).join('')}</div>`:''}
+    ${resSkills.length?`<div class="lbl" style="margin:18px 0 8px">Skills</div><div class="cards">${resSkills.map(skillCard).join('')}</div>`:''}
+    ${(!resNotes.length && !resSkills.length)?'<div class="empty">Nada encontrado.</div>':''}`;
+}
+function renderSkillsList(){
+  const list = [...SKILLS].sort((a,b)=>a.numero.localeCompare(b.numero));
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="h-eyebrow">Skills (raciocínio aplicado)</div>
+    <h1>Como as notas viram cálculo</h1>
+    <p class="lede">Cada skill é um procedimento determinístico que consome notas do cânone para calcular ou classificar algo (FTP, TSS, CTL/ATL/TSB, fadiga, pacing...). O mapa mostra como as skills dependem umas das outras; a lista abaixo mostra todas.</p>
+    <div class="graphcard">
+      <div class="graphhead">
+        <span class="t">${SKILLS.length} skills · ${SKILL_EDGES.length} vínculos</span>
+        <div class="legend">
+          <span><span class="lg-line spre"></span> pré-requisito</span>
+          <span><span class="lg-line scons"></span> consumida-por</span>
+          <span><span class="lg-line scomp"></span> complementar</span>
+          <span><span class="lg-line sdesp"></span> despachada-para</span>
+        </div>
+      </div>
+      <div class="graphwrap">
+        ${skillGraphSVG()}
+        <div class="graphctl">
+          <button class="gbtn" onclick="skillZoomBy(1.25)">+</button>
+          <button class="gbtn" onclick="skillZoomBy(0.8)">−</button>
+          <button class="gbtn" onclick="skillZoomReset()">⤾</button>
+        </div>
+      </div>
+    </div>
+    <div class="listsub" style="margin-top:24px">${list.length} skill(s).</div>
+    <div class="cards">${list.map(skillCard).join('')}</div>`;
+  wireSkillGraph();
+}
+function relSkillItem(id, tipo){
+  const s = skillById[id]; const title = s?s.titulo:id;
+  return `<button class="relitem" onclick="go({v:'skill',id:'${id}'})">
+    <div class="rrow">${tipo?`<span class="rt ${tipo}">${tipo}</span>`:''}
+    <span class="rx"><b>${s?s.numero:id}</b>${escapeHtml(title)}</span></div>
+    </button>`;
+}
+function relSkillItemWithUso(skillId, uso){
+  const s = skillById[skillId]; const title = s?s.titulo:skillId;
+  return `<button class="relitem" onclick="go({v:'skill',id:'${skillId}'})">
+    <div class="rrow"><span class="rx"><b>${s?s.numero:skillId}</b>${escapeHtml(title)}</span></div>
+    ${uso?`<div class="rj">${escapeHtml(uso)}</div>`:''}
+    </button>`;
+}
+function notaRefItem(id, uso){
+  const n = byId[id]; const title = n?n.titulo:id;
+  return `<button class="relitem" onclick="go({v:'note',id:'${id}'})">
+    <div class="rrow"><span class="rx"><b>${id.replace('nota-','#')}</b>${escapeHtml(title)}</span></div>
+    ${uso?`<div class="rj">${escapeHtml(uso)}</div>`:''}
+    </button>`;
+}
+function dadosNecessariosHtml(s){
+  if(!s.dados_necessarios || !s.dados_necessarios.length) return '';
+  const rows = s.dados_necessarios.map(d => `
+    <div class="dnrow">
+      <div class="dnhead">
+        <span class="dncampo">${escapeHtml(d.campo)}</span>
+        <span class="dntag ${d.tipo}">${d.tipo}</span>
+        <span class="dnreq">${d.obrigatorio?'obrigatório':'opcional'}</span>
+      </div>
+      ${d.fonte?`<div class="dnfonte">${inlineMd(d.fonte)}</div>`:''}
+      ${d.observacao?`<div class="dnobs">${inlineMd(d.observacao)}</div>`:''}
+    </div>`).join('');
+  return `<div class="panel" style="margin:16px 0"><h3>Dados necessários para calcular</h3><div class="dnlist">${rows}</div></div>`;
+}
+function renderSkill(id){
+  const s = skillById[id]; if(!s){ go({v:'skills'}); return; }
+  const notasHtml = (s.notasUsadas||[]).map(nu=>notaRefItem(nu.id, nu.uso)).join('') || '<div class="hint">Nenhuma.</div>';
+  const relOutHtml = (s.skillsRel||[]).map(r=>relSkillItem(r.id, r.tipo)).join('') || '<div class="hint">Nenhuma.</div>';
+  const relInHtml = skillIncomingRel(id).map(r=>relSkillItem(r.from, r.tipo)).join('') || '<div class="hint">Nenhuma.</div>';
+  const condicaoHtml = s.condicao_nao_calculavel ? `<div class="skillbadge"><span class="k">Condição de não-calculável</span>${inlineMd(s.condicao_nao_calculavel)}</div>` : '';
+  const fallback = s.fallback_potencia_estimada || s.fallback_zona_manual;
+  const fallbackHtml = fallback ? `<div class="skillbadge fb"><span class="k">Decisão operacional do projeto (não é regra do cânone)</span>${inlineMd(fallback)}</div>` : '';
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="badges">
+      <span class="tag-id">${s.numero}</span>
+      ${chip(shortDom(s.dom), domColor(s.dom))}
+      ${chip(s.tipo_skill,'','type')}
+      ${s.confianca_herdada!=null?chip('confiança herdada '+s.confianca_herdada.toFixed(2).replace('.',','),'','line'):''}
+      ${s.status?chip(s.status,'','line'):''}
+    </div>
+    <h2 class="note">${escapeHtml(s.titulo)}</h2>
+    <div class="body">${mdToHtml(s.body)}</div>
+    ${condicaoHtml}
+    ${fallbackHtml}
+    ${dadosNecessariosHtml(s)}
+    <div class="cols">
+      <div class="panel">
+        <h3>Notas do cânone usadas</h3>
+        <div class="rel">${notasHtml}</div>
+      </div>
+      <div class="panel">
+        <h3>Skills relacionadas (esta skill aponta para)</h3>
+        <div class="rel">${relOutHtml}</div>
+        <h3 style="margin-top:18px">Referenciada por</h3>
+        <div class="rel">${relInHtml}</div>
+      </div>
+    </div>`;
+}
 
 let zoom = {s:1, tx:0, ty:0};
 function renderHome(){
@@ -854,7 +1309,7 @@ function renderNote(id){
   const applyBlock = apply ? `<div class="apply"><span class="k">Aplicação ao feedback</span>${inlineMd(apply)}</div>` : '';
   const fontesHtml = (n.fontes||[]).map(f=>`<div class="src"><span class="bk">${escapeHtml(f.arquivo||'')}</span>${f.pagina?` · <span class="pg">p. ${escapeHtml(f.pagina)}</span>`:''}${f.trecho?`<div class="q">${escapeHtml(f.trecho)}</div>`:''}</div>`).join('') || '<div class="hint">—</div>';
   view.innerHTML = `
-    <button class="back" onclick="go({v:'home'})">← mapa de relações</button>
+    <button class="back" onclick="history.back()">← voltar</button>
     ${revFlags.length?`<div class="revflag">⚠ Marcada para revisão (${revFlags.map(r=>REV_LABELS[r.tipo]).join(', ')}). <button onclick="go({v:'revisao'})">ver detalhes →</button></div>`:''}
     <div class="badges">
       <span class="tag-id">${n.id}</span>
@@ -879,7 +1334,8 @@ function renderNote(id){
         <h3 style="margin-top:18px">É usada por</h3>
         <div class="rel">${relIn}</div>
       </div>
-    </div>`;
+    </div>
+    ${skillsUsingNota(id).length ? `<div class="panel" style="margin-top:20px"><h3>Usada por estas skills (raciocínio aplicado)</h3><div class="rel">${skillsUsingNota(id).map(u=>relSkillItemWithUso(u.skillId,u.uso)).join('')}</div></div>` : ''}`;
 }
 function relItem(id,tipo,just){
   const t=byId[id]; const title = t?t.titulo:id;
@@ -890,15 +1346,9 @@ function relItem(id,tipo,just){
     </button>`;
 }
 function renderList(list,title,color,kind){
-  const cards = list.length? list.map(n=>`
-    <button class="ncard" onclick="go({v:'note',id:'${n.id}'})">
-      <div class="top"><span class="cid">${n.id.replace('nota-','#')}</span>
-        <span class="miniline">${TIPO[n.tipo]||n.tipo}</span></div>
-      <div class="tt">${escapeHtml(n.titulo)}</div>
-      <div class="mt"><span class="mini" style="background:${domColor(n.dom)}">${shortDom(n.dom)}</span></div>
-    </button>`).join('') : `<div class="empty">Nada encontrado nesta ${kind}.</div>`;
+  const cards = list.length? list.map(noteCard).join('') : `<div class="empty">Nada encontrado nesta ${kind}.</div>`;
   view.innerHTML = `
-    <button class="back" onclick="go({v:'home'})">← mapa de relações</button>
+    <button class="back" onclick="history.back()">← voltar</button>
     <div class="listhead"><span class="dot" style="background:${color}"></span>${title}</div>
     <div class="listsub">${list.length} nota(s).</div>
     <div class="cards">${cards}</div>`;
@@ -906,6 +1356,7 @@ function renderList(list,title,color,kind){
 
 sidebar();
 render();
+history.replaceState(state, '', location.pathname + location.search);
 </script>
 </body>
 </html>
@@ -919,6 +1370,8 @@ def main():
                          help="Pasta contendo as notas (default: ../notas relativo a este script)")
     parser.add_argument("--revisao-dir", default=str(script_dir.parent / "_revisao"),
                          help="Pasta contendo as anotacoes de revisao (default: ../_revisao)")
+    parser.add_argument("--skills-dir", default=str(script_dir.parent / "skills"),
+                         help="Pasta contendo as skills, cada uma em <id>/skill.md (default: ../skills)")
     parser.add_argument("--saida", default=str(script_dir / "index.html"),
                          help="Arquivo HTML de saida (default: index.html nesta pasta)")
     args = parser.parse_args()
@@ -940,10 +1393,18 @@ def main():
     revisao_dir = Path(args.revisao_dir)
     revisoes = coletar_revisoes(revisao_dir)
 
-    html = build_html(notas, revisoes)
+    skills_dir = Path(args.skills_dir)
+    skills = coletar_skills(skills_dir)
+
+    def numero_key(s):
+        m = re.search(r"(\d+)", s.get("numero", "0"))
+        return int(m.group(1)) if m else 0
+    skills.sort(key=numero_key)
+
+    html = build_html(notas, revisoes, skills)
     saida = Path(args.saida)
     saida.write_text(html, encoding="utf-8")
-    print(f"OK: {len(notas)} notas e {len(revisoes)} anotacoes de revisao processadas. Wiki gerado em: {saida}")
+    print(f"OK: {len(notas)} notas, {len(revisoes)} anotacoes de revisao e {len(skills)} skills processadas. Wiki gerado em: {saida}")
 
 
 if __name__ == "__main__":
