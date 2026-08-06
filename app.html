@@ -261,7 +261,6 @@
       <button class="navlink active" id="nav-map" onclick="go({v:'home'})">Mapa de relações</button>
       <button class="navlink" id="nav-skills" onclick="go({v:'skills'})">Skills (raciocínio)</button>
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
-      <button class="navlink" id="nav-upload" onclick="go({v:'upload'})">Enviar fonte</button>
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
     </div>
     <div>
@@ -656,7 +655,6 @@ function syncNav(){
   document.getElementById('nav-map').classList.toggle('active', state.v==='home');
   document.getElementById('nav-skills').classList.toggle('active', state.v==='skills'||state.v==='skill');
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
-  document.getElementById('nav-upload').classList.toggle('active', state.v==='upload');
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
 }
 
@@ -685,7 +683,6 @@ function render(){
   if(state.v==='note') return renderNote(state.id);
   if(state.v==='skills') return renderSkillsList();
   if(state.v==='skill') return renderSkill(state.id);
-  if(state.v==='upload') return renderUpload();
   if(state.v==='fila') return renderFila();
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
@@ -1035,7 +1032,7 @@ function renderAuthbox(){
   } else {
     box.innerHTML = `
       <div class="authstatus"><span class="authdot"></span>Não conectado</div>
-      <button class="authbtn" onclick="go({v:'upload'})">Entrar</button>`;
+      <button class="authbtn" onclick="go({v:'fila'})">Entrar</button>`;
   }
 }
 
@@ -1043,7 +1040,7 @@ function lockedView(titulo){
   return `
     <div class="h-eyebrow">Área restrita</div>
     <h1>${escapeHtml(titulo)}</h1>
-    <div class="lockmsg">Envio de fontes, fila de processamento e decisões de revisão exigem login (só o Jacques tem conta neste projeto Supabase). As demais áreas — mapa, skills, notas, revisão legada — continuam públicas.</div>
+    <div class="lockmsg">Fila de processamento e decisões de revisão exigem login (só o Jacques tem conta neste projeto Supabase). As demais áreas — mapa, skills, notas, revisão legada — continuam públicas.</div>
     <div style="margin-top:18px">${renderLoginForm()}</div>`;
 }
 
@@ -1093,65 +1090,22 @@ async function fazerLogout(){
   go({v:'home'});
 }
 
-function renderUpload(){
-  if(!session){ view.innerHTML = lockedView('Enviar fonte'); return; }
-  view.innerHTML = `
-    <div class="h-eyebrow">Ingestão</div>
-    <h1>Enviar nova fonte</h1>
-    <p class="lede">Envie um PDF ou markdown com material novo (livro, artigo, capítulo). O arquivo fica guardado no Supabase Storage e entra na fila como um job "pendente" — a extração de notas/skills a partir dele (aplicando o cânone de instrucoes.md) ainda é feita à parte, não automaticamente por este formulário.</p>
-    <div class="dropzone" id="dropzone" onclick="document.getElementById('file-input').click()">
-      <div class="dz-t">Clique ou arraste um arquivo aqui</div>
-      <div class="dz-s">PDF ou .md — fica em fontes-ingestao/, vinculado a um registro em ingestao_jobs</div>
-    </div>
-    <input type="file" id="file-input" accept=".pdf,.md,.txt" style="display:none">
-    <div class="formmsg" id="upload-msg" style="margin-top:10px"></div>`;
-  const dz = document.getElementById('dropzone');
-  const input = document.getElementById('file-input');
-  input.addEventListener('change', e=>{ if(e.target.files[0]) enviarArquivo(e.target.files[0]); });
-  ['dragenter','dragover'].forEach(evt=>dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.add('over'); }));
-  ['dragleave','drop'].forEach(evt=>dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.remove('over'); }));
-  dz.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) enviarArquivo(f); });
-}
-async function enviarArquivo(file){
-  const msg = document.getElementById('upload-msg');
-  msg.textContent = `Enviando ${file.name}...`; msg.className='formmsg';
-  const path = `${Date.now()}_${file.name}`;
-  const { error: upErr } = await sb.storage.from('fontes-ingestao').upload(path, file);
-  if(upErr){ msg.textContent = 'Erro no upload: '+upErr.message; msg.className='formmsg err'; return; }
-  const { error: dbErr } = await sb.from('ingestao_jobs').insert({
-    arquivo_nome: file.name, arquivo_storage_path: path, status: 'pendente',
-    enviado_por: session.user.email,
-  });
-  if(dbErr){ msg.textContent = 'Arquivo enviado, mas falhou ao registrar job: '+dbErr.message; msg.className='formmsg err'; return; }
-  msg.textContent = 'Enviado! Acompanhe em "Fila de processamento".'; msg.className='formmsg ok';
-  await carregarFilaERevisao();
-}
-
 function renderFila(){
   if(!session){ view.innerHTML = lockedView('Fila de processamento'); return; }
-  const statusLabel = {pendente:'pendente', processando:'processando solicitado', aguardando_revisao:'aguardando revisão', concluido:'concluído', erro:'erro'};
+  const statusLabel = {pendente:'pendente', processando:'processando', aguardando_revisao:'aguardando revisão', concluido:'concluído', erro:'erro'};
   const rows = FILA.map(j => `
     <div class="jobrow">
       <div>
         <div class="jobname">${escapeHtml(j.arquivo_nome)}</div>
-        <div class="jobmeta">enviado por ${escapeHtml(j.enviado_por||'—')} · ${new Date(j.criado_em).toLocaleString('pt-BR')}${j.etapa_atual?' · '+escapeHtml(j.etapa_atual):''}</div>
+        <div class="jobmeta">${new Date(j.criado_em).toLocaleString('pt-BR')}${j.etapa_atual?' · '+escapeHtml(j.etapa_atual):''}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        ${j.status==='pendente' ? `<button class="btn ghost" onclick="processarJob('${j.id}')">Processar</button>` : ''}
-        <span class="jobstatus ${j.status}">${statusLabel[j.status]||j.status}</span>
-      </div>
+      <span class="jobstatus ${j.status}">${statusLabel[j.status]||j.status}</span>
     </div>`).join('');
   view.innerHTML = `
     <div class="h-eyebrow">Ingestão</div>
     <h1>Fila de processamento</h1>
-    <p class="lede">Status de cada fonte enviada, do upload até a nota/skill ficar pronta para revisão. Clicar em "Processar" só sinaliza o job — a extração de fato (ler o PDF, aplicar as regras do cânone, checar redundância/conexão com as notas existentes) é feita por mim numa conversa: depois de clicar, volte ao chat e peça "processa a fila de ingestão".</p>
-    <div class="jobtable">${rows || '<div class="empty">Nenhum job ainda. Envie uma fonte em "Enviar fonte".</div>'}</div>`;
-}
-async function processarJob(id){
-  const { error } = await sb.from('ingestao_jobs').update({status:'processando', etapa_atual:'aguardando extração no chat'}).eq('id', id);
-  if(error){ alert('Erro: '+error.message); return; }
-  await carregarFilaERevisao();
-  render();
+    <p class="lede">Status de cada fonte processada via chat com o Claude, do início da extração até a nota/skill ficar pronta para revisão em "Revisão pendente".</p>
+    <div class="jobtable">${rows || '<div class="empty">Nenhum job ainda. Envie um material novo numa conversa com o Claude para começar.</div>'}</div>`;
 }
 
 function renderFilaRevisaoPipeline(){
