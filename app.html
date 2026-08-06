@@ -1129,20 +1129,29 @@ async function enviarArquivo(file){
 
 function renderFila(){
   if(!session){ view.innerHTML = lockedView('Fila de processamento'); return; }
-  const statusLabel = {pendente:'pendente', processando:'processando', aguardando_revisao:'aguardando revisão', concluido:'concluído', erro:'erro'};
+  const statusLabel = {pendente:'pendente', processando:'processando solicitado', aguardando_revisao:'aguardando revisão', concluido:'concluído', erro:'erro'};
   const rows = FILA.map(j => `
     <div class="jobrow">
       <div>
         <div class="jobname">${escapeHtml(j.arquivo_nome)}</div>
         <div class="jobmeta">enviado por ${escapeHtml(j.enviado_por||'—')} · ${new Date(j.criado_em).toLocaleString('pt-BR')}${j.etapa_atual?' · '+escapeHtml(j.etapa_atual):''}</div>
       </div>
-      <span class="jobstatus ${j.status}">${statusLabel[j.status]||j.status}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${j.status==='pendente' ? `<button class="btn ghost" onclick="processarJob('${j.id}')">Processar</button>` : ''}
+        <span class="jobstatus ${j.status}">${statusLabel[j.status]||j.status}</span>
+      </div>
     </div>`).join('');
   view.innerHTML = `
     <div class="h-eyebrow">Ingestão</div>
     <h1>Fila de processamento</h1>
-    <p class="lede">Status de cada fonte enviada, do upload até a nota/skill ficar pronta para revisão.</p>
+    <p class="lede">Status de cada fonte enviada, do upload até a nota/skill ficar pronta para revisão. Clicar em "Processar" só sinaliza o job — a extração de fato (ler o PDF, aplicar as regras do cânone, checar redundância/conexão com as notas existentes) é feita por mim numa conversa: depois de clicar, volte ao chat e peça "processa a fila de ingestão".</p>
     <div class="jobtable">${rows || '<div class="empty">Nenhum job ainda. Envie uma fonte em "Enviar fonte".</div>'}</div>`;
+}
+async function processarJob(id){
+  const { error } = await sb.from('ingestao_jobs').update({status:'processando', etapa_atual:'aguardando extração no chat'}).eq('id', id);
+  if(error){ alert('Erro: '+error.message); return; }
+  await carregarFilaERevisao();
+  render();
 }
 
 function renderFilaRevisaoPipeline(){
