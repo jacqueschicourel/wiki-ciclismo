@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-gerar_wiki.py — gera o wiki HTML autocontido (index.html) a partir das notas
-atomicas em notas/**/*.md (formato: frontmatter YAML + corpo em markdown).
+gerar_wiki.py — gera o wiki HTML autocontido ESTATICO (estatico.html) a partir
+das notas atomicas em notas/**/*.md (formato: frontmatter YAML + corpo em markdown).
 
 Layout editorial com mapa de relacoes em grafo (posicionado via simulacao de
 forcas calculada em JS no carregamento da pagina), navegacao por dominio,
 busca e paginas de nota com fontes/relacionadas clicaveis.
+
+IMPORTANTE (2026-08-08): index.html deixou de ser o output deste script.
+index.html agora É o app.html (versão ao vivo, consulta o Supabase direto do
+navegador) — é o arquivo servido na URL pública (GitHub Pages). Este script
+gera a versão estática pré-renderizada (congelada no momento da execução) em
+estatico.html, só como fallback/arquivo — nunca sobrescrever index.html com
+o output deste script.
 
 Uso:
     python gerar_wiki.py [--notas-dir CAMINHO] [--saida CAMINHO]
 
 Padroes:
     --notas-dir  ../notas   (pasta 'notas' irma da pasta 'wiki')
-    --saida      index.html (gravado dentro da pasta deste script)
+    --saida      estatico.html (gravado dentro da pasta deste script)
 
 Sem dependencias externas (nao usa PyYAML) — o parser de frontmatter foi
 escrito especificamente para o esquema usado nas notas desta base:
@@ -696,6 +703,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <div>
       <button class="navlink active" id="nav-map" onclick="go({v:'home'})">Mapa de relações</button>
       <button class="navlink" id="nav-skills" onclick="go({v:'skills'})">Skills (raciocínio)</button>
+      <button class="navlink" id="nav-skills-entrega" onclick="go({v:'skills-entrega'})">Skills de curadoria</button>
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
     </div>
     <div>
@@ -997,7 +1005,8 @@ window.addEventListener('popstate', e=>{
 });
 function syncNav(){
   document.getElementById('nav-map').classList.toggle('active', state.v==='home');
-  document.getElementById('nav-skills').classList.toggle('active', state.v==='skills'||state.v==='skill');
+  document.getElementById('nav-skills').classList.toggle('active', state.v==='skills'||(state.v==='skill'&&skillById[state.id]&&skillById[state.id].dom!=='entrega-feedback'));
+  document.getElementById('nav-skills-entrega').classList.toggle('active', state.v==='skills-entrega'||(state.v==='skill'&&skillById[state.id]&&skillById[state.id].dom==='entrega-feedback'));
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
 }
 
@@ -1025,6 +1034,7 @@ function render(){
   if(state.v==='revisao') return renderRevisao();
   if(state.v==='note') return renderNote(state.id);
   if(state.v==='skills') return renderSkillsList();
+  if(state.v==='skills-entrega') return renderSkillsEntrega();
   if(state.v==='skill') return renderSkill(state.id);
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
@@ -1062,6 +1072,7 @@ function renderSearchCombined(resNotes, resSkills, q){
 }
 function renderSkillsList(){
   const list = [...SKILLS].sort((a,b)=>a.numero.localeCompare(b.numero));
+  const tecnicas = list.filter(s => s.dominio !== 'entrega-feedback');
   view.innerHTML = `
     <button class="back" onclick="history.back()">← voltar</button>
     <div class="h-eyebrow">Skills (raciocínio aplicado)</div>
@@ -1086,9 +1097,19 @@ function renderSkillsList(){
         </div>
       </div>
     </div>
-    <div class="listsub" style="margin-top:24px">${list.length} skill(s).</div>
-    <div class="cards">${list.map(skillCard).join('')}</div>`;
+    <div class="listsub" style="margin-top:24px">${tecnicas.length} skill(s) do cânone técnico.</div>
+    <div class="cards">${tecnicas.map(skillCard).join('')}</div>`;
   wireSkillGraph();
+}
+function renderSkillsEntrega(){
+  const entrega = [...SKILLS].filter(s => s.dominio === 'entrega-feedback').sort((a,b)=>a.numero.localeCompare(b.numero));
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="h-eyebrow">Skills de curadoria</div>
+    <h1>Da análise técnica ao feedback pro atleta</h1>
+    <p class="lede">Estas skills não calculam nada do cânone técnico — consomem o que as skills de raciocínio já calcularam e decidem o que comunicar (curadoria) e como comunicar (redação por canal).</p>
+    <div class="listsub" style="margin-top:24px">${entrega.length} skill(s) de entrega.</div>
+    <div class="cards">${entrega.map(skillCard).join('')}</div>`;
 }
 function relSkillItem(id, tipo){
   const s = skillById[id]; const title = s?s.titulo:id;
@@ -1372,8 +1393,8 @@ def main():
                          help="Pasta contendo as anotacoes de revisao (default: ../_revisao)")
     parser.add_argument("--skills-dir", default=str(script_dir.parent / "skills"),
                          help="Pasta contendo as skills, cada uma em <id>/skill.md (default: ../skills)")
-    parser.add_argument("--saida", default=str(script_dir / "index.html"),
-                         help="Arquivo HTML de saida (default: index.html nesta pasta)")
+    parser.add_argument("--saida", default=str(script_dir / "estatico.html"),
+                         help="Arquivo HTML de saida (default: estatico.html nesta pasta — NUNCA index.html, que agora é a versão ao vivo)")
     args = parser.parse_args()
 
     notas_dir = Path(args.notas_dir)

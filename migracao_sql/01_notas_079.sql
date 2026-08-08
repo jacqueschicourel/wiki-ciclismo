@@ -1,0 +1,44 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m10581$nota-0043$m10581$, $m10582$Capacidade Anaeróbia (Nível 6) é intensidade supra-máxima: exige mais de 100% do VO2máx$m10582$, $m10583$tipos-de-treino$m10583$,
+  $m10584$direta$m10584$, $m10585$conceito$m10585$,
+  ARRAY[$m10586$diario$m10586$]::text[], ARRAY[$m10587$potência-média$m10587$]::text[],
+  0.8, $m10588$ativo$m10588$, $m10589$Esforços de Capacidade Anaeróbia (Nível 6, tipicamente ≤2 minutos) exigem uma intensidade "supra-máxima" — ou seja, superior a 100% do VO2máx do atleta, além do que pode ser sustentado por vias aeróbias. É por isso que esses esforços são tão dolorosos e de duração necessariamente curta: a demanda energética excede a capacidade aeróbia máxima, obrigando o corpo a recorrer predominantemente a vias anaeróbias. Diferem do Nível 5 (VO2máx), que fica dentro (ou levemente acima, 106-120%) da faixa aeróbia máxima.
+
+Esses esforços devem ser feitos quando o atleta está relativamente fresco na semana de treino, dada a intensidade elevada exigida.
+
+Aplicação ao feedback: ao identificar picos de potência muito curtos (≤2 min) que excedem claramente a faixa do Nível 5/VO2máx (>120% do FTP), classificar esses trechos como estímulo de Capacidade Anaeróbia, não de VO2máx — são sistemas energéticos distintos mesmo estando na mesma região de "alta intensidade" do arquivo.
+
+**Nota sobre a fronteira 2-3min (2026-08-02, achado de auditoria adversarial):** esta nota define Capacidade Anaeróbia como "tipicamente ≤2 minutos" e nota-0042 define a janela mínima de VO2máx como "pelo menos 3 minutos" — nenhuma das duas fontes resolve explicitamente qual sistema predomina num esforço de 2 a 3 minutos de duração. Decisão adotada: não inventar um limiar numérico exato dentro desse intervalo (nenhuma fonte do cânone sustenta um corte preciso). Em vez disso, tratar 2-3min como zona de transição mista — consistente com o princípio já estabelecido em nota-0170 (limiares fisiológicos são regiões de transição contínuas, não interruptores binários): um esforço de 2-3min provavelmente recebe contribuição relevante de ambos os sistemas (anaeróbio e VO2máx), com a proporção dependendo de quão perto de 2min ou de 3min o esforço está, e da intensidade real sustentada (>120% FTP pesa mais para Capacidade Anaeróbia; 106-120% FTP pesa mais para VO2máx). Qualquer skill que precise classificar um esforço nessa janela deve reportar ambas as classificações possíveis com essa ressalva de ambiguidade, nunca escolher uma só com falsa certeza.$m10589$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m10590$nota-0044$m10590$, $m10591$Protocolo micro-burst: 15 s a 150% FTP / 15 s a 50% FTP, em blocos de 10 minutos$m10591$, $m10592$tipos-de-treino$m10592$,
+  $m10593$direta$m10593$, $m10594$protocolo$m10594$,
+  ARRAY[$m10595$diario$m10595$]::text[], ARRAY[$m10596$potência-por-lap$m10596$, $m10597$cadência$m10597$]::text[],
+  0.8, $m10598$ativo$m10598$, $m10599$Protocolo "micro-burst", indicado especialmente para rolo/smart trainer por ser altamente controlável: blocos contínuos de 10 minutos alternando 15 segundos "on" a 150% do FTP com 15 segundos "off" a 50% do FTP, repetidos continuamente durante todo o bloco. O livro sugere fazer 2 blocos de 10 min, com 20 minutos de pedalada leve entre eles.
+
+Propósito: melhora a capacidade de produzir potência explosiva característica do "estouro" inicial de um sprint, da arrancada em pé numa prova de rua (criterium) ou da largada parada numa prova de pista — os autores notam que os arquivos de potência desse treino são muito parecidos com os de um criterium real, ilustrando a especificidade do estímulo. É classificado tanto como treino de Nível 7 (potência neuromuscular) quanto, numa variação, como treino de Nível 4 (limiar) quando os bursts de 10s são inseridos dentro de um bloco de 1h em ritmo de Tempo baixo (76-80% FTP).
+
+Aplicação ao feedback: ao identificar num arquivo padrões de alternância curta e regular entre potência muito alta (~150% FTP) e muito baixa (~50% FTP) em ciclos de 15s, reconhecer isso como um treino de micro-burst (estímulo neuromuscular/limiar, não um treino de intervalos tradicionais) antes de classificar a sessão por outra métrica de zona.$m10599$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m10600$nota-0046$m10600$, $m10601$Padrão de potência da \"jogada vencedora\" em prova: ataque inicial, sustentação no limiar, sprint final$m10601$, $m10602$tipos-de-treino$m10602$,
+  $m10603$direta$m10603$, $m10604$regra-interpretacao$m10604$,
+  ARRAY[$m10605$diario$m10605$]::text[], ARRAY[$m10606$potência-série-temporal$m10606$, $m10607$potência-média$m10607$, $m10608$FC (média/máx)$m10608$, $m10609$velocidade$m10609$]::text[],
+  0.75, $m10610$ativo$m10610$, $m10611$Segundo análise dos autores de múltiplos arquivos de potência de corridas, a jogada que resulta em vitória (ou em formar/sustentar uma fuga decisiva) segue um padrão reconhecível em 3 fases: (1) ataque inicial explosivo para criar separação do pelotão (esforço de potência muito alta, curta duração — ordem de grandeza de ~200% do FTP em média por ~30s, com pico por volta de ~300% do FTP); (2) esforço elevado contínuo para estabelecer/consolidar a separação, tipicamente se estabilizando perto da potência de limiar (FTP, 100-110%); (3) arremate final com um pico curto de velocidade/potência no sprint de chegada.
+
+Aplicação ao feedback: ao analisar o arquivo de potência de uma prova (especialmente onde o atleta se destacou do pelotão ou correu numa fuga), procurar esse padrão de 3 fases pode ajudar a identificar e nomear corretamente o tipo de esforço decisivo realizado — útil tanto para dar feedback tático quanto para desenhar treinos específicos que simulem esse padrão (o livro chama isso de treino "simulação de jogada vencedora").$m10611$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m10612$nota-0049$m10612$, $m10613$Ciclistas vencedores de prova de pelotão tipicamente não pedalam por pelo menos 15% do tempo$m10613$, $m10614$tipos-de-treino$m10614$,
+  $m10615$direta$m10615$, $m10616$regra-interpretacao$m10616$,
+  ARRAY[$m10617$diario$m10617$]::text[], ARRAY[$m10618$tempo-movimento$m10618$, $m10619$tempo-decorrido$m10619$, $m10620$potência-máx$m10620$]::text[],
+  0.75, $m10621$ativo$m10621$, $m10622$Analisando arquivos de potência de vencedores de provas de pelotão (mass-start), os autores observam um padrão: a maioria não pedala em pelo menos 15% do tempo total da prova (ou seja, pedala menos de 85% do tempo) — o tempo sem pedalar reflete economia de energia (esconder-se do vento, aproveitar embalos). Quando pedalam, entretanto, produzem os picos de potência mais altos da prova.
+
+Aplicação ao feedback: em arquivos de prova, uma porcentagem de tempo pedalando acima de 85% pode ser um sinal de posicionamento subótimo no pelotão (gastando energia à toa em vez de "descansar" na roda de outros), e vale investigar/comentar isso no feedback pós-prova. Esse indicador é menos relevante em treino solo/estruturado, onde o objetivo já é outro.$m10622$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

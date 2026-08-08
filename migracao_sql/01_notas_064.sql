@@ -1,0 +1,44 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8923$nota-0202$m8923$, $m8924$Carboidratos múltiplos (glicose via SGLT1 + frutose via GLUT5) aumentam a absorção intestinal total e permitem ingestão horária maior com menos desconforto GI; o intestino é treinável$m8924$, $m8925$nutricao-e-energia$m8925$,
+  $m8926$contexto$m8926$, $m8927$conceito$m8927$,
+  ARRAY[$m8928$diario$m8928$]::text[], '{}'::text[],
+  0.55, $m8929$ativo$m8929$, $m8930$A glicose usa o transportador intestinal SGLT1 e a frutose usa predominantemente o GLUT5 — combinar os dois tipos de carboidrato (em vez de usar só glicose) aumenta a absorção intestinal total e reduz desconforto gastrointestinal, permitindo ingestões horárias mais altas (até 90-120g/h, ver nota-0201). Além disso, o intestino é treinável: ingestão repetida de carboidrato durante os treinos melhora esvaziamento gástrico, capacidade de absorção e tolerância — a estratégia nutricional de prova nunca deve ser testada pela primeira vez em competição.
+
+Aplicação ao feedback: nota de contexto nutricional — não gera regra de interpretação de dado do Strava, mas justifica por que a faixa superior da tabela de ingestão (nota-0201) só é viável para atletas que praticaram esse volume de carboidrato em treinos longos previamente.$m8930$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8931$nota-0203$m8931$, $m8932$Mito refutado: 'janela anabólica' de 30 minutos — na realidade dura várias horas, e o consumo total diário de energia/proteína importa mais que o momento exato da primeira refeição pós-treino$m8932$, $m8933$nutricao-e-energia$m8933$,
+  $m8934$contexto$m8934$, $m8935$conceito$m8935$,
+  ARRAY[$m8936$diario$m8936$]::text[], '{}'::text[],
+  0.55, $m8937$ativo$m8937$, $m8938$Desmistifica a crença popular de uma "janela anabólica" restrita aos 30 minutos pós-treino, na qual seria essencial ingerir proteína/carboidrato imediatamente. A evidência atual mostra que essa janela de maior sensibilidade metabólica dura na verdade várias horas, e que o consumo total diário de energia e proteína tem impacto maior no resultado final do que a rapidez da primeira refeição pós-treino — a prioridade deve ser um planejamento nutricional consistente ao longo do dia, não a corrida por um shake imediato. Exceção: quando o intervalo até a próxima sessão é curto (<24h), iniciar a reposição de carboidrato logo após o treino é recomendado, pela maior capacidade de armazenamento de glicogênio nas primeiras horas.
+
+Aplicação ao feedback: fora do escopo de dados do Strava (nutrição não é rastreada) — nota de contexto útil apenas se o produto algum dia oferecer orientação nutricional educativa ao usuário; deve evitar reforçar o mito popular da "janela de 30 minutos".$m8938$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8939$nota-0204$m8939$, $m8940$Suplementos com evidência científica robusta para ciclismo: cafeína (endurance e alta intensidade), creatina (sprint/acelerações repetidas), bicarbonato de sódio (esforços de 1-10min), nitrato/beterraba (moderadamente treinados), beta-alanina (esforços de 1-4min)$m8940$, $m8941$nutricao-e-energia$m8941$,
+  $m8942$contexto$m8942$, $m8943$referencia$m8943$,
+  ARRAY[$m8944$semanal$m8944$]::text[], '{}'::text[],
+  0.55, $m8945$ativo$m8945$, $m8946$Resumo de suplementos com boa evidência científica para ciclismo, por faixa de aplicação: Cafeína — reduz percepção de esforço, melhora atenção e capacidade de sustentar intensidade, benefícios tanto em endurance quanto em alta intensidade (resposta individual variável por genética/hábito); Creatina — beneficia sprint, acelerações repetidas e treino de força, impacto menor em provas longas (risco de ganho de massa corporal em alguns atletas); Bicarbonato de sódio — aumenta capacidade tamponante, beneficia esforços intensos de ~1-10 minutos, risco de desconforto GI (testar em treino antes de competição); Nitrato/suco de beterraba — melhora eficiência muscular, mais eficaz em atletas moderadamente treinados que em elite; Beta-alanina — aumenta carnosina muscular, beneficia esforços de alta intensidade de ~1-4 minutos. O Manual adverte que a maioria dos demais suplementos do mercado (boosters hormonais, queimadores de gordura, antioxidantes em altas doses, "pré-treinos") tem evidência limitada ou inconsistente.
+
+Aplicação ao feedback: fora do escopo de dados do Strava (suplementação não é rastreada) — nota de referência para caso o produto ofereça conteúdo educativo sobre nutrição esportiva; útil para mapear qual suplemento é mais relevante ao tipo de esforço identificado numa sessão (ex.: sessões de sprint/pista → bicarbonato/beta-alanina; provas longas → cafeína/carboidrato).$m8946$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8947$nota-0223$m8947$, $m8948$Necessidade de proteína para atletas de endurance: RDA geral é 0,83 g/kg/dia, mas quem treina intensamente deve consumir 1,2-1,8 g/kg/dia$m8948$, $m8949$nutricao-e-energia$m8949$,
+  $m8950$contexto$m8950$, $m8951$referencia$m8951$,
+  ARRAY[$m8952$semanal$m8952$, $m8953$mensal$m8953$]::text[], '{}'::text[],
+  0.75, $m8954$ativo$m8954$, $m8955$A RDA (Recommended Dietary Allowance) padrão de proteína é **0,83 g por kg de massa corporal/dia** (ex.: homem de 90 kg → 75 g/dia) — um valor liberal, pensado para cobrir 97% da população saudável e sedentária, com margem de segurança de ~25%. Esse valor NÃO é adequado como referência para atletas em treinamento intenso.
+
+Com base em evidências de balanço de nitrogênio e turnover proteico, atletas que treinam intensamente (endurance ou resistência) devem consumir entre **1,2 e 1,8 g de proteína por kg de massa corporal/dia**. Consumir acima de 1,8 g/kg não traz vantagem adicional mensurável no uso proteico corporal total. Para atletas vegetarianos, a recomendação (ACSM/American Dietetic Association) é ligeiramente mais alta, 1,3-1,8 g/kg/dia, para compensar a menor digestibilidade e o perfil de aminoácidos incompleto de fontes vegetais isoladas.
+
+Contexto: a maior demanda vem de duas fontes — (1) o treino de endurance aumenta o catabolismo proteico via oxidação de aminoácidos de cadeia ramificada (BCAA, especialmente leucina) e via o ciclo alanina-glicose (nota-0224), especialmente quando os estoques de glicogênio estão baixos; (2) atletas com alto gasto calórico já costumam ingerir 2-3x a RDA apenas por comerem mais no total, mesmo sem planejamento deliberado — ou seja, a maioria dos atletas de endurance bem alimentados já atinge essa faixa organicamente.
+
+Isso não significa que "mais proteína = mais massa muscular": consumir 100 g extras de proteína/dia (400 kcal) não se traduz em 500 g/dia de ganho de massa muscular — o excesso é catabolizado para energia ou reciclado como gordura, com sobrecarga renal/hepática na eliminação de ureia.
+
+Aplicação ao feedback: fora do escopo de sinais do Strava (ingestão alimentar não é rastreada) — nota de referência útil para conteúdo educativo ou para contextualizar picos de fadiga/recuperação lenta em blocos de alto volume (trabalho-kJ elevado), onde a ingestão proteica insuficiente é um fator de risco conhecido para recuperação inadequada, mesmo que não verificável diretamente pelos dados de atividade.$m8955$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

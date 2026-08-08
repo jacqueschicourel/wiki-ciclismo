@@ -1,0 +1,40 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8291$nota-0147$m8291$, $m8292$Cuidado: 'Pmax' exibido em unidades Garmin/ANT+ é na verdade Ppeak (pico de um único ciclo de pedalada), diferente do Pmax do modelo PDC do livro$m8292$, $m8293$metricas-de-potencia$m8293$,
+  $m8294$direta$m8294$, $m8295$regra-interpretacao$m8295$,
+  ARRAY[$m8296$diario$m8296$]::text[], ARRAY[$m8297$potência-máx$m8297$]::text[],
+  0.7, $m8298$revisar$m8298$, $m8299$**Alerta crítico de nomenclatura para integração de dados:** o campo rotulado "Pmax" que aparece em unidades Garmin e em métricas ANT+ de pedalada **não é o mesmo Pmax** definido no modelo de Power Duration Curve deste livro (nota-0077, a potência máxima sustentável por pelo menos uma revolução completa de pedal com as duas pernas, derivada do ajuste da PDC). O valor exibido como "Pmax" pelo Garmin é, na definição correta dos autores, o **Ppeak** — o pico de potência aplicado durante um único ciclo de pedalada (pode ser dominado por uma única perna/instante, não uma revolução completa).
+
+Aplicação ao feedback: **este é um risco real de erro de interpretação de dados** se o produto ingerir campos rotulados "Pmax" diretamente de arquivos/APIs do Strava ou Garmin sem verificar a definição real por trás do campo. Antes de usar qualquer valor rotulado "Pmax" vindo de dados brutos de dispositivo, confirmar se ele corresponde ao Pmax modelado da PDC (nota-0077, tipicamente calculado por software de análise como TrainingPeaks WKO) ou ao Ppeak instantâneo do dispositivo (Garmin/ANT+) — são grandezas diferentes e não devem ser comparadas diretamente ou usadas de forma intercambiável nas notas/regras que referenciam "Pmax".
+
+**Motivo da revisão:** aplicar esta distinção corretamente depende de como o Strava/API expõe esse campo especificamente, o que não foi verificado nesta etapa de extração — fica como item de atenção técnica para a fase de implementação.$m8299$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8300$nota-0150$m8300$, $m8301$Torque = Força × Braço de alavanca; Potência = Torque × Velocidade Angular — por que a mesma potência pode vir de combinações diferentes de força/cadência$m8301$, $m8302$metricas-de-potencia$m8302$,
+  $m8303$contexto$m8303$, $m8304$conceito$m8304$,
+  ARRAY[$m8305$diario$m8305$]::text[], '{}'::text[],
+  0.65, $m8306$ativo$m8306$, $m8307$Definição biomecânica: torque é o momento de força aplicado ao pedivela (Força × Braço de alavanca); potência é o produto entre torque e velocidade angular (cadência). Consequência prática: a mesma potência em watts pode ser produzida por combinações muito diferentes de torque/cadência — subidas íngremes tendem a exigir torque elevado com cadência baixa, enquanto terrenos planos/contrarrelógio tendem a usar torque moderado com cadência elevada.
+
+Aplicação ao feedback: nota de base conceitual — explica por que a potência isolada não descreve completamente o estímulo mecânico de uma sessão; duas sessões com a mesma potência média podem ter demandas musculares (torque) muito diferentes dependendo da cadência. Relevante como pano de fundo para qualquer regra que cruze potência com cadência (ver nota-0151), mas não gera, por si só, um gatilho de interpretação de dado do Strava.$m8307$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8308$nota-0151$m8308$, $m8309$Faixas de cadência típicas por contexto: 80-95 rpm em intensidade moderada, >110 rpm em sprint, <75 rpm em subida íngreme$m8309$, $m8310$metricas-de-potencia$m8310$,
+  $m8311$direta$m8311$, $m8312$regra-interpretacao$m8312$,
+  ARRAY[$m8313$diario$m8313$]::text[], ARRAY[$m8314$cadência$m8314$, $m8315$potência-série-temporal$m8315$]::text[],
+  0.55, $m8316$ativo$m8316$, $m8317$Faixas de cadência observadas empiricamente por contexto de esforço (não são prescrições rígidas, mas tendências naturais de seleção de cadência): intensidade moderada → 80-95 rpm; esforço máximo/sprint → >110 rpm; subida íngreme → <75 rpm. O texto enfatiza que não existe uma "cadência ideal" universal — o equilíbrio é dinâmico entre custo cardiovascular (cadências altas) e custo muscular/tensão mecânica (cadências baixas), dependendo de potência requerida, duração do esforço, características individuais e fadiga acumulada.
+
+Aplicação ao feedback: pode ser usada como referência frouxa ao interpretar a cadência média de um trecho/sessão em relação ao tipo de terreno/intensidade (ex.: cadência muito baixa sustentada em terreno plano pode indicar escolha de marcha subótima ou fadiga muscular; cadência muito alta em subida pode indicar tentativa de poupar as pernas às custas do sistema cardiovascular). Confiança moderada-baixa porque são faixas descritivas amplas, não um limiar validado — usar como heurística de contexto, não como regra de alerta automática.$m8317$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8318$nota-0152$m8318$, $m8319$Mito da 'pedalada redonda': ciclistas treinados concentram força na fase descendente; tentar forçar aplicação de força durante toda a rotação aumenta custo energético sem ganho de potência$m8319$, $m8320$metricas-de-potencia$m8320$,
+  $m8321$contexto$m8321$, $m8322$conceito$m8322$,
+  ARRAY[$m8323$diario$m8323$]::text[], '{}'::text[],
+  0.6, $m8324$ativo$m8324$, $m8325$Desmistifica a ideia tradicional de que o ciclista deveria aplicar força uniforme durante os 360° da pedalada ("empurrar, puxar, levantar, empurrar"). Apenas a força tangencial (perpendicular ao pedivela) produz torque útil; a força radial (direcionada ao eixo) não contribui para o movimento. Evidência eletromiográfica mostra que ciclistas experientes concentram a produção de força na fase descendente (aproximadamente 12h-6h do ciclo) e reduzem ativamente a ativação na fase de recuperação — apenas o suficiente para diminuir a inércia da própria perna. Tentar forçar deliberadamente mais aplicação de força durante a fase de recuperação (a técnica de "puxar o pedal") tende a aumentar a coativação muscular e o custo energético sem ganho proporcional de potência.
+
+Aplicação ao feedback: relevante como nota de cautela caso o produto algum dia interprete dados de "pedal smoothness" ou torque efetivo (via medidores compatíveis) — não deveria recomendar automaticamente que o atleta busque um perfil de força mais uniforme/"redondo", pois isso não é respaldado como benéfico pela evidência citada.$m8325$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

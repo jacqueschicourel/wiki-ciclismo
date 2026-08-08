@@ -1,0 +1,32 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9118$nota-0236$m9118$, $m9119$Deficiência de ferro sem anemia (ferritina baixa, Hb normal) já prejudica desempenho de endurance; a maior parte da 'anemia esportiva' é diluicional (expansão de 20% do volume plasmático), não deficiência real$m9119$, $m9120$nutricao-e-energia$m9120$,
+  $m9121$contexto$m9121$, $m9122$referencia$m9122$,
+  ARRAY[$m9123$mensal$m9123$]::text[], '{}'::text[],
+  0.65, $m9124$revisar$m9124$, $m9125$Dois pontos importantes sobre status de ferro em atletas de endurance, frequentemente confundidos:
+
+**1. "Anemia esportiva" costuma ser diluicional, não uma deficiência real.** Dias de treino aumentam o volume plasmático em cerca de **20%**, enquanto o volume total de hemácias permanece praticamente inalterado. Como resultado, a hemoglobina total (o que importa fisiologicamente para capacidade de transporte de O2) permanece igual ou aumenta levemente, mas a *concentração* de hemoglobina cai (mais plasma diluindo a mesma quantidade de hemácias) — parecendo "anemia" num hemograma simples, sem representar uma real perda de capacidade de transporte de oxigênio. Apesar dessa diluição aparente, capacidade aeróbia e desempenho melhoram com o treino. Critérios rigorosos de diagnóstico tornam a anemia esportiva "real" bem menos prevalente do que se costuma acreditar.
+
+**2. Deficiência de ferro SEM anemia (ferritina baixa, hemoglobina normal) já prejudica o desempenho.** Ferritina sérica abaixo de **20 µg/L em mulheres** e **30 µg/L em homens** indica reservas de ferro depletadas. Mesmo sem hemoglobina baixa, essa "anemia funcional" reduz proteínas oxidativas dependentes de ferro na célula muscular. Em um estudo controlado, mulheres fisicamente ativas com ferritina baixa (mas não anêmicas) que receberam suplementação de ferro (20mg de sulfato ferroso, 2x/dia por 6 semanas) melhoraram o tempo de um contrarrelógio de ciclismo de 15km **duas vezes mais** que o grupo placebo (3,4 min mais rápido vs. 1,6 min no placebo) — sem mudança significativa na hemoglobina, sugerindo que o ganho veio da capacidade oxidativa muscular, não do transporte sanguíneo de O2.
+
+Grupos de maior risco para deficiência de ferro: mulheres em idade fértil (perda menstrual de 15-30mg de ferro por ciclo), vegetarianas (absorção de ferro não-heme é 2-5% vs. 10-35% do ferro heme), e atletas com baixa ingestão calórica geral.
+
+Confiança rebaixada (0,65) e status `revisar`: o achado central sobre suplementação e desempenho em ciclismo (item 2) vem de um único estudo controlado com amostra pequena, e a unidade de ferritina no texto-fonte ("mg·L⁻¹") provavelmente é um erro de digitação/OCR para µg/L (unidade clínica padrão para ferritina) — mantida a citação literal, mas sinalizada aqui para conferência.
+
+Aplicação ao feedback: fora do escopo de sinais do Strava (ferritina e hemoglobina exigem exame de sangue) — nota de referência útil para conteúdo educativo, especialmente relevante para atletas mulheres endurance ou vegetarianas com queda de desempenho inexplicada, para sugerir avaliação de ferritina antes de assumir causas puramente relacionadas a treino/recuperação.$m9125$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9126$nota-0237$m9126$, $m9127$Ingestão recomendada de cálcio (1000-1300 mg/dia) e fatores de risco de osteoporose — relevante para ciclistas por ser esporte de baixo impacto (não osteogênico)$m9127$, $m9128$nutricao-e-energia$m9128$,
+  $m9129$contexto$m9129$, $m9130$referencia$m9130$,
+  ARRAY[$m9131$mensal$m9131$]::text[], '{}'::text[],
+  0.7, $m9132$ativo$m9132$, $m9133$Referência de ingestão diária de cálcio recomendada (National Academy of Sciences): adultos 19-50 anos, **1000 mg/dia**; mulheres 51-70 anos e adultos 71+, **1200 mg/dia**; adolescentes 14-18 anos, **1300 mg/dia**. Fontes: 240mL de leite ou 170g de iogurte ≈ 300mg; 1 xícara de espinafre ≈ 270mg.
+
+**Susceptibilidade à osteoporose**: 60-80% ligada a fatores genéticos, 20-40% relacionada a estilo de vida (dieta, atividade física, tabagismo). Estatística de referência: **1 em cada 2 mulheres e 1 em cada 8 homens acima de 50 anos** terá uma fratura relacionada à osteoporose ao longo da vida. Vitamina D adequada (600 UI/dia para a maioria dos adultos, 800 UI/dia após os 70 anos) é necessária para a absorção de cálcio.
+
+**Relevância específica para ciclistas**: o ciclismo é um esporte de baixo impacto (sem carga axial repetitiva de sustentação de peso, ao contrário de corrida), o que significa que NÃO fornece o estímulo mecânico osteogênico que outros esportes de endurance oferecem. Isso torna ciclistas — especialmente os que praticam o esporte como atividade principal/exclusiva por muitos anos — um grupo de maior atenção para densidade óssea, principalmente se combinado a outros fatores de risco já conhecidos (baixa ingestão de cálcio, baixa disponibilidade energética/RED-S, treino intenso predominantemente em jejum de peso). Isso é coerente com por que "esportes de baixo impacto" tendem a aparecer em listas de risco de osteoporose apesar do alto condicionamento cardiovascular do atleta.
+
+Aplicação ao feedback: fora do escopo de sinais do Strava (densidade óssea e ingestão de cálcio não são rastreadas) — nota de referência/contexto útil para conteúdo educativo voltado a ciclistas de longa data, especialmente mulheres na pós-menopausa ou atletas com sinais de baixa disponibilidade energética, para reforçar a importância de cálcio/vitamina D e, quando possível, algum trabalho de força/impacto complementar ao ciclismo.$m9133$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

@@ -1,0 +1,38 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8453$nota-0158$m8453$, $m8454$FC deve ser interpretada como resposta fisiológica em contexto, não como número isolado — temperatura, hidratação, altitude, fadiga, estresse e cafeína a deslocam independentemente da intensidade real do esforço$m8454$, $m8455$metricas-de-potencia$m8455$,
+  $m8456$direta$m8456$, $m8457$regra-interpretacao$m8457$,
+  ARRAY[$m8458$diario$m8458$]::text[], ARRAY[$m8459$FC (média/máx)$m8459$]::text[],
+  0.6, $m8460$ativo$m8460$, $m8461$A relação entre FC e intensidade real do esforço (potência) não é fixa: fatores como temperatura ambiente elevada, desidratação, altitude, fadiga acumulada, estresse psicológico e cafeína podem elevar a FC para uma dada potência sem que isso reflita mudança na carga mecânica real. O Manual recomenda que a FC seja sempre interpretada "dentro de um contexto fisiológico mais amplo", e não como valor absoluto isolado.
+
+Aplicação ao feedback: ao gerar feedback baseado em FC (ex.: "FC estava mais alta que o normal para essa potência"), o produto deveria evitar concluir automaticamente que houve piora de condicionamento — o ideal é considerar fatores de contexto disponíveis (temperatura da sessão, se o Strava fornecer; duração/densidade da carga recente; hora do dia) antes de sinalizar decoupling ou fadiga cardiovascular apenas por elevação isolada de FC. Reforça a cautela já presente na nota-0001 sobre decoupling Pw:Hr — desvios de FC podem ter causas ambientais/comportamentais, não só fisiológicas.$m8461$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8462$nota-0176$m8462$, $m8463$FTP não é um limiar fisiológico: é estimativa funcional de desempenho (maior potência sustentável ~1h), geralmente próxima do MLSS mas não o mede diretamente (não mede lactato, ventilação ou metabolismo)$m8463$, $m8464$metricas-de-potencia$m8464$,
+  $m8465$direta$m8465$, $m8466$regra-interpretacao$m8466$,
+  ARRAY[$m8467$mensal$m8467$]::text[], ARRAY[$m8468$FTP$m8468$]::text[],
+  0.65, $m8469$ativo$m8469$, $m8470$Distinção conceitual importante: FTP é uma estimativa funcional/prática da maior potência sustentável por ~1 hora — na maioria dos atletas treinados, fica próxima do MLSS, mas não é a mesma coisa. FTP não mede lactato, ventilação ou metabolismo diretamente; mede desempenho (watts produzidos). É uma excelente ferramenta prática, mas não substitui a compreensão fisiológica subjacente (LT1/LT2/MLSS).
+
+Aplicação ao feedback: o produto deve evitar apresentar a FTP ao usuário como se fosse uma medida fisiológica precisa e objetiva (ex.: "seu limiar de lactato é X watts") — é uma estimativa de desempenho prático, sujeita a variação por protocolo de teste, motivação, terreno e condições do dia (consistente com a cautela já presente nas notas de protocolo de teste de FTP do Livro 1). Ao comunicar mudanças de FTP ao longo do tempo, tratar como mudança de capacidade de desempenho sustentável, não como medição direta de um processo metabólico.$m8470$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8471$nota-0177$m8471$, $m8472$Potência Crítica: maior potência teoricamente sustentável sem perda de homeostase — conceito matemático (relação potência-tempo), frequentemente próximo mas não idêntico ao MLSS$m8472$, $m8473$metricas-de-potencia$m8473$,
+  $m8474$contexto$m8474$, $m8475$conceito$m8475$,
+  ARRAY[$m8476$mensal$m8476$]::text[], '{}'::text[],
+  0.55, $m8477$ativo$m8477$, $m8478$A Potência Crítica (CP) é definida no Manual como a maior potência teoricamente sustentável sem perda contínua de homeostase — um conceito matemático derivado da relação potência-tempo (já detalhado operacionalmente na nota-0026 do Livro 1), com forte relação com o domínio "severo" de intensidade (ver nota-0178). Está frequentemente próxima do MLSS, mas não é idêntica: um é um modelo matemático ajustado a dados de potência-duração, o outro é uma medida fisiológica direta (lactato estável).
+
+Aplicação ao feedback: reforça, sem alterar, o uso já estabelecido da Potência Crítica no cânone (nota-0026) — a diferença conceitual entre CP/MLSS/FTP não muda a aplicação prática (todas aproximam a mesma "zona" de intensidade máxima sustentável), mas justifica por que pequenas discrepâncias entre esses três valores para o mesmo atleta são esperadas e não indicam erro de medição.$m8478$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m8479$nota-0185$m8479$, $m8480$Potência informa a carga externa (trabalho produzido); FC informa parte da carga interna (esforço fisiológico); RPE informa a resposta global — devem ser interpretadas de forma complementar, não substituindo uma à outra$m8480$, $m8481$metricas-de-potencia$m8481$,
+  $m8482$direta$m8482$, $m8483$regra-interpretacao$m8483$,
+  ARRAY[$m8484$diario$m8484$]::text[], ARRAY[$m8485$potência-média$m8485$, $m8486$FC (média/máx)$m8486$, $m8487$esforço-relativo (Relative Effort)$m8487$]::text[],
+  0.6, $m8488$ativo$m8488$, $m8489$Distinção conceitual central para interpretação de dados de treino: potência mede a carga externa (trabalho mecânico objetivamente produzido, independente do estado fisiológico do atleta); FC mede parte da carga interna (resposta fisiológica ao esforço, influenciada por múltiplos fatores de contexto — ver nota-0158); percepção subjetiva de esforço (RPE) mede a resposta global e integrada do organismo (fadiga, dor, temperatura, estado psicológico, disponibilidade energética, motivação). Nenhuma substitui a outra — cada uma responde a uma pergunta diferente sobre a sessão.
+
+Aplicação ao feedback: ao interpretar uma sessão, o produto deveria idealmente cruzar as três fontes de sinal disponíveis (potência = quanto trabalho foi feito; FC = quanto custou fisiologicamente, sujeito a confundidores; esforço-relativo do Strava = proxy de RPE integrado) em vez de usar apenas potência isoladamente — especialmente relevante para diferenciar uma sessão "fácil na potência mas fisiologicamente cara" (ex.: calor, desidratação, fadiga) de uma sessão genuinamente leve. Reforça a lógica já usada no Livro 1 para decoupling Pw:Hr (nota-0001) e VI (variabilidade de potência vs. FC).$m8489$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

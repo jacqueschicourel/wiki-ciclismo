@@ -1,0 +1,44 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11072$nota-0131$m11072$, $m11073$Protocolo 30-30-30 para ciclocross (30s a 150% FTP / 30s roda livre / 30s corrida) e volume semanal de FTP recomendado$m11073$, $m11074$tipos-de-treino$m11074$,
+  $m11075$direta$m11075$, $m11076$protocolo$m11076$,
+  ARRAY[$m11077$semanal$m11077$]::text[], ARRAY[$m11078$potência-por-lap$m11078$, $m11079$FTP$m11079$]::text[],
+  0.75, $m11080$ativo$m11080$, $m11081$**Treino 30-30-30 (específico para ciclocross):** ciclo contínuo de 30 segundos a 150% da FTP, seguido de 30 segundos em roda livre (0% da FTP), seguido de 30 segundos correndo (simulando desmontar/carregar a bike), repetido continuamente por **10 minutos**. Descansar 5 minutos entre séries, completando **3 a 5 séries de 10 minutos**, depois desaquecer. Ao estender o esforço de 15s (Nível 7, Neuromuscular) para 30s, o estímulo predominante passa a ser o sistema de Capacidade Anaeróbia (Nível 6), com menor exigência neuromuscular pura.
+
+**Trabalho de FTP semanal recomendado para ciclocross:** uma sessão semanal com um dos seguintes formatos — 4 esforços de 10 minutos na FTP, 3 esforços de 15 minutos, ou 2 esforços de 20 minutos.
+
+Aplicação ao feedback: se o sistema identificar um padrão de atividade compatível com este protocolo (ciclos regulares de ~30s de alta intensidade / ~30s de recuperação / repetições ao longo de blocos de ~10min), pode reconhecê-lo como um treino 30-30-30 de ciclocross e usar isso para contextualizar a análise de TSS/IF da sessão (a intensidade média será moderada apesar do estímulo intenso, por causa dos 30s de roda livre a 0%).$m11081$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11082$nota-0137$m11082$, $m11083$Efeito Allen em MTB de ultraresistência: acelerar antes de um trecho rápido cria um gap de distância que os concorrentes não conseguem fechar; a regra de TT 'não comece forte demais' NÃO se aplica$m11083$, $m11084$tipos-de-treino$m11084$,
+  $m11085$direta$m11085$, $m11086$regra-interpretacao$m11086$,
+  ARRAY[$m11087$diario$m11087$]::text[], ARRAY[$m11088$velocidade$m11088$, $m11089$distância$m11089$, $m11090$potência-média$m11090$]::text[],
+  0.7, $m11091$ativo$m11091$, $m11092$Em MTB (especialmente ultraresistência, sem possibilidade real de draft após os primeiros ~15 minutos), a lógica de pacing de contrarrelógio de estrada (nota-0118, "não comece forte demais") **não se aplica**. Os autores descrevem o **"Efeito Allen"**: quando um competidor acelera *antes* de um trecho rápido do percurso (ex.: ataca numa subida para chegar ao topo primeiro), ele começa a percorrer o trecho rápido seguinte mais cedo, enquanto os concorrentes ainda estão no trecho lento — criando um **gap de distância** entre eles.
+
+Ponto-chave: mesmo que o gap de *tempo* permaneça constante, o gap de *distância* pode crescer (já que na parte rápida do percurso a mesma diferença de tempo representa uma distância maior) — e na maioria das modalidades de ciclismo **é a distância entre os corredores que determina o vencedor**, não o tempo. Isso torna o gap praticamente impossível de fechar para quem ficou para trás, mesmo que o líder desacelere bastante no final da prova.
+
+Aplicação ao feedback: para atividades classificadas como MTB de ultraresistência (ou provas offroad longas e sem pelotão/draft), não aplicar as heurísticas de pacing conservador desenvolvidas para contrarrelógio de estrada. Regras de pacing recomendadas por este produto devem ser específicas por modalidade — reconhecer que o tipo de atividade (MTB ultraresistência vs. CRI de estrada) inverte a lógica de "não comece forte demais".$m11092$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11093$nota-0140$m11093$, $m11094$Estrutura do catálogo de treinos do Apêndice: níveis, códigos e convenção de RI (intervalo de descanso)$m11094$, $m11095$tipos-de-treino$m11095$,
+  $m11096$contexto$m11096$, $m11097$referencia$m11097$,
+  ARRAY[$m11098$semanal$m11098$]::text[], '{}'::text[],
+  0.6, $m11099$ativo$m11099$, $m11100$O Apêndice do livro (páginas 404-467) contém um catálogo extenso de treinos prontos (~85+ treinos), organizados por nível de intensidade e identificados por código: `AR-Wn` (Nível 1, Recuperação Ativa), `END-Wn` (Nível 2, Endurance), `TEMP-Wn` (Nível 3, Tempo), `SubLT-Wn` (Níveis 3-4, Sweet Spot 88-93% FTP), Nível 4 (Limiar de Lactato, códigos próprios), `VO2-Wn` (Nível 5), `AC-Wn` (Nível 6, Capacidade Anaeróbia), `NP-Wn` (Nível 7, Potência Neuromuscular), além de categorias especiais `WATTS-Wn` ("Kitchen Sink", multissistema) e `P-Wn` (Pirâmides), mais catálogos de treinos de natação (`SWIM-Wn`) e corrida (`RUN-Wn`, usando zonas de ritmo 1-4) para os planos de triathlon do Cap.10. Convenção: "RI" = intervalo de descanso entre esforços.
+
+**Decisão de escopo (registrada em `cobertura.md`):** dado que cada treino individual é essencialmente uma combinação/variação dos parâmetros já capturados nas notas de Zonas de Coggan (nota-0048), Sweet Spot, iLevels e nos protocolos específicos já extraídos (ex.: 30-30-30, calibração de potência), **não foram criadas notas atômicas para cada um dos ~85 treinos individuais** — isso replicaria a mesma fórmula básica (X minutos a Y% da FTP, cadência Z) dezenas de vezes sem agregar conceito novo, indo contra a prioridade de manter a base focada em métodos/fórmulas realmente distintos. Duas estruturas de treino genuinamente distintas do catálogo foram capturadas separadamente: "Kitchen Sink" (nota-0141) e "Pirâmide" (nota-0142).
+
+Aplicação ao feedback: esta nota serve como índice/mapa do catálogo original para referência futura, caso seja necessário consultar um treino específico por código (ex.: quando outras notas do livro referenciam "TEMP-W8" ou "VO2-W1").$m11100$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11101$nota-0141$m11101$, $m11102$Formato de treino 'Kitchen Sink': combina múltiplos sistemas energéticos numa única sessão longa, com ênfase variável$m11102$, $m11103$tipos-de-treino$m11103$,
+  $m11104$direta$m11104$, $m11105$conceito$m11105$,
+  ARRAY[$m11106$diario$m11106$]::text[], ARRAY[$m11107$tempo-em-zona$m11107$, $m11108$TSS$m11108$]::text[],
+  0.65, $m11109$ativo$m11109$, $m11110$"Kitchen Sink" é o nome dado pelos autores a um formato de treino longo (3-5+ horas) que combina deliberadamente blocos de **múltiplos sistemas energéticos/níveis de intensidade** na mesma sessão (ex.: sprints, esforços de Capacidade Anaeróbia, blocos de FTP, Sweet Spot, tudo dentro do mesmo ride de Endurance longo) — literalmente "tudo menos a pia da cozinha". Apesar de combinar vários sistemas, cada treino Kitchen Sink específico costuma ter ênfase maior num sistema. Servem como bom teste de resistência à fadiga geral (o termo já havia sido referenciado sem definição formal nas notas do Cap.10, ex. treino de Joe TriGuy).
+
+Aplicação ao feedback: ao analisar uma atividade muito longa com blocos de intensidade muito variados (tempo significativo em várias zonas diferentes, não concentrado numa única), o sistema pode reconhecer esse padrão como um treino tipo "Kitchen Sink" — útil para não classificar erroneamente a sessão como "mal estruturada"/"sem foco", já que essa variedade é intencional nesse formato específico de treino.$m11110$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

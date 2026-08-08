@@ -1,0 +1,44 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m4179$nota-0047$m4179$, $m4180$Os níveis de treino são um contínuo fisiológico, sem fronteira rígida entre eles$m4180$, $m4181$metodologia-e-periodizacao$m4181$,
+  $m4182$contexto$m4182$, $m4183$conceito$m4183$,
+  ARRAY[$m4184$diario$m4184$, $m4185$semanal$m4185$]::text[], '{}'::text[],
+  0.75, $m4186$ativo$m4186$, $m4187$Apesar dos 7 níveis de treino terem fronteiras percentuais bem definidas na Tabela 3.1 (nota-0022), os autores alertam que essa é uma simplificação prática — fisiologicamente, os sistemas de energia se misturam em um contínuo, sem um ponto exato onde um sistema "liga" e outro "desliga". Treinar no Nível 3, por exemplo, recruta predominantemente o sistema associado a esse nível, mas não deixa os demais sistemas completamente intocados.
+
+Aplicação ao feedback: evitar linguagem excessivamente categórica ao classificar uma sessão em um único nível ("isso foi 100% um treino de VO2máx e não treinou mais nada") — é mais preciso falar em estímulo predominante daquele nível, reconhecendo sobreposição com sistemas vizinhos.$m4187$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m4188$nota-0088$m4188$, $m4189$Faixa \"ótima\" de CTL: 100-150 TSS/dia; limite superior observado em elite ~150-180$m4189$, $m4190$metodologia-e-periodizacao$m4190$,
+  $m4191$direta$m4191$, $m4192$referencia$m4192$,
+  ARRAY[$m4193$mensal$m4193$]::text[], ARRAY[$m4194$TSS$m4194$]::text[],
+  0.75, $m4195$ativo$m4195$, $m4196$Com base em observação de uma ampla variedade de atletas (ciclistas de pista amadores de elite, mountain bikers masters, profissionais de estrada), os autores relatam que a carga de treino "ótima" tende a ficar numa faixa de **CTL entre 100 e 150 TSS/dia**. Atletas com CTL abaixo de 100 costumam sentir que estão subtreinando (embora isso não garanta que treinar mais melhoraria a performance); poucos atletas conseguem sustentar uma média de longo prazo acima de 150 TSS/dia.
+
+Referência de topo de escala (elite mundial): ciclistas do Tour de France sustentam CTL de 150–160 durante boa parte do ano, chegando a 170–180 logo após o Tour; etapas mais difíceis do Tour geram TSS de 200–300 num único dia. Os autores especulam um "limite genético hipotético" de CTL em torno de 180–200.
+
+Aplicação ao feedback: usar essa faixa (100-150) como referência de calibração ao avaliar se a carga crônica de um atleta está numa zona típica de treino sério, está baixa (subtreino) ou está excepcionalmente alta (nível próximo de elite mundial profissional).$m4196$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m4197$nota-0089$m4197$, $m4198$Platô de CTL por 4-6 semanas (sem mudança de foco/performance) indica estagnação de treino$m4198$, $m4199$metodologia-e-periodizacao$m4199$,
+  $m4200$direta$m4200$, $m4201$regra-interpretacao$m4201$,
+  ARRAY[$m4202$mensal$m4202$]::text[], ARRAY[$m4203$TSS$m4203$]::text[],
+  0.8, $m4204$ativo$m4204$, $m4205$Um platô de CTL sustentado por 4 a 6 semanas — enquanto o foco do treino permanece o mesmo e a performance também não muda — costuma indicar estagnação do treino, não progresso. O atleta pode se sentir "consistente" repetindo os mesmos treinos, mas na prática está apenas mantendo a fitness atual, não desenvolvendo-a, porque o princípio de sobrecarga progressiva não está sendo aplicado.
+
+Aplicação ao feedback: ao detectar CTL estável por várias semanas sem evolução correspondente de performance (ex.: FTP, Power Profile), sinalizar possível estagnação e sugerir progressão de carga (aumento de volume/intensidade) em vez de simplesmente repetir o padrão de treino atual.$m4205$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m4206$nota-0093$m4206$, $m4207$Modelo de impulso-resposta de Banister: origem teórica do CTL/ATL/TSB e por que os autores o simplificaram$m4207$, $m4208$metodologia-e-periodizacao$m4208$,
+  $m4209$contexto$m4209$, $m4210$conceito$m4210$,
+  ARRAY[$m4211$mensal$m4211$]::text[], '{}'::text[],
+  0.75, $m4212$ativo$m4212$, $m4213$O CTL/ATL/TSB do Performance Manager Chart tem origem no modelo de impulso-resposta proposto por Eric Banister em 1975, amplamente usado em pesquisa esportiva (levantamento de peso, atletismo, natação, ciclismo, triatlo). O modelo trata o treino como uma função de transferência: doses diárias de treino (input) geram dois efeitos opostos — adaptação positiva (efeito crônico, de decaimento lento) e fadiga negativa (efeito agudo, de decaimento rápido) — cuja soma prevê a performance (output) a qualquer momento. O modelo original usa 4 parâmetros ajustáveis (ka, kf = fatores de ganho; τa, τf = constantes de tempo) e consegue explicar >70% (frequentemente >90%) da variação dia a dia de desempenho em vários esportes.
+
+**Verificação externa (2026-08-02, achado de auditoria adversarial):** nenhum dos 3 trechos-fonte no frontmatter (todos de "Training and Racing with a Power Meter") contém o número ">70%/>90%" — o livro-fonte discute o modelo qualitativamente nesses trechos específicos, sem citar essa estatística ali. Busca externa (Hellard, Avalos, Lacoste, Barale, Chatard, Millet — "Assessing the limitations of the Banister model in monitoring training", estudo com nadadores de elite, PMC1974899) encontrou R² = 0,79 ± 0,13 (significativo em todos os sujeitos, *p*<0,05), com R² individuais na faixa de ~0,65 a ~0,9+ na amostra — dentro da faixa geral que a nota descreve, embora o valor médio fique mais perto de ">70%" do que de ">90% frequentemente". Uma segunda busca indicou que outras revisões da literatura relatam uma faixa mais ampla (45-85%) de variância explicada em diferentes estudos originais, atribuída à quantificação imprecisa do treino e à variação dos parâmetros do modelo ao longo do tempo. Conclusão: a afirmação da nota é plausível e consistente com a faixa geral reportada na literatura, mas ">90% frequentemente" está no extremo otimista — não é uma invenção, porém também não é o centro da distribuição observada nos estudos localizados. Confiança da nota mantida em 0,75 (já refletia alguma incerteza); tratar o número como ordem de grandeza da literatura, não como estatística garantida do modelo.
+
+Limitações que motivaram a criação do CTL/ATL/TSB simplificado: (1) o modelo é uma "caixa-preta" matemática, sem ligação clara a mecanismos fisiológicos específicos; (2) assume que não há teto para a performance (na prática, platôs acontecem); (3) exigiria entre 20 e 200 medições diretas de performance máxima para ajustar os 4 parâmetros com confiança estatística — Banister sugeriu reajustar o modelo a cada 60-90 dias, o que implicaria medir a performance máxima do atleta a cada 4 dias ou mais — inviável na prática fora de laboratório; (4) os fatores de ganho (ka, kf) variam muito entre estudos/indivíduos e são difíceis de estimar de forma confiável.
+
+Os autores resolveram esses problemas eliminando os fatores de ganho (ka, kf) do modelo e substituindo os termos integrais complexos por médias móveis exponenciais simples — dando origem ao CTL (nota-0083), ATL (nota-0084) e TSB (nota-0085). O preço dessa simplificação é que CTL/ATL/TSB são indicadores *relativos*, não preditores absolutos e precisos de performance como o modelo original pretendia ser.$m4213$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

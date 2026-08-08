@@ -1,0 +1,40 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m3621$nota-0290$m3621$, $m3622$Broncoespasmo induzido por exercício é mais prevalente em atletas de endurance que na população geral; mecanismo ligado ao ressecamento das vias aéreas por ar frio/seco em alta ventilação$m3622$, $m3623$fisiologia$m3623$,
+  $m3624$contexto$m3624$, $m3625$conceito$m3625$,
+  ARRAY[$m3626$diario$m3626$]::text[], '{}'::text[],
+  0.7, $m3627$ativo$m3627$, $m3628$O **broncoespasmo induzido por exercício (EIB)** é significativamente mais comum em atletas de endurance treinados do que na população sedentária — contraintuitivo, já que se poderia esperar que alta aptidão cardiorrespiratória protegesse contra isso. Dados de atletas de elite finlandeses de atletismo: **17% dos corredores de longa distância** têm asma diagnosticada por médico, contra **8% dos atletas de potência** e apenas **3% dos controles não-atletas**. Entre atletas olímpicos em geral (últimas 5 Olimpíadas), a prevalência de asma/hiper-responsividade das vias aéreas gira em torno de **8%**, tornando-a a condição crônica mais comum entre atletas olímpicos — possivelmente relacionada à própria natureza do treino intenso e prolongado.
+
+**Verificação de fonte (2026-08-02, achado de auditoria adversarial):** o número "8%, últimas 5 Olimpíadas" não aparece em nenhum dos 3 trechos-fonte citados no frontmatter (que cobrem só os dados finlandeses e as estatísticas gerais de asmáticos/rinite). Busca externa confirma o número de forma independente: levantamentos do COI ao longo de 5 Jogos Olímpicos (verões e invernos, 2002-2010) reportam prevalência de asma/hiper-responsividade das vias aéreas em torno de 8% entre olímpicos, descrita como a condição crônica mais comum nesse grupo — consistente com o que a nota já afirmava. Mantido o número, mas registrado aqui que a citação de apoio direta ainda falta no frontmatter (o dado provavelmente veio de outro trecho do capítulo de McArdle não capturado nas 3 citações, ou de conhecimento geral do fisiologista que escreveu o capítulo) — não é um número inventado, é uma citação incompleta.
+
+**Mecanismo:** durante exercício de alta ventilação, o ar inspirado é aquecido e umidificado à custa do revestimento da mucosa respiratória, que se resfria e resseca. Esse ressecamento aumenta a osmolalidade da mucosa, desencadeando degranulação de mastócitos e liberação de mediadores pró-inflamatórios (leucotrienos, histamina, prostaglandinas) que provocam broncoconstrição — geralmente com início 5-15 minutos pós-exercício e resolução espontânea em 30-90 minutos. O efeito é mais pronunciado em **ar frio e seco** (esportes de inverno como esqui cross-country, patinação de velocidade e biatlo mostram prevalência ainda maior), porque o gradiente de secagem das vias aéreas é maior.
+
+Importante: **treinamento físico não "cura" a asma**, mas aumenta a reserva de fluxo aéreo e reduz o trabalho respiratório durante a atividade — ou seja, o atleta asmático bem manejado pode treinar e competir em alto nível.
+
+Aplicação ao feedback: episódios recorrentes de desconforto respiratório/tosse durante ou logo após treinos intensos — especialmente em clima frio e seco, ou em sessões de alta ventilação (limiar, intervalados longos) — podem indicar broncoespasmo induzido por exercício, mais comum em ciclistas de endurance do que se costuma supor; vale sugerir avaliação médica em vez de assumir apenas "falta de condicionamento".$m3628$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m3629$nota-0145$m3629$, $m3630$Desambiguação: Limiar Anaeróbio (ventilatório) ≠ Limiar de Lactato ≠ OBLA ≠ MLSS — termos usados de forma intercambiável mas fisiologicamente distintos$m3630$, $m3631$limiares-e-lactato$m3631$,
+  $m3632$contexto$m3632$, $m3633$conceito$m3633$,
+  ARRAY[$m3634$mensal$m3634$]::text[], '{}'::text[],
+  0.7, $m3635$ativo$m3635$, $m3636$O Glossário do livro esclarece uma confusão terminológica comum entre 4 conceitos frequentemente usados como sinônimos, mas fisiologicamente distintos:
+
+- **Limiar Anaeróbio (AT):** mais corretamente chamado "limiar ventilatório" — intensidade em que a ventilação aumenta de forma não-linear em relação à taxa metabólica (consumo de O2). **Não tem relação mecanística direta** (causa-efeito) com o limiar de lactato, apesar de ser frequentemente usado para estimá-lo.
+- **Limiar de Lactato (LT):** intensidade em que a liberação de lactato no sangue começa a exceder sua taxa de remoção. Na prática, corresponde a uma intensidade relativamente **baixa** — próxima da transição entre os Níveis 2 e 3 (não perto da FTP).
+- **OBLA (Onset of Blood Lactate):** intensidade correspondente a uma concentração fixa de **4 mmol/L** de lactato no sangue. Pode estar significativamente acima ou abaixo do MLSS/FTP do indivíduo.
+- **MLSS (Maximal Lactate Steady State):** a maior intensidade em que o lactato sanguíneo permanece estável ao longo do tempo. **Comparável à FTP** — e é o que a maioria dos treinadores/atletas **erroneamente chama de "LT"** no uso coloquial.
+
+Aplicação ao feedback: ao usar terminologia de "limiar" em textos de feedback para o usuário, ter cuidado para não confundir "limiar de lactato" (intensidade relativamente baixa, Nível 2-3) com o conceito que a FTP realmente representa (mais próximo do MLSS). Se o produto usar dados externos que mencionem "AT" ou "LT" de outras fontes (ex.: testes de laboratório informados pelo usuário), não assumir automaticamente equivalência com a FTP sem essa distinção.$m3636$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m3637$nota-0166$m3637$, $m3638$Lactato ≠ ácido lático; é produzido continuamente (mesmo em repouso e sob abundância de O2) — aumento da concentração reflete maior taxa glicolítica, não falta de oxigênio$m3638$, $m3639$limiares-e-lactato$m3639$,
+  $m3640$contexto$m3640$, $m3641$conceito$m3641$,
+  ARRAY[$m3642$mensal$m3642$]::text[], '{}'::text[],
+  0.6, $m3643$ativo$m3643$, $m3644$Correção terminológica: em pH fisiológico circula lactato (o ânion), não "ácido lático" — termo usado historicamente de forma imprecisa. A produção de lactato ocorre continuamente na glicólise (conversão de piruvato em lactato pela enzima LDH, que regenera NAD⁺ e permite que a glicólise continue produzindo ATP rapidamente) — inclusive em repouso e sob abundância de oxigênio. O que determina a concentração sanguínea observada é o equilíbrio entre produção e remoção/utilização, não a presença ou ausência de oxigênio. Portanto, "lactato alto" não indica hipóxia — indica aumento da taxa glicolítica, típico de intensidades mais altas.
+
+Aplicação ao feedback: nota de correção conceitual de fundo, relevante caso o feedback do produto alguma vez mencione "lactato" ou "queima muscular" em linguagem para o usuário — deve evitar a narrativa ultrapassada de "falta de oxigênio causa acúmulo de lactato" e não usar "ácido lático" como sinônimo tecnicamente correto de lactato.$m3644$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

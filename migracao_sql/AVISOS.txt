@@ -1,0 +1,1 @@
+[skill] analisar-treino: dominio '' fora da taxonomia atual — nao migrada, revisar manualmente.

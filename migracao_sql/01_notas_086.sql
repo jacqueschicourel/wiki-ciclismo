@@ -1,0 +1,15 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11415$nota-0250$m11415$, $m11416$Aquecimento prévio melhora desempenho de ciclismo intenso em 2-3% e contrarrelógio curto em 3-4min, via cinética mais rápida de VO2 e menor acúmulo de lactato$m11416$, $m11417$tipos-de-treino$m11417$,
+  $m11418$contexto$m11418$, $m11419$conceito$m11419$,
+  ARRAY[$m11420$diario$m11420$]::text[], '{}'::text[],
+  0.6, $m11421$revisar$m11421$, $m11422$Estudos específicos de ciclismo citados por McArdle quantificam o efeito do aquecimento pré-esforço: aquecimento em intensidade moderada a alta melhorou o desempenho de ciclismo intenso em **2 a 3%**; um aquecimento prévio (independente da intensidade) melhorou um contrarrelógio curto de ciclismo de 3-4 minutos (~3km). O mecanismo provável é a aceleração da cinética de consumo de oxigênio (VO2) no início do esforço, por aumento do fluxo sanguíneo — ou seja, o atleta atinge o "steady state" metabólico mais rápido, reduzindo o déficit de oxigênio inicial e a dependência de vias anaeróbias no começo do esforço.
+
+Em esforços de sprint máximo, um aquecimento ativo de 5 minutos antes de um sprint máximo de 30s em cicloergômetro produziu **menor acúmulo de lactato sanguíneo e muscular** do que o mesmo esforço sem aquecimento prévio — mesmo controlando para a temperatura muscular (aquecimento passivo até a mesma temperatura não replicou o efeito), sugerindo que o benefício vem de menor dependência de vias anaeróbias no esforço subsequente, não apenas do aumento de temperatura per se.
+
+Cinco mecanismos fisiológicos propostos para o efeito ergogênico do aquecimento (aumento de fluxo sanguíneo e de temperatura muscular/central): (1) contração e relaxamento muscular mais rápidos; (2) maior economia de movimento por menor resistência viscosa intramuscular; (3) entrega e uso de oxigênio facilitados (hemoglobina libera O2 mais prontamente em temperaturas mais altas — efeito Bohr); (4) transmissão nervosa e metabolismo muscular facilitados; (5) maior fluxo sanguíneo por vasodilatação local.
+
+Aplicação ao feedback: nota de contexto — o Strava não detecta automaticamente se um aquecimento foi realizado nem sua qualidade/estrutura, então não gera regra de interpretação direta de sinal isolado. Relevante como base técnica para explicar, quando o atleta relata objetivos de prova/teste, por que um protocolo de aquecimento estruturado (moderado a alto, cerca de alguns minutos antes de esforços intensos como contrarrelógios curtos ou sprints) tende a produzir melhora mensurável de desempenho (2-4% em esforços curtos e intensos), e por que pular o aquecimento antes de testes de FTP/VO2máx pode subestimar a capacidade real do atleta.$m11422$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

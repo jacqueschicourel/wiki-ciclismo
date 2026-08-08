@@ -1,0 +1,29 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11201$nota-0142$m11201$, $m11202$Formato de treino 'Pirâmide': escada de duração ascendente e depois descendente através de zonas crescentes de intensidade$m11202$, $m11203$tipos-de-treino$m11203$,
+  $m11204$direta$m11204$, $m11205$protocolo$m11205$,
+  ARRAY[$m11206$diario$m11206$]::text[], ARRAY[$m11207$tempo-em-zona$m11207$, $m11208$potência-por-lap$m11208$, $m11209$potência-média$m11209$]::text[],
+  0.65, $m11210$ativo$m11210$, $m11211$Formato de treino "Pirâmide": uma sequência de intervalos em que a **duração diminui à medida que a intensidade (zona) aumenta**, subindo até um pico de intensidade máxima, e depois **o padrão se inverte simetricamente** (duração volta a aumentar conforme a intensidade diminui), com recuperação em Endurance entre cada degrau. Exemplo do livro: 4min em FTP alto → 3min em VO2max → 2min em Capacidade Anaeróbia → 1min esforço máximo → (subida completa) → 2min Capacidade Anaeróbia → 3min VO2max → 4min FTP baixo (descida simétrica). Existem variações menos intensas combinando apenas Tempo/Sweet Spot em vez da pirâmide completa até o esforço máximo.
+
+Aplicação ao feedback: ao analisar os dados de intervalo de uma atividade, um padrão de blocos com duração decrescente-depois-crescente e intensidade crescente-depois-decrescente (simétrico ao redor de um pico central) é reconhecível como um treino em formato "pirâmide" — útil para classificar automaticamente o tipo de treino executado a partir da estrutura pura dos dados de potência/tempo-em-zona, sem depender de rótulo manual do atleta.$m11211$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11212$nota-0187$m11212$, $m11213$Treinamento de força para ciclistas: benefícios em economia de pedalada, potência máxima, sprint, resistência à fadiga e prevenção de lesões — foco em capacidade neuromuscular, não hipertrofia máxima$m11213$, $m11214$tipos-de-treino$m11214$,
+  $m11215$contexto$m11215$, $m11216$conceito$m11216$,
+  ARRAY[$m11217$semanal$m11217$, $m11218$mensal$m11218$]::text[], '{}'::text[],
+  0.5, $m11219$ativo$m11219$, $m11220$Contrariando a visão antiga de que força teria pouca utilidade para ciclistas, o Manual cita benefícios evidenciados para: economia de pedalada, potência máxima, capacidade de sprint, resistência à fadiga e prevenção de lesões. O objetivo do treinamento de força para ciclistas não é hipertrofia máxima, mas melhora da capacidade neuromuscular (recrutamento, coordenação, rigidez músculo-tendínea) e produção de força específica ao gesto da pedalada.
+
+Aplicação ao feedback: fora do escopo de dados do Strava (o app não registra treino de força) — nota de contexto para caso o produto amplie o escopo de feedback além de dados de ciclismo puro, ou para explicar por que melhorias de economia/potência máxima podem ocorrer sem mudança visível no volume de treino em bike.$m11220$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m11221$nota-0199$m11221$, $m11222$Catálogo de sessões por objetivo fisiológico (Manual, Cap.21): Base Aeróbia (3-5h Z2), Limiar (2-4×10-20min ~LT2/FTP), VO2máx (5×5min, 6×4min, 4×8min, 30/30), Anaeróbio (8×1min, 10×30s), Neuromuscular (sprints 6-12s)$m11222$, $m11223$tipos-de-treino$m11223$,
+  $m11224$direta$m11224$, $m11225$protocolo$m11225$,
+  ARRAY[$m11226$diario$m11226$]::text[], ARRAY[$m11227$tempo-em-zona$m11227$, $m11228$potência-por-lap$m11228$]::text[],
+  0.6, $m11229$ativo$m11229$, $m11230$Catálogo de exemplos de sessões por objetivo fisiológico predominante, cada uma com estrutura clássica de aquecimento → parte principal → retorno à calma → recuperação pós-treino: (1) Base Aeróbia — 3h30-5h em Zona 2 (Endurance), estabilidade e baixa variabilidade; (2) Limiar — 2×20min, 3×15min ou 4×10min próximos a LT2/FTP; (3) VO2máx — 5×5min, 6×4min, 4×8min, ou 30/30s, objetivo de acumular tempo perto do VO2max (não necessariamente potência máxima); (4) Anaeróbio — 8×1min ou 10×30s, esforços muito intensos com recuperação longa, alto custo fisiológico, uso criterioso; (5) Neuromuscular — sprints de 6-12s com recuperação completa entre repetições, foco em qualidade não volume; (6) Regenerativa — intensidade muito baixa, curta duração, não deve virar treino de endurance.
+
+Aplicação ao feedback: catálogo de referência para classificar o "tipo" provável de uma sessão a partir do padrão de potência/tempo-em-zona observado no Strava (ex.: repetições de ~5min perto do Nível 5 de Coggan → provável sessão de VO2max; blocos de 15-20min perto da FTP → provável sessão de limiar) — útil para o produto inferir a intenção da sessão e avaliar se a execução correspondeu ao padrão esperado, complementando (sem substituir) o catálogo já existente do Livro 1 (nota-0140).$m11230$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

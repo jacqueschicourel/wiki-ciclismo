@@ -1,0 +1,28 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m3248$nota-0231$m3248$, $m3249$Ciclistas que treinam mais tempo em/acima do limiar de lactato aumentam a eficiência bruta de pedalada ao longo de uma temporada competitiva (~1% em média, Hopker 2009)$m3249$, $m3250$fisiologia$m3250$,
+  $m3251$contexto$m3251$, $m3252$conceito$m3252$,
+  ARRAY[$m3253$mensal$m3253$]::text[], '{}'::text[],
+  0.6, $m3254$revisar$m3254$, $m3255$Um estudo (Hopker et al., 2009) encontrado em ciclistas ao longo de uma temporada competitiva mostrou que **quanto mais tempo um ciclista passa treinando em ou acima do limiar de lactato (LT), maior o aumento da eficiência bruta de pedalada** (gross efficiency) comparado à pré-temporada e pós-temporada. O aumento médio é modesto — cerca de **1%** — mas o próprio livro-texto observa que essa margem pode ser decisiva entre vencer ou perder e para bater recordes pessoais.
+
+Isso é uma escala de tempo e magnitude diferente da mudança de eficiência de pedalada de longo prazo já registrada no cânone (nota-0215: ~8% de melhora ao longo de vários ANOS de treino consistente) — aqui trata-se de uma flutuação menor (~1%) dentro de uma única temporada, especificamente ligada ao volume de treino perto do limiar de lactato (não ao volume total ou à quantidade de anos de treino).
+
+Confiança rebaixada (0,6) e status `revisar`: o achado vem de um único estudo (Hopker et al. 2009), sem indicação no texto-fonte de que seja uma revisão sistemática ou meta-análise, e depende de medição laboratorial de eficiência bruta (VO2/RQ) não disponível no Strava.
+
+Aplicação ao feedback: fora do escopo de aplicação direta (não medível via Strava), mas relevante como hipótese de por que o volume de treino em zona limiar (Sweet Spot/Limiar, nota-0041) durante a temporada pode trazer ganhos de eficiência que não aparecem diretamente como aumento de FTP, mas se manifestam como melhor desempenho em provas na mesma potência.$m3255$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m3256$nota-0239$m3256$, $m3257$Deriva cardíaca quantificada: -13% de volume sistólico e +11% de FC entre 15-55min de ciclismo submáximo, mesmo em ambiente termoneutro (Fritzsche et al.)$m3257$, $m3258$fisiologia$m3258$,
+  $m3259$contexto$m3259$, $m3260$conceito$m3260$,
+  ARRAY[$m3261$diario$m3261$]::text[], '{}'::text[],
+  0.6, $m3262$revisar$m3262$, $m3263$Estudo de laboratório (Fritzsche et al., 1999, citado no McArdle) mediu volume sistólico, frequência cardíaca (FC) e fluxo sanguíneo cutâneo durante 60 min de ciclismo submáximo contínuo em ambiente termoneutro, em 7 homens ativos. Resultado: entre os minutos 15 e 55, o volume sistólico caiu 13% enquanto a FC subiu 11%, mantendo o débito cardíaco praticamente estável (~16 L/min). O fluxo sanguíneo cutâneo não aumentou entre os minutos 20 e 60 — ou seja, a queda do volume sistólico não foi explicada pela hipótese clássica de redistribuição de sangue para a pele (termorregulação), já que o ambiente era termoneutro.
+
+O achado mais importante veio de um segundo braço experimental: quando os pesquisadores bloquearam farmacologicamente o aumento da FC (com atenolol, um beta-bloqueador beta-1, impedindo a "deriva" da FC), o volume sistólico NÃO caiu, apesar de fluxo sanguíneo cutâneo semelhante entre as condições. Isso sugere que, nesse experimento, o aumento da FC é causa (não apenas correlato) da queda do volume sistólico — provavelmente porque uma FC mais alta reduz o tempo disponível para enchimento diastólico do ventrículo a cada batimento.
+
+Esse é o único dado numérico sobre deriva cardíaca/decoupling em todo o cânone (as outras 3 fontes descrevem o mecanismo apenas qualitativamente). Ainda assim, isto NÃO é uma fórmula genérica de cálculo do Pw:Hr (não há uma equação do tipo "razão potência/FC da 1ª metade vs. 2ª metade da prova"). É um resultado de laboratório com N pequeno (7 homens), medição invasiva de volume sistólico (não disponível via Strava) e protocolo controlado (cicloergômetro, ambiente termoneutro, esforço submáximo constante) — condições que não necessariamente generalizam para o "decoupling" calculado a partir de potência e FC em atividades de campo, com variações de terreno, vento e intensidade. Por isso a nota permanece como `aplicacao: contexto`, não `direta`: confirma e quantifica o mecanismo fisiológico por trás do decoupling observado no Strava, mas não fornece um limiar ou fórmula operacional para gerar regras automáticas.
+
+Aplicação ao feedback: útil apenas como explicação de fundo, caso o produto precise justificar didaticamente por que a FC tende a subir gradualmente em relação à potência ao longo de treinos longos e contínuos (>15 min), mesmo sem calor extremo — não deve ser usado para definir um percentual-alvo de decoupling aceitável.$m3263$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;

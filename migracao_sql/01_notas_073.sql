@@ -1,0 +1,44 @@
+BEGIN;
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9780$nota-0180$m9780$, $m9781$A economia de pedalada piora ao longo da prova conforme a fadiga aumenta (maior coativação, recrutamento alterado, maior custo energético) — base fisiológica do conceito de durabilidade$m9781$, $m9782$recuperacao-e-fadiga$m9782$,
+  $m9783$contexto$m9783$, $m9784$conceito$m9784$,
+  ARRAY[$m9785$diario$m9785$]::text[], '{}'::text[],
+  0.55, $m9786$ativo$m9786$, $m9787$A economia de pedalada não é constante ao longo de uma sessão/prova: conforme a fadiga acumula, o recrutamento muscular se altera, a coativação (ativação simultânea de músculos antagonistas) aumenta, os padrões biomecânicos se modificam e o custo energético para sustentar a mesma potência cresce. O Manual identifica esse fenômeno como parte do que hoje se estuda sob o termo "durabilidade" — já operacionalizado no cânone via o conceito de Stamina/TTE do Livro 1 (nota-0081, nota-0080).
+
+Aplicação ao feedback: reforça a base mecanística por trás de detectores de queda de eficiência/durabilidade já previstos no cânone (Livro 1) — uma sessão longa em que a relação potência/FC piora nas últimas horas, ou em que o atleta não sustenta a potência-alvo no final, reflete esse mecanismo de degradação da economia por fadiga acumulada, não necessariamente uma limitação cardiovascular isolada.$m9787$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9788$nota-0181$m9788$, $m9789$Durabilidade: capacidade de preservar características fisiológicas e desempenho mecânico ao longo de exercício prolongado, apesar da fadiga acumulada — distinta de potência máxima/FTP$m9789$, $m9790$recuperacao-e-fadiga$m9790$,
+  $m9791$contexto$m9791$, $m9792$conceito$m9792$,
+  ARRAY[$m9793$diario$m9793$, $m9794$semanal$m9794$]::text[], '{}'::text[],
+  0.6, $m9795$ativo$m9795$, $m9796$Durabilidade é definida como a capacidade de manter características fisiológicas (VO2, limiares, economia) e desempenho mecânico (potência) ao longo de exercício prolongado, apesar da fadiga acumulada. É uma capacidade distinta de VO2máx/FTP/limiares medidos em repouso: dois atletas com valores de laboratório praticamente idênticos (VO2máx, FTP, LT2, economia) podem ter desempenhos muito diferentes após 4-5h de prova — um mantém a resposta a ataques, o outro perde potência progressivamente, aumenta a FC relativa e reduz a eficiência de pedalada. A maioria dos testes fisiológicos tradicionais é feita com o atleta descansado, mas a maioria das decisões decisivas de prova ocorre após horas de fadiga acumulada — daí a importância crescente desse conceito na fisiologia do endurance moderna.
+
+Aplicação ao feedback: este é exatamente o conceito que o Livro 1 já opera via Stamina (queda percentual de potência sustentável em duração longa vs. curta, nota-0081) e TTE (nota-0080) — o Manual fornece a fundamentação fisiológica completa por trás dessas métricas já implementáveis a partir de dados do Strava (queda de potência/aumento de FC relativa ao longo de uma sessão longa).$m9796$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9797$nota-0182$m9797$, $m9798$Deriva cardíaca (cardiovascular drift): FC aumenta progressivamente para a mesma potência ao longo de exercício prolongado, com redução do volume sistólico — mecanismo por trás do fenômeno de decoupling, mas o Manual não fornece fórmula de cálculo$m9798$, $m9799$recuperacao-e-fadiga$m9799$,
+  $m9800$contexto$m9800$, $m9801$conceito$m9801$,
+  ARRAY[$m9802$diario$m9802$]::text[], '{}'::text[],
+  0.55, $m9803$ativo$m9803$, $m9804$O Manual descreve explicitamente a "deriva cardíaca" (cardiovascular drift) como parte das alterações do sistema cardiovascular durante exercício prolongado: a FC aumenta progressivamente para sustentar a mesma potência, acompanhada de redução do volume sistólico. Esse é precisamente o fenômeno fisiológico por trás do que o Livro 1 chama de "decoupling" (Pw:Hr) — a razão potência/FC que se degrada ao longo de uma sessão longa (nota-0001 do Livro 1, que usa o sinal mas não define a fórmula de cálculo).
+
+O Capítulo 20 (Monitoramento do Treinamento, p. 160) detalha ainda os principais fatores causadores da deriva cardíaca: aumento da temperatura corporal, redução do volume plasmático, desidratação e fadiga cardiovascular — e afirma que, "interpretada corretamente", a deriva cardíaca pode informar sobre resistência aeróbia, estado de hidratação e adaptação ao treinamento.
+
+**Busca ativa pela fórmula do decoupling — CONCLUÍDA para esta fonte, sem sucesso:** os dois capítulos mais prováveis (13 — Durabilidade, e 20 — Monitoramento do Treinamento, que trata explicitamente de "Frequência cardíaca e deriva cardíaca") descrevem o mecanismo fisiológico e os fatores causadores da deriva cardíaca de forma qualitativa, mas **em nenhum momento o Manual apresenta uma fórmula de cálculo do decoupling/Pw:Hr** (ex.: comparação percentual entre a razão potência/FC da primeira e da segunda metade de uma sessão, método usado pelo TrainingPeaks/WKO). A lacuna registrada em `mapas/capacidades.md` (bucket 3) permanece em aberto após o processamento completo desta fonte — a busca deverá continuar nas Fontes 3 (VO2 Max Essentials) e 4 (McArdle).
+
+Aplicação ao feedback: fundamenta, no nível mecanístico, por que o decoupling Pw:Hr é um sinal válido de fadiga cardiovascular acumulada/durabilidade insuficiente, e amplia os fatores de confusão a considerar (temperatura, hidratação) — mas o cânone ainda carece de uma fórmula operacional citável para implementá-lo.$m9804$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+INSERT INTO notas (id, titulo, dominio_slug, aplicacao_slug, tipo_nota_slug, camadas, sinais, confianca, status, corpo) VALUES (
+  $m9805$nota-0193$m9805$, $m9806$Monotonia (repetição de cargas semelhantes na semana) e Strain (carga total × monotonia): conceitos citados sem fórmula de cálculo — lacuna do cânone$m9806$, $m9807$recuperacao-e-fadiga$m9807$,
+  $m9808$contexto$m9808$, $m9809$conceito$m9809$,
+  ARRAY[$m9810$semanal$m9810$]::text[], '{}'::text[],
+  0.4, $m9811$revisar$m9811$, $m9812$O Manual introduz os conceitos de Monotonia (repetição de cargas semelhantes de treino ao longo da semana — treino excessivamente uniforme aumenta risco de fadiga/doenças) e Strain (combinação entre carga total e monotonia — valores altos associados a maior risco de queda de desempenho e lesões), citados como indicadores complementares ao TSS/TRIMP para avaliar a distribuição (não apenas a magnitude) da carga.
+
+**Lacuna do cânone:** o Manual descreve os conceitos qualitativamente mas **não fornece a fórmula de cálculo** (a formulação clássica na literatura esportiva, de Carl Foster, é Monotonia = média diária de carga ÷ desvio-padrão diário de carga, e Strain = carga semanal total × Monotonia — mas essa fórmula não foi apresentada no texto-fonte, portanto não pode ser citada como parte do cânone sem uma fonte que a defina explicitamente). Confiança rebaixada e status marcado como `revisar` por depender de fórmula não fornecida pela fonte.
+
+Aplicação ao feedback: nenhuma regra operacional pode ser implementada a partir desta nota isoladamente — registrar como candidato a "Detector" em `mapas/capacidades.md` (bucket de lacunas do cânone), a ser resolvido apenas se uma fonte futura (Fonte 3 ou 4) apresentar a fórmula explícita, ou mediante decisão humana de adotar a fórmula clássica de Foster por fora do cânone das 4 obras.$m9812$
+)
+ON CONFLICT (id) DO UPDATE SET titulo=excluded.titulo, dominio_slug=excluded.dominio_slug, aplicacao_slug=excluded.aplicacao_slug, tipo_nota_slug=excluded.tipo_nota_slug, camadas=excluded.camadas, sinais=excluded.sinais, confianca=excluded.confianca, status=excluded.status, corpo=excluded.corpo, atualizado_em=now();
+COMMIT;
