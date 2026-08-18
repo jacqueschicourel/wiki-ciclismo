@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   :root{
     --paper:#F3F3EF; --card:#FFFFFF; --ink:#17191E; --muted:#6A6E77;
@@ -250,6 +251,124 @@
   .commentitem .ca{font-family:var(--mono);font-size:10.5px;color:var(--muted);display:block;margin-bottom:2px}
   .lockmsg{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;
     max-width:440px;font-size:14px;color:#33363D}
+
+  /* ---- Área do atleta: dashboard diário/semanal/mensal (portado do mockup, escopo isolado
+     em .dashwrap pra não vazar estilo pro resto do app — layout ainda com dado estático) ---- */
+  .dashwrap{
+    --sub:#5f5e5a; --bg:#fdfcfa;
+    --green-bg:#EAF3DE; --green-tx:#173404; --green-tx2:#27500A;
+    --amber-bg:#FAEEDA; --amber-tx:#412402; --amber-tx2:#633806;
+    --blue:#185FA5; --red:#d03b3b; --gray:#c3c2b7;
+    background:var(--bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    line-height:1.6; max-width:760px; margin:18px 0 0; padding:20px 20px 40px;
+    border-radius:16px; border:1px solid var(--line);
+  }
+  .dashwrap h1{font-size:21px;font-weight:600;margin:0 0 2px}
+  .dashwrap .sub{color:var(--sub);font-size:14px;margin:0 0 18px}
+  .dashwrap h2{font-size:16px;font-weight:600;margin:0 0 12px}
+  .dashwrap section{margin-bottom:34px}
+  .dashwrap .topbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:10px 0;margin:-20px -20px 16px;border-radius:16px 16px 0 0}
+  .dashwrap .topbar-inner{padding:0 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .dashwrap .modebar{display:flex;gap:6px}
+  .dashwrap .modebtn{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 14px;
+    font-size:12.5px;font-weight:600;cursor:pointer;color:var(--sub)}
+  .dashwrap .modebtn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .dashwrap .maintabs{display:flex;gap:8px;margin:16px 0 24px;border-bottom:1px solid var(--line)}
+  .dashwrap .maintab{border:none;background:none;padding:10px 4px;font-size:14.5px;font-weight:600;
+    color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-right:14px}
+  .dashwrap .maintab.active{color:var(--ink);border-bottom-color:var(--ink)}
+  .dashwrap .tabpanel{display:none}
+  .dashwrap .tabpanel.active{display:block}
+  .dashwrap .totais{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:24px}
+  .dashwrap .totalcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .dashwrap .totalcard .lbl{font-size:12px;color:var(--sub)}
+  .dashwrap .totalcard .val{font-size:21px;font-weight:600;margin-top:2px}
+  .dashwrap .diapicker{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;padding-bottom:4px}
+  .dashwrap .diapill{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:20px;
+    padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;color:var(--sub);white-space:nowrap}
+  .dashwrap .diapill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .dashwrap .diapill .tagdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
+  .dashwrap .diacontent{display:none}
+  .dashwrap .diacontent.active{display:block}
+  .dashwrap .diacard-big{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .dashwrap .diacard-big .tit{font-size:16px;font-weight:600;margin-bottom:6px}
+  .dashwrap .diacard-big .msg{font-size:14.5px;color:var(--ink);line-height:1.7;background:#f7f6f2;
+    border-radius:10px;padding:14px 16px;margin-top:12px}
+  .dashwrap .diastats{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+  .dashwrap .diastat{font-size:12.5px;color:var(--sub)}
+  .dashwrap .diastat b{color:var(--ink);font-weight:600}
+  .dashwrap .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:20px;padding:3px 10px}
+  .dashwrap .badge.forte{background:#FCEBEB;color:#791F1F}
+  .dashwrap .badge.moderado{background:#FAEEDA;color:#854F0B}
+  .dashwrap .badge.leve{background:#EAF3DE;color:#27500A}
+  .dashwrap .semana{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .dashwrap .diacard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 6px;
+    text-align:center;min-height:118px;display:flex;flex-direction:column}
+  .dashwrap .diacard .dia{font-size:11px;color:var(--muted)}
+  .dashwrap .diacard .data{font-size:11px;color:var(--muted);margin-bottom:6px}
+  .dashwrap .barbox{height:44px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:6px}
+  .dashwrap .bar{width:60%;border-radius:3px 3px 0 0}
+  .dashwrap .tag{font-size:10px;font-weight:600;border-radius:4px;padding:2px 4px;margin:0 auto 4px;display:inline-block}
+  .dashwrap .tag.descanso{background:#f1efe8;color:#5f5e5a}
+  .dashwrap .tag.leve{background:#EAF3DE;color:#27500A}
+  .dashwrap .tag.moderado{background:#FAEEDA;color:#854F0B}
+  .dashwrap .tag.forte{background:#FCEBEB;color:#791F1F}
+  .dashwrap .diacard .linha{font-size:10.5px;color:var(--sub);line-height:1.35}
+  .dashwrap .cards2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .dashwrap .card{border-radius:12px;padding:16px 18px}
+  .dashwrap .card.alto{background:var(--green-bg)}
+  .dashwrap .card.atencao{background:var(--amber-bg)}
+  .dashwrap .card .headrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .dashwrap .card .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dashwrap .card.alto .dot{background:var(--green-tx2)}
+  .dashwrap .card.atencao .dot{background:var(--amber-tx2)}
+  .dashwrap .card .titulo{font-size:14px;font-weight:600}
+  .dashwrap .card.alto .titulo{color:var(--green-tx)}
+  .dashwrap .card.atencao .titulo{color:var(--amber-tx)}
+  .dashwrap .card .txt{font-size:13.5px}
+  .dashwrap .card.alto .txt{color:var(--green-tx2)}
+  .dashwrap .card.atencao .txt{color:var(--amber-tx2)}
+  .dashwrap .verbtn{background:none;border:none;padding:0;margin-top:10px;font-size:13px;font-weight:600;
+    cursor:pointer;display:flex;align-items:center;gap:4px}
+  .dashwrap .card.alto .verbtn{color:var(--green-tx2)}
+  .dashwrap .card.atencao .verbtn{color:var(--amber-tx2)}
+  .dashwrap .verbtn .chev{transition:transform .15s}
+  .dashwrap .verbtn.open .chev{transform:rotate(180deg)}
+  .dashwrap .detalhe{max-height:0;overflow:hidden;transition:max-height .25s ease}
+  .dashwrap .detalhe.open{max-height:340px}
+  .dashwrap .detalhe-inner{background:var(--card);border-radius:10px;padding:14px;margin-top:10px}
+  .dashwrap .chartbox{position:relative;width:100%;height:200px}
+  .dashwrap .correl{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .dashwrap .correlitem{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .dashwrap .correlitem:last-child{border-bottom:none;padding-bottom:0}
+  .dashwrap .correlitem:first-child{padding-top:0}
+  .dashwrap .correlitem .icon{width:22px;height:22px;border-radius:50%;background:#E6F1FB;color:var(--blue);
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .dashwrap .correlitem .body{flex:1}
+  .dashwrap .correlitem .txt{font-size:13.5px}
+  .dashwrap .correlitem .txt b{font-weight:600}
+  .dashwrap .rec{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+  .dashwrap .reccard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .dashwrap .reccard .n{font-size:13px;font-weight:600;margin-bottom:4px}
+  .dashwrap .reccard .t{font-size:13px;color:var(--sub)}
+  .dashwrap .fonte{font-size:11.5px;color:var(--muted);margin-top:6px}
+  .dashwrap .emptystate{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:36px 24px;text-align:center}
+  .dashwrap .emptystate .ico{font-size:26px;margin-bottom:10px}
+  .dashwrap .emptystate .tit{font-size:15px;font-weight:600;margin-bottom:6px}
+  .dashwrap .emptystate .txt{font-size:13.5px;color:var(--sub);max-width:420px;margin:0 auto}
+  .dashwrap.mobile-mode{background:#eceae3;max-width:390px;padding:44px 16px 40px;
+    box-shadow:0 10px 40px rgba(0,0,0,.14);position:relative}
+  .dashwrap.mobile-mode::before{content:'';position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    width:90px;height:6px;border-radius:4px;background:#d8d6cd}
+  .dashwrap.mobile-mode .topbar-inner{max-width:390px;margin:0 auto}
+  .dashwrap.mobile-mode .semana{display:flex;overflow-x:auto;gap:8px;padding-bottom:6px;
+    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+  .dashwrap.mobile-mode .diacard{flex:0 0 96px;scroll-snap-align:start}
+  .dashwrap.mobile-mode .totais{grid-template-columns:repeat(2,1fr)}
+  .dashwrap.mobile-mode .cards2{grid-template-columns:1fr}
+  .dashwrap.mobile-mode .rec{grid-template-columns:1fr}
+  .dashwrap.mobile-mode .maintabs{gap:2px}
 </style>
 </head>
 <body>
@@ -263,6 +382,7 @@
       <button class="navlink" id="nav-skills-entrega" onclick="go({v:'skills-entrega'})">Skills de curadoria</button>
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
+      <button class="navlink" id="nav-cadastro" onclick="go({v:'cadastro'})">Cadastro / conta</button>
     </div>
     <div>
       <div class="lbl">Domínios</div>
@@ -320,6 +440,8 @@ const REV_LABELS = {'baixa-confianca':'Baixa confiança','conflito':'Conflito','
 let FILA = [];      // ingestao_jobs (só visível autenticado)
 let REVISAO_PIPE = []; // revisao_pendente (só visível autenticado)
 let session = null;
+let meuPerfil = null; // {tipo:'assessoria', row} ou {tipo:'atleta', row} ou null (logado sem cadastro ainda)
+let vinculoEscolhido = {}; // prefixo do form -> id de assessoria escolhido via busca por código
 
 async function carregarDados(){
   const [{data: notasRows}, {data: fontesRows}, {data: relRows}, {data: skillsRows}, {data: legadoRows}] = await Promise.all([
@@ -361,6 +483,22 @@ async function carregarFilaERevisao(){
   ]);
   FILA = jobs || [];
   REVISAO_PIPE = revs || [];
+}
+
+async function carregarPerfil(){
+  meuPerfil = null;
+  if(!session) return;
+  const uid = session.user.id;
+  const [{data: assRows}, {data: atlRows}] = await Promise.all([
+    sb.from('assessorias').select('*').eq('owner_user_id', uid),
+    sb.from('atletas').select('*').eq('user_id', uid),
+  ]);
+  if(assRows && assRows.length){ meuPerfil = {tipo:'assessoria', row: assRows[0]}; return; }
+  if(atlRows && atlRows.length){ meuPerfil = {tipo:'atleta', row: atlRows[0]}; return; }
+  // logado mas sem linha própria ainda: tenta reivindicar automaticamente um cadastro
+  // feito antes pelo coach (mesmo e-mail, ainda sem user_id vinculado)
+  const {data: reiv} = await sb.rpc('reivindicar_atleta_por_email');
+  if(reiv){ meuPerfil = {tipo:'atleta', row: reiv}; }
 }
 </script>
 
@@ -658,6 +796,7 @@ function syncNav(){
   document.getElementById('nav-skills-entrega').classList.toggle('active', state.v==='skills-entrega'||(state.v==='skill'&&skillById[state.id]&&skillById[state.id].dom==='entrega-feedback'));
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
+  document.getElementById('nav-cadastro').classList.toggle('active', state.v==='cadastro');
 }
 
 function sidebar(){
@@ -687,6 +826,7 @@ function render(){
   if(state.v==='skills-entrega') return renderSkillsEntrega();
   if(state.v==='skill') return renderSkill(state.id);
   if(state.v==='fila') return renderFila();
+  if(state.v==='cadastro') return renderCadastro();
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
     const q=state.q;
@@ -1082,6 +1222,7 @@ async function fazerLogin(){
   session = data.session;
   msg.textContent = 'Login ok.'; msg.className='formmsg ok';
   await carregarFilaERevisao();
+  await carregarPerfil();
   renderAuthbox();
   render();
 }
@@ -1095,11 +1236,11 @@ async function fazerCadastro(){
   if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
   msg.textContent = data.session ? 'Conta criada e conectada.' : 'Conta criada — confirme o e-mail e depois entre.';
   msg.className='formmsg ok';
-  if(data.session){ session = data.session; await carregarFilaERevisao(); renderAuthbox(); render(); }
+  if(data.session){ session = data.session; await carregarFilaERevisao(); await carregarPerfil(); renderAuthbox(); render(); }
 }
 async function fazerLogout(){
   await sb.auth.signOut();
-  session = null; FILA = []; REVISAO_PIPE = [];
+  session = null; FILA = []; REVISAO_PIPE = []; meuPerfil = null;
   renderAuthbox();
   go({v:'home'});
 }
@@ -1120,6 +1261,599 @@ function renderFila(){
     <h1>Fila de processamento</h1>
     <p class="lede">Status de cada fonte processada via chat com o Claude, do início da extração até a nota/skill ficar pronta para revisão em "Revisão pendente".</p>
     <div class="jobtable">${rows || '<div class="empty">Nenhum job ainda. Envie um material novo numa conversa com o Claude para começar.</div>'}</div>`;
+}
+
+/* ---------------- Cadastro de assessoria/atleta ---------------- */
+const SELECT_STYLE = 'border:1px solid var(--line-strong);background:var(--card);border-radius:10px;padding:9px 11px;font-family:var(--sans);font-size:13.5px;color:var(--ink)';
+
+function vinculoBoxHtml(prefix){
+  return `
+    <div id="${prefix}vinculo-inner" style="display:none;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:10px;margin-top:2px">
+      <div class="lbl">Vincular a uma assessoria (opcional)</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="${prefix}codigo" placeholder="código de convite" style="flex:1">
+        <button class="btn ghost" type="button" onclick="buscarCodigoConvite('${prefix}')">Buscar</button>
+      </div>
+      <div id="${prefix}codigo-resultado" class="formmsg"></div>
+      <div class="lbl">ou escolha da lista</div>
+      <select id="${prefix}select-assessoria" style="${SELECT_STYLE}">
+        <option value="">— nenhuma (fico independente) —</option>
+      </select>
+    </div>`;
+}
+
+function renderCadastro(){
+  vinculoEscolhido = {};
+  if(!session){
+    view.innerHTML = `
+      <div class="h-eyebrow">Conta</div>
+      <h1>Cadastro / conta</h1>
+      <p class="lede">Crie a conta da sua assessoria (treinador) ou a sua conta de atleta, ou entre se já tiver uma.</p>
+      <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:18px">
+        <div class="panel loginform" style="max-width:340px">
+          <h3>Já tenho conta</h3>
+          <input type="email" id="cad-login-email" placeholder="email" autocomplete="username">
+          <input type="password" id="cad-login-pass" placeholder="senha" autocomplete="current-password">
+          <button class="btn" onclick="fazerLoginCadastro()">Entrar</button>
+          <div class="formmsg" id="cad-login-msg"></div>
+        </div>
+        <div class="panel loginform" style="max-width:380px">
+          <h3>Criar conta</h3>
+          <input type="text" id="cad-nome" placeholder="nome">
+          <input type="email" id="cad-email" placeholder="email" autocomplete="username">
+          <input type="password" id="cad-pass" placeholder="senha (mín. 6 caracteres)" autocomplete="new-password">
+          <div style="display:flex;gap:14px;font-size:13.5px">
+            <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="cad-tipo" value="assessoria" checked onchange="atualizarTipoCadastro()">Sou treinador (assessoria)</label>
+            <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="cad-tipo" value="atleta" onchange="atualizarTipoCadastro()">Sou atleta</label>
+          </div>
+          <div id="cad-vinculo-box">${vinculoBoxHtml('cad-')}</div>
+          <button class="btn" onclick="criarConta()">Criar conta</button>
+          <div class="formmsg" id="cad-msg"></div>
+        </div>
+      </div>`;
+    return;
+  }
+  if(!meuPerfil){
+    view.innerHTML = `
+      <div class="h-eyebrow">Conta</div>
+      <h1>Complete seu cadastro</h1>
+      <p class="lede">Conectado como <b>${escapeHtml(session.user.email)}</b>, mas ainda sem assessoria ou atleta vinculado a esta conta.</p>
+      <div class="panel loginform" style="max-width:380px;margin-top:14px">
+        <input type="text" id="cad2-nome" placeholder="nome">
+        <div style="display:flex;gap:14px;font-size:13.5px">
+          <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="cad2-tipo" value="assessoria" checked onchange="atualizarTipoCadastro2()">Sou treinador (assessoria)</label>
+          <label style="display:flex;align-items:center;gap:6px"><input type="radio" name="cad2-tipo" value="atleta" onchange="atualizarTipoCadastro2()">Sou atleta</label>
+        </div>
+        <div id="cad2-vinculo-box">${vinculoBoxHtml('cad2-')}</div>
+        <button class="btn" onclick="completarCadastro()">Salvar</button>
+        <div class="formmsg" id="cad2-msg"></div>
+      </div>`;
+    return;
+  }
+  if(meuPerfil.tipo==='assessoria') return renderPerfilAssessoria();
+  return renderPerfilAtleta();
+}
+
+function atualizarTipoCadastro(){
+  const tipo = document.querySelector('input[name="cad-tipo"]:checked').value;
+  const box = document.getElementById('cad-vinculo-inner');
+  box.style.display = tipo==='atleta' ? 'flex' : 'none';
+  if(tipo==='atleta') popularSelectAssessorias('cad-select-assessoria');
+}
+function atualizarTipoCadastro2(){
+  const tipo = document.querySelector('input[name="cad2-tipo"]:checked').value;
+  const box = document.getElementById('cad2-vinculo-inner');
+  box.style.display = tipo==='atleta' ? 'flex' : 'none';
+  if(tipo==='atleta') popularSelectAssessorias('cad2-select-assessoria');
+}
+
+async function listarAssessoriasPublicas(){
+  const {data, error} = await sb.from('assessorias_publicas').select('*').order('nome');
+  if(error) return [];
+  return data || [];
+}
+async function popularSelectAssessorias(selectId){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  const list = await listarAssessoriasPublicas();
+  sel.innerHTML = '<option value="">— nenhuma (fico independente) —</option>' +
+    list.map(a => `<option value="${a.id}">${escapeHtml(a.nome)}</option>`).join('');
+}
+async function buscarCodigoConvite(prefix){
+  const codigo = document.getElementById(prefix+'codigo').value.trim();
+  const out = document.getElementById(prefix+'codigo-resultado');
+  if(!codigo){ out.textContent=''; return; }
+  const {data, error} = await sb.rpc('buscar_assessoria_por_codigo', {p_codigo: codigo});
+  if(error || !data || !data.length){
+    out.textContent = 'Código não encontrado.'; out.className='formmsg err';
+    delete vinculoEscolhido[prefix];
+    return;
+  }
+  const a = data[0];
+  out.textContent = 'Encontrada: '+a.nome+' (selecionada)'; out.className='formmsg ok';
+  vinculoEscolhido[prefix] = a.id;
+  const sel = document.getElementById(prefix+'select-assessoria');
+  if(sel) sel.value = ''; // código tem prioridade sobre a lista
+}
+function resolverVinculoEscolhido(prefix){
+  if(vinculoEscolhido[prefix]) return vinculoEscolhido[prefix];
+  const sel = document.getElementById(prefix+'select-assessoria');
+  return (sel && sel.value) ? sel.value : null;
+}
+
+async function fazerLoginCadastro(){
+  const email = document.getElementById('cad-login-email').value.trim();
+  const pass = document.getElementById('cad-login-pass').value;
+  const msg = document.getElementById('cad-login-msg');
+  msg.textContent = 'Entrando...'; msg.className='formmsg';
+  const {data, error} = await sb.auth.signInWithPassword({email, password: pass});
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  session = data.session;
+  await carregarFilaERevisao();
+  await carregarPerfil();
+  renderAuthbox();
+  render();
+}
+
+async function criarConta(){
+  const nome = document.getElementById('cad-nome').value.trim();
+  const email = document.getElementById('cad-email').value.trim();
+  const pass = document.getElementById('cad-pass').value;
+  const tipo = document.querySelector('input[name="cad-tipo"]:checked').value;
+  const msg = document.getElementById('cad-msg');
+  if(!nome || !email || !pass){ msg.textContent = 'Preencha nome, e-mail e senha.'; msg.className='formmsg err'; return; }
+  msg.textContent = 'Criando conta...'; msg.className='formmsg';
+  const {data, error} = await sb.auth.signUp({email, password: pass});
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  if(!data.session){
+    msg.textContent = 'Conta criada — confirme o e-mail e depois entre para concluir o cadastro.';
+    msg.className = 'formmsg ok';
+    return;
+  }
+  session = data.session;
+  await carregarFilaERevisao();
+  await finalizarCadastroPerfil(tipo, nome, 'cad-', msg);
+}
+async function completarCadastro(){
+  const nome = document.getElementById('cad2-nome').value.trim();
+  const tipo = document.querySelector('input[name="cad2-tipo"]:checked').value;
+  const msg = document.getElementById('cad2-msg');
+  if(!nome){ msg.textContent = 'Preencha o nome.'; msg.className='formmsg err'; return; }
+  await finalizarCadastroPerfil(tipo, nome, 'cad2-', msg);
+}
+async function finalizarCadastroPerfil(tipo, nome, prefix, msg){
+  msg.textContent = 'Salvando...'; msg.className='formmsg';
+  if(tipo==='assessoria'){
+    const {data, error} = await sb.from('assessorias').insert({nome, owner_user_id: session.user.id}).select().single();
+    if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+    meuPerfil = {tipo:'assessoria', row:data};
+    msg.textContent = 'Cadastro concluído.'; msg.className='formmsg ok';
+  } else {
+    // tenta reivindicar um cadastro pré-criado pelo coach com o mesmo e-mail antes de criar um novo
+    const {data: reiv} = await sb.rpc('reivindicar_atleta_por_email');
+    if(reiv){
+      meuPerfil = {tipo:'atleta', row: reiv};
+      msg.textContent = 'Sua assessoria já tinha te cadastrado — conta vinculada automaticamente.'; msg.className='formmsg ok';
+    } else {
+      const assessoriaId = resolverVinculoEscolhido(prefix);
+      const {data, error} = await sb.from('atletas').insert({nome, email: session.user.email, user_id: session.user.id, assessoria_id: assessoriaId}).select().single();
+      if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+      meuPerfil = {tipo:'atleta', row:data};
+      msg.textContent = 'Cadastro concluído.'; msg.className='formmsg ok';
+    }
+  }
+  renderAuthbox();
+  render();
+}
+
+async function renderPerfilAssessoria(){
+  const row = meuPerfil.row;
+  view.innerHTML = `
+    <div class="h-eyebrow">Conta</div>
+    <h1>${escapeHtml(row.nome)}</h1>
+    <p class="lede">Sua assessoria. Código de convite para atletas se vincularem: <code>${escapeHtml(row.codigo_convite)}</code></p>
+    <div class="panel loginform" style="max-width:380px">
+      <h3>Editar nome</h3>
+      <input type="text" id="assessoria-nome" value="${escapeHtml(row.nome)}">
+      <button class="btn" onclick="salvarPerfilAssessoria()">Salvar</button>
+      <div class="formmsg" id="assessoria-msg"></div>
+    </div>
+    <div class="panel loginform" style="max-width:420px;margin-top:18px">
+      <h3>Adicionar atleta</h3>
+      <input type="text" id="novo-atleta-nome" placeholder="nome do atleta">
+      <input type="email" id="novo-atleta-email" placeholder="e-mail do atleta">
+      <button class="btn" onclick="adicionarAtletaNaAssessoria()">Adicionar</button>
+      <div class="formmsg" id="novo-atleta-msg"></div>
+    </div>
+    <div class="lbl" style="margin-top:20px">Atletas vinculados</div>
+    <div class="jobtable" id="lista-atletas"><div class="hint">Carregando atletas…</div></div>`;
+  await carregarECarregarListaAtletas();
+}
+async function carregarECarregarListaAtletas(){
+  const box = document.getElementById('lista-atletas');
+  if(!box) return;
+  const {data, error} = await sb.from('atletas').select('*').eq('assessoria_id', meuPerfil.row.id).order('nome');
+  if(error){ box.innerHTML = `<div class="empty">Erro ao carregar atletas: ${escapeHtml(error.message)}</div>`; return; }
+  if(!data || !data.length){ box.innerHTML = '<div class="empty">Nenhum atleta vinculado ainda.</div>'; return; }
+  box.innerHTML = data.map(a => `
+    <div class="jobrow">
+      <div>
+        <div class="jobname">${escapeHtml(a.nome)}</div>
+        <div class="jobmeta">${escapeHtml(a.email||'sem e-mail')}</div>
+      </div>
+      <span class="jobstatus ${a.user_id?'concluido':'pendente'}">${a.user_id?'conta vinculada':'aguardando cadastro'}</span>
+      <button class="btn ghost" style="margin-left:10px" onclick="removerAtletaDaAssessoria('${a.id}')">Remover</button>
+    </div>`).join('');
+}
+async function salvarPerfilAssessoria(){
+  const nome = document.getElementById('assessoria-nome').value.trim();
+  const msg = document.getElementById('assessoria-msg');
+  if(!nome){ msg.textContent = 'Nome não pode ficar vazio.'; msg.className='formmsg err'; return; }
+  const {data, error} = await sb.from('assessorias').update({nome, atualizado_em:new Date().toISOString()}).eq('id', meuPerfil.row.id).select().single();
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  meuPerfil.row = data;
+  msg.textContent = 'Salvo.'; msg.className='formmsg ok';
+  const h1 = view.querySelector('h1'); if(h1) h1.textContent = data.nome;
+}
+async function adicionarAtletaNaAssessoria(){
+  const nome = document.getElementById('novo-atleta-nome').value.trim();
+  const email = document.getElementById('novo-atleta-email').value.trim();
+  const msg = document.getElementById('novo-atleta-msg');
+  if(!nome){ msg.textContent = 'Preencha o nome do atleta.'; msg.className='formmsg err'; return; }
+  msg.textContent = 'Adicionando...'; msg.className='formmsg';
+  const {error} = await sb.from('atletas').insert({nome, email: email||null, assessoria_id: meuPerfil.row.id});
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  msg.textContent = 'Atleta adicionado. Ele(a) pode vincular a própria conta depois com o mesmo e-mail, ou usando o código de convite.'; msg.className='formmsg ok';
+  document.getElementById('novo-atleta-nome').value = ''; document.getElementById('novo-atleta-email').value = '';
+  await carregarECarregarListaAtletas();
+}
+async function removerAtletaDaAssessoria(id){
+  if(!confirm('Remover este atleta da assessoria?')) return;
+  const {error} = await sb.from('atletas').delete().eq('id', id);
+  if(error){ alert('Erro: '+error.message); return; }
+  await carregarECarregarListaAtletas();
+}
+
+/* ---- Dashboard diário/semanal/mensal (layout portado do mockup analises/area-do-atleta-mockup.html;
+   ainda com dado estático — não puxa do Supabase, é só a camada visual pra revisão) ---- */
+function atletaDashboardHtml(nome){
+  return `
+  <div class="dashwrap" id="atletaDash">
+    <div class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <div style="font-size:13px;font-weight:600">Área do atleta</div>
+          <div style="font-size:11.5px;color:var(--sub)">${escapeHtml(nome)}</div>
+        </div>
+        <div class="modebar">
+          <button class="modebtn active" id="dashBtnDesktop" onclick="dashSetMode('desktop')">Computador</button>
+          <button class="modebtn" id="dashBtnMobile" onclick="dashSetMode('mobile')">Celular</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="maintabs">
+      <button class="maintab active" id="tabbtn-diario" onclick="dashShowTab('diario')">Diário</button>
+      <button class="maintab" id="tabbtn-semanal" onclick="dashShowTab('semanal')">Semanal</button>
+      <button class="maintab" id="tabbtn-mensal" onclick="dashShowTab('mensal')">Mensal</button>
+    </div>
+
+    <div class="tabpanel active" id="tab-diario">
+      <div class="diapicker">
+        <button class="diapill active" onclick="dashShowDia('d0801', this)"><span class="tagdot" style="background:#d03b3b"></span>Sáb 01/08</button>
+        <button class="diapill" onclick="dashShowDia('d0804', this)"><span class="tagdot" style="background:#fab219"></span>Ter 04/08</button>
+        <button class="diapill" onclick="dashShowDia('d0805', this)"><span class="tagdot" style="background:#fab219"></span>Qua 05/08</button>
+        <button class="diapill" onclick="dashShowDia('d0806', this)"><span class="tagdot" style="background:#7bc25a"></span>Qui 06/08</button>
+      </div>
+
+      <div class="diacontent active" id="d0801">
+        <div class="diacard-big">
+          <span class="badge forte">Forte</span>
+          <div class="tit" style="margin-top:8px">O treino mais forte do mês</div>
+          <div class="msg">Fala, ${escapeHtml(nome)}! Foi seu esforço mais forte em semanas — quase 4h20 pedalando, com uma carga bem acima do normal. Sua frequência cardíaca ficou puxada a maior parte do tempo. Na segunda metade você perdeu um pouco de rendimento em relação à primeira — sinal de fadiga acumulando ao longo de um treino tão longo, o que é esperado. Vale priorizar a recuperação nos próximos dias.</div>
+          <div class="diastats">
+            <div class="diastat"><b>97,5 km</b> distância</div>
+            <div class="diastat"><b>4h02</b> pedalando</div>
+            <div class="diastat"><b>146 bpm</b> FC média</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diacontent" id="d0804">
+        <div class="diacard-big">
+          <span class="badge moderado">Moderado</span>
+          <div class="tit" style="margin-top:8px">Repetição de subida, versão curta</div>
+          <div class="msg">E aí — hoje foi curto mas puxado: quase 1h30 pedalando, com boa parte tranquila e várias arrancadas fortes na subida da Química, pelo menos 4 delas beirando ou passando teu limiar por cerca de 1 minuto cada. Não é uma pedalada de fundo, é treino de repetição de subida mesmo. Você já tinha feito esse tipo de treino há uma semana (28/07), só que com bem mais repetições e num pedal mais longo — hoje foi uma versão mais curta e pontual do mesmo estímulo. A carga de hoje foi moderada, não deve sobrar cansaço até amanhã. Se for repetir esse tipo de treino em versões mais longas, vale pensar em repor carboidrato ao longo do pedal.</div>
+          <div class="diastats">
+            <div class="diastat"><b>33,8 km</b> distância</div>
+            <div class="diastat"><b>1h25</b> pedalando</div>
+            <div class="diastat"><b>TSS 96</b> carga do dia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diacontent" id="d0805">
+        <div class="diacard-big">
+          <span class="badge moderado">Moderado</span>
+          <div class="tit" style="margin-top:8px">Base tranquila com arrancadas de verdade</div>
+          <div class="msg">Foi quase 2h na rua, mas com carga geral baixa/moderada — pode encarar o treino de amanhã numa boa. O que chamou atenção foi o contraste: a maior parte rolou tranquila, com FC média de 126bpm, mas você meteu pelo menos 6 arrancadas fortes ao longo do percurso, uma delas passando de 800W de pico. Não foi ritmo constante, foi mais parada-e-arrancada mesmo. Foram quase 1h40 de pedalada — se ainda não tá repondo carboidrato durante o treino, uns 30 a 60g por hora já ajudam numa saída dessa duração.</div>
+          <div class="diastats">
+            <div class="diastat"><b>46,6 km</b> distância</div>
+            <div class="diastat"><b>1h36</b> pedalando</div>
+            <div class="diastat"><b>TSS 103</b> carga do dia</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diacontent" id="d0806">
+        <div class="diacard-big">
+          <span class="badge leve">Leve</span>
+          <div class="tit" style="margin-top:8px">Treino leve, com uma arrancada no fim</div>
+          <div class="msg">Hoje foram 46,7km em cerca de 89 minutos, percurso bem plano. Foi treino leve — 66% do tempo em zona 1-2, carga do dia baixa pro teu padrão. Teve uma arrancada de verdade perto do fim, pico de 775W, conferida e não é erro de sensor. Na segunda metade FC e potência subiram juntas, sinal de que não sobrou fadiga acumulada. Como passou de 1h20, se repetir treino desse tamanho vale repor 30-60g de carboidrato por hora.</div>
+          <div class="diastats">
+            <div class="diastat"><b>46,7 km</b> distância</div>
+            <div class="diastat"><b>1h29</b> pedalando</div>
+            <div class="diastat"><b>TSS 85</b> carga do dia</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-semanal">
+      <p class="sub" style="margin-top:0">Domingo 02/08 a sábado 08/08 de 2026</p>
+      <div class="totais">
+        <div class="totalcard"><div class="lbl">Pedaladas</div><div class="val">3</div></div>
+        <div class="totalcard"><div class="lbl">Distância</div><div class="val">127&nbsp;km</div></div>
+        <div class="totalcard"><div class="lbl">Tempo pedalando</div><div class="val">4h31</div></div>
+        <div class="totalcard"><div class="lbl">Dias de descanso</div><div class="val">4</div></div>
+      </div>
+      <section>
+        <h2>Sua semana, dia a dia</h2>
+        <div class="semana">
+          <div class="diacard"><div class="dia">Dom</div><div class="data">02/08</div><div class="barbox"><div class="bar" style="height:6%;background:#c3c2b7"></div></div><span class="tag descanso">Descanso</span><div class="linha">Sem pedalada registrada</div></div>
+          <div class="diacard"><div class="dia">Seg</div><div class="data">03/08</div><div class="barbox"><div class="bar" style="height:6%;background:#c3c2b7"></div></div><span class="tag descanso">Descanso</span><div class="linha">Sem pedalada registrada</div></div>
+          <div class="diacard"><div class="dia">Ter</div><div class="data">04/08</div><div class="barbox"><div class="bar" style="height:93%;background:#fab219"></div></div><span class="tag moderado">Moderado</span><div class="linha">Repetição de subida, curta e puxada</div></div>
+          <div class="diacard"><div class="dia">Qua</div><div class="data">05/08</div><div class="barbox"><div class="bar" style="height:100%;background:#fab219"></div></div><span class="tag moderado">Moderado</span><div class="linha">Maior carga da semana, base + arrancadas</div></div>
+          <div class="diacard"><div class="dia">Qui</div><div class="data">06/08</div><div class="barbox"><div class="bar" style="height:82%;background:#7bc25a"></div></div><span class="tag leve">Leve</span><div class="linha">Mais tranquilo, sem sinal de fadiga</div></div>
+          <div class="diacard"><div class="dia">Sex</div><div class="data">07/08</div><div class="barbox"><div class="bar" style="height:6%;background:#c3c2b7"></div></div><span class="tag descanso">Descanso</span><div class="linha">Sem pedalada registrada</div></div>
+          <div class="diacard"><div class="dia">Sáb</div><div class="data">08/08</div><div class="barbox"><div class="bar" style="height:6%;background:#c3c2b7"></div></div><span class="tag descanso">Descanso</span><div class="linha">Sem pedalada registrada</div></div>
+        </div>
+      </section>
+      <section>
+        <h2>Pontos altos da semana</h2>
+        <div class="cards2">
+          <div class="card alto">
+            <div class="headrow"><span class="dot"></span><span class="titulo">Nenhuma pedalada deixou fadiga acumulada</span></div>
+            <div class="txt">Nas 3 sessões, a frequência cardíaca não subiu mais que a potência na segunda metade — na quarta ela até melhorou. Sinal de que a base aeróbica está estável.</div>
+            <button class="verbtn" onclick="dashToggle('det-decoupling', this)"><span>Ver gráfico</span><span class="chev">▾</span></button>
+            <div class="detalhe" id="det-decoupling"><div class="detalhe-inner">
+              <div class="chartbox"><canvas id="chartDecoupling" role="img" aria-label="Gráfico de barras mostrando a variação da relação potência/frequência cardíaca entre a primeira e a segunda metade de cada pedalada da semana. Terça caiu 0,6%, quarta melhorou 4,2%, quinta caiu 0,3%.">Terça -0,6%, quarta +4,2% (melhorou), quinta -0,3% — nenhum valor indica fadiga.</canvas></div>
+              <div class="fonte">Variação da razão potência/FC entre a 1ª e a 2ª metade de cada pedalada.</div>
+            </div></div>
+          </div>
+          <div class="card alto">
+            <div class="headrow"><span class="dot"></span><span class="titulo">Carga bem distribuída, sem 1 dia dominando a semana</span></div>
+            <div class="txt">As 3 pedaladas ficaram próximas em carga (96, 103 e 85) — nenhuma sessão isolada puxou a semana sozinha, diferente da semana anterior.</div>
+            <button class="verbtn" onclick="dashToggle('det-carga', this)"><span>Ver gráfico</span><span class="chev">▾</span></button>
+            <div class="detalhe" id="det-carga"><div class="detalhe-inner">
+              <div class="chartbox"><canvas id="chartCarga" role="img" aria-label="Gráfico de barras com a carga de treino dos 3 dias em que você pedalou essa semana: terça 96, quarta 103, quinta 85.">Terça 96, quarta 103, quinta 85 — valores próximos entre si.</canvas></div>
+              <div class="fonte">Carga de treino (TSS) de cada pedalada, calculada a partir do stream real de potência.</div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Pontos de atenção</h2>
+        <div class="cards2">
+          <div class="card atencao">
+            <div class="headrow"><span class="dot"></span><span class="titulo">Volume da semana caiu bastante</span></div>
+            <div class="txt">Só 3 pedaladas e 127km, contra 4 pedaladas e 309km na semana anterior (26/07 a 01/08) — quase metade do volume. Não é possível saber o motivo (viagem, imprevisto, escolha deliberada) sem confirmar com o atleta.</div>
+            <button class="verbtn" onclick="dashToggle('det-volume', this)"><span>Ver gráfico</span><span class="chev">▾</span></button>
+            <div class="detalhe" id="det-volume"><div class="detalhe-inner">
+              <div class="chartbox"><canvas id="chartVolume" role="img" aria-label="Gráfico de barras comparando a distância total pedalada nesta semana (127km) com a semana anterior (309km).">Semana 26/07-01/08: 309km. Semana 02/08-08/08: 127km.</canvas></div>
+              <div class="fonte">Distância total da semana, direto do Strava — mesma métrica nas duas semanas, dá pra comparar.</div>
+            </div></div>
+          </div>
+          <div class="card atencao">
+            <div class="headrow"><span class="dot"></span><span class="titulo">Quarta teve 6 arrancadas fortes, mas soltas</span></div>
+            <div class="txt">Foram 6 picos de esforço na quarta, mas nenhum virou um bloco estruturado de treino — ficou entre "pedalada tranquila" e "treino de intervalo" sem se firmar em nenhum dos dois.</div>
+            <button class="verbtn" onclick="dashToggle('det-matches', this)"><span>Ver gráfico</span><span class="chev">▾</span></button>
+            <div class="detalhe" id="det-matches"><div class="detalhe-inner">
+              <div class="chartbox"><canvas id="chartMatches" role="img" aria-label="Gráfico de barras com o número de arrancadas fortes identificadas em cada pedalada da semana: terça 4, quarta 6, quinta 1.">Terça 4 arrancadas, quarta 6 arrancadas, quinta 1 arrancada.</canvas></div>
+              <div class="fonte">Número de picos de esforço (~1min ou mais, acima de 120% do FTP) por pedalada.</div>
+            </div></div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Correlações que a base de conhecimento identificou</h2>
+        <div class="correl">
+          <div class="correlitem">
+            <div class="icon">↗</div>
+            <div class="body">
+              <div class="txt"><b>Quanto mais picotada a pedalada, mais arrancadas fortes ela teve.</b> Quarta foi a mais picotada e teve o maior número de arrancadas (6); quinta foi a mais constante e teve só 1.</div>
+              <button class="verbtn" style="color:var(--blue)" onclick="dashToggle('det-vi', this)"><span>Ver gráfico</span><span class="chev">▾</span></button>
+              <div class="detalhe" id="det-vi"><div class="detalhe-inner">
+                <div class="chartbox"><canvas id="chartVI" role="img" aria-label="Gráfico de barras comparando o quão picotada foi cada pedalada com o número de arrancadas fortes, nos 3 dias da semana.">Terça: picotado 1,48, 4 arrancadas. Quarta: picotado 1,60, 6 arrancadas. Quinta: picotado 1,14, 1 arrancada.</canvas></div>
+                <div class="fonte">Variabilidade de potência (quanto mais alto, mais picotada a pedalada) e número de arrancadas de cada dia.</div>
+              </div></div>
+            </div>
+          </div>
+          <div class="correlitem">
+            <div class="icon">✓</div>
+            <div class="body">
+              <div class="txt"><b>Em nenhum dia da semana a frequência cardíaca subiu mais que a potência.</b> Mesmo com durações e esforços diferentes (de 1h25 a 1h36), o padrão de fadiga clássico não apareceu nenhuma vez.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section style="margin-bottom:10px">
+        <h2>Recomendações pra semana que vem</h2>
+        <div class="rec">
+          <div class="reccard"><div class="n">1. Dá pra somar mais volume, se quiser</div><div class="t">A recuperação das 3 sessões foi rápida nas 3 vezes — se o objetivo é ganhar base, sobrou espaço pra treinar nos dias de descanso.</div></div>
+          <div class="reccard"><div class="n">2. Repita o padrão de terça como treino de qualidade</div><div class="t">A repetição de subida foi curta, estruturada e não deixou cansaço — bom modelo pra manter 1x por semana.</div></div>
+          <div class="reccard"><div class="n">3. Se repetir o dia de quarta, estruture as arrancadas</div><div class="t">Definir tempo de trabalho/descanso fixo (em vez de arrancadas soltas) concentra melhor o estímulo de intensidade.</div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="tabpanel" id="tab-mensal">
+      <div class="emptystate">
+        <div class="ico">📅</div>
+        <div class="tit">Relatório mensal ainda não disponível</div>
+        <div class="txt">A parte do sistema que monta essa visão (agregando as semanas do mês e a fase do plano) ainda não foi testada com dado real (skill-0025, pendente de piloto). Assim que estiver pronta, o resumo do mês aparece aqui, no mesmo formato do semanal.</div>
+      </div>
+    </div>
+  </div>`;
+}
+function dashSetMode(mode){
+  const el = document.getElementById('atletaDash');
+  if(!el) return;
+  el.classList.toggle('mobile-mode', mode==='mobile');
+  document.getElementById('dashBtnDesktop').classList.toggle('active', mode==='desktop');
+  document.getElementById('dashBtnMobile').classList.toggle('active', mode==='mobile');
+  window.dispatchEvent(new Event('resize'));
+}
+function dashShowTab(name){
+  ['diario','semanal','mensal'].forEach(function(n){
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+    document.getElementById('tabbtn-'+n).classList.toggle('active', n===name);
+  });
+  window.dispatchEvent(new Event('resize'));
+}
+function dashShowDia(id, btn){
+  document.querySelectorAll('#atletaDash .diacontent').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('#atletaDash .diapill').forEach(function(el){ el.classList.remove('active'); });
+  btn.classList.add('active');
+}
+function dashToggle(id, btn){
+  const el = document.getElementById(id);
+  const opening = !el.classList.contains('open');
+  el.classList.toggle('open');
+  btn.classList.toggle('open');
+  btn.querySelector('span').textContent = opening ? 'Ocultar gráfico' : 'Ver gráfico';
+  if(opening && !el.dataset.rendered){
+    el.dataset.rendered = '1';
+    dashRenderChart(id);
+  }
+}
+function dashBaseOpts(extra){
+  return Object.assign({
+    responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{display:false} },
+    scales:{ x:{ grid:{display:false}, ticks:{color:'#898781', font:{size:11}} }, y:{ display:false } }
+  }, extra||{});
+}
+function dashRenderChart(id){
+  if(id==='det-decoupling'){
+    new Chart(document.getElementById('chartDecoupling'), {
+      type:'bar',
+      data:{ labels:['Terça','Quarta','Quinta'], datasets:[{ data:[-0.6,4.2,-0.3], backgroundColor:['#7bc25a','#7bc25a','#7bc25a'], borderRadius:4 }] },
+      options: dashBaseOpts({ scales:{ x:{ grid:{display:false} }, y:{ display:true, ticks:{callback:v=>v+'%'} } } })
+    });
+  }
+  if(id==='det-carga'){
+    new Chart(document.getElementById('chartCarga'), {
+      type:'bar',
+      data:{ labels:['Terça','Quarta','Quinta'], datasets:[{ data:[96,103,85], backgroundColor:['#fab219','#fab219','#7bc25a'], borderRadius:4 }] },
+      options: dashBaseOpts()
+    });
+  }
+  if(id==='det-volume'){
+    new Chart(document.getElementById('chartVolume'), {
+      type:'bar',
+      data:{ labels:['26/07 a 01/08','02/08 a 08/08'], datasets:[{ data:[309,127], backgroundColor:['#c3c2b7','#fab219'], borderRadius:4 }] },
+      options: dashBaseOpts()
+    });
+  }
+  if(id==='det-matches'){
+    new Chart(document.getElementById('chartMatches'), {
+      type:'bar',
+      data:{ labels:['Terça','Quarta','Quinta'], datasets:[{ data:[4,6,1], backgroundColor:['#fab219','#d03b3b','#7bc25a'], borderRadius:4 }] },
+      options: dashBaseOpts()
+    });
+  }
+  if(id==='det-vi'){
+    new Chart(document.getElementById('chartVI'), {
+      type:'bar',
+      data:{
+        labels:['Terça','Quarta','Quinta'],
+        datasets:[
+          { label:'Quão picotada (índice)', data:[1.48,1.60,1.14], backgroundColor:'#85B7EB', borderRadius:4 },
+          { label:'Nº de arrancadas', data:[4,6,1], backgroundColor:'#0F6E56', borderRadius:4 }
+        ]
+      },
+      options: dashBaseOpts({ plugins:{ legend:{ display:true, position:'top', labels:{ boxWidth:10, font:{size:11}, color:'#5f5e5a' } } } })
+    });
+  }
+}
+
+async function renderPerfilAtleta(){
+  const row = meuPerfil.row;
+  let assessoriaNome = null;
+  if(row.assessoria_id){
+    const {data} = await sb.from('assessorias_publicas').select('*').eq('id', row.assessoria_id).maybeSingle();
+    assessoriaNome = data ? data.nome : null;
+  }
+  view.innerHTML = `
+    <div class="h-eyebrow">Conta</div>
+    <h1>${escapeHtml(row.nome)}</h1>
+    <p class="lede">${row.assessoria_id ? 'Vinculado à assessoria <b>'+escapeHtml(assessoriaNome||'—')+'</b>.' : 'Atleta independente — sem assessoria vinculada.'}</p>
+
+    ${atletaDashboardHtml(row.nome)}
+
+    <div class="cols" style="margin-top:26px;max-width:820px">
+      <div class="panel loginform">
+        <h3>Meus dados</h3>
+        <input type="text" id="atleta-nome" value="${escapeHtml(row.nome)}" placeholder="nome">
+        <input type="number" id="atleta-peso" value="${row.peso_kg??''}" placeholder="peso (kg)" step="0.1">
+        <input type="number" id="atleta-ftp" value="${row.ftp_vigente_w??''}" placeholder="FTP vigente (W)" step="1">
+        <button class="btn" onclick="salvarPerfilAtleta()">Salvar</button>
+        <div class="formmsg" id="atleta-msg"></div>
+      </div>
+      ${row.assessoria_id ? '' : `
+      <div class="panel loginform">
+        <h3>Vincular a uma assessoria</h3>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="atv-codigo" placeholder="código de convite" style="flex:1">
+          <button class="btn ghost" type="button" onclick="buscarCodigoConvite('atv-')">Buscar</button>
+        </div>
+        <div id="atv-codigo-resultado" class="formmsg"></div>
+        <div class="lbl">ou escolha da lista</div>
+        <select id="atv-select-assessoria" style="${SELECT_STYLE}"><option value="">— selecione —</option></select>
+        <button class="btn" onclick="vincularAssessoriaAgora()">Vincular</button>
+        <div class="formmsg" id="atv-msg"></div>
+      </div>`}
+    </div>`;
+  if(!row.assessoria_id) await popularSelectAssessorias('atv-select-assessoria');
+}
+async function salvarPerfilAtleta(){
+  const nome = document.getElementById('atleta-nome').value.trim();
+  const pesoRaw = document.getElementById('atleta-peso').value;
+  const ftpRaw = document.getElementById('atleta-ftp').value;
+  const msg = document.getElementById('atleta-msg');
+  if(!nome){ msg.textContent = 'Nome não pode ficar vazio.'; msg.className='formmsg err'; return; }
+  const patch = {
+    nome, atualizado_em: new Date().toISOString(),
+    peso_kg: pesoRaw==='' ? null : parseFloat(pesoRaw),
+    ftp_vigente_w: ftpRaw==='' ? null : parseFloat(ftpRaw),
+  };
+  const {data, error} = await sb.from('atletas').update(patch).eq('id', meuPerfil.row.id).select().single();
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  meuPerfil.row = data;
+  msg.textContent = 'Salvo.'; msg.className='formmsg ok';
+  const h1 = view.querySelector('h1'); if(h1) h1.textContent = data.nome;
+}
+async function vincularAssessoriaAgora(){
+  const id = resolverVinculoEscolhido('atv-');
+  const msg = document.getElementById('atv-msg');
+  if(!id){ msg.textContent = 'Busque por código ou escolha uma assessoria na lista.'; msg.className='formmsg err'; return; }
+  const {data, error} = await sb.from('atletas').update({assessoria_id:id, atualizado_em:new Date().toISOString()}).eq('id', meuPerfil.row.id).select().single();
+  if(error){ msg.textContent = error.message; msg.className='formmsg err'; return; }
+  meuPerfil.row = data;
+  msg.textContent = 'Vinculado!'; msg.className='formmsg ok';
+  render();
 }
 
 function renderFilaRevisaoPipeline(){
@@ -1183,6 +1917,7 @@ async function boot(){
   reindexSkillGraph();
   reindexLinkify();
   await carregarFilaERevisao();
+  await carregarPerfil();
   renderAuthbox();
   sidebar();
   render();
@@ -1191,8 +1926,9 @@ async function boot(){
   sb.auth.onAuthStateChange(async (_event, newSession) => {
     session = newSession;
     await carregarFilaERevisao();
+    await carregarPerfil();
     renderAuthbox();
-    if(state.v==='upload' || state.v==='fila' || state.v==='revisao') render();
+    if(state.v==='upload' || state.v==='fila' || state.v==='revisao' || state.v==='cadastro') render();
   });
 }
 boot();
