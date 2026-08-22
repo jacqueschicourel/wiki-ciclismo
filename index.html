@@ -383,6 +383,7 @@
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
       <button class="navlink" id="nav-cadastro" onclick="go({v:'cadastro'})">Cadastro / conta</button>
+      <button class="navlink" id="nav-treinos" onclick="go({v:'treinos'})">Treinos analisados</button>
     </div>
     <div>
       <div class="lbl">Domínios</div>
@@ -439,18 +440,24 @@ let NOTES = [], SKILLS = [], REVISOES = [];
 const REV_LABELS = {'baixa-confianca':'Baixa confiança','conflito':'Conflito','modelo-concorrente':'Modelo concorrente'};
 let FILA = [];      // ingestao_jobs (só visível autenticado)
 let REVISAO_PIPE = []; // revisao_pendente (só visível autenticado)
+let ANALISES = [];  // analises_sessao (pública — leitura liberada pra qualquer visitante)
+let FEEDBACK_TREINOS = []; // feedback_treino_publico (comentários/aprovação públicos, ex.: Igor)
 let session = null;
 let meuPerfil = null; // {tipo:'assessoria', row} ou {tipo:'atleta', row} ou null (logado sem cadastro ainda)
 let vinculoEscolhido = {}; // prefixo do form -> id de assessoria escolhido via busca por código
 
 async function carregarDados(){
-  const [{data: notasRows}, {data: fontesRows}, {data: relRows}, {data: skillsRows}, {data: legadoRows}] = await Promise.all([
+  const [{data: notasRows}, {data: fontesRows}, {data: relRows}, {data: skillsRows}, {data: legadoRows}, {data: analisesRows}, {data: feedbackTreinosRows}] = await Promise.all([
     sb.from('notas').select('*').eq('status','ativo'),
     sb.from('notas_fontes').select('*'),
     sb.from('notas_relacoes').select('*'),
     sb.from('skills').select('*'),
     sb.from('revisao_legado').select('*'),
+    sb.from('analises_sessao').select('*').order('data_atividade', {ascending:false}),
+    sb.from('feedback_treino_publico').select('*').order('criado_em', {ascending:true}),
   ]);
+  ANALISES = analisesRows || [];
+  FEEDBACK_TREINOS = feedbackTreinosRows || [];
   const fontesPorNota = {}, relPorNota = {};
   (fontesRows||[]).forEach(f=>{ (fontesPorNota[f.nota_id] = fontesPorNota[f.nota_id]||[]).push({arquivo:f.arquivo, pagina:f.pagina, trecho:f.trecho}); });
   (relRows||[]).forEach(r=>{ (relPorNota[r.nota_origem_id] = relPorNota[r.nota_origem_id]||[]).push({id:r.nota_destino_id, tipo:r.tipo, justificativa:r.justificativa}); });
@@ -797,6 +804,7 @@ function syncNav(){
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
   document.getElementById('nav-cadastro').classList.toggle('active', state.v==='cadastro');
+  document.getElementById('nav-treinos').classList.toggle('active', state.v==='treinos'||state.v==='treino');
 }
 
 function sidebar(){
@@ -827,6 +835,8 @@ function render(){
   if(state.v==='skill') return renderSkill(state.id);
   if(state.v==='fila') return renderFila();
   if(state.v==='cadastro') return renderCadastro();
+  if(state.v==='treinos') return renderTreinos();
+  if(state.v==='treino') return renderTreino(state.id);
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
     const q=state.q;
@@ -1166,6 +1176,148 @@ function renderList(list,title,color,kind){
     <div class="listhead"><span class="dot" style="background:${color}"></span>${title}</div>
     <div class="listsub">${list.length} nota(s).</div>
     <div class="cards">${cards}</div>`;
+}
+
+/* ---------------- Treinos analisados (público — sem login) ---------------- */
+function extrairNumero(regex, texto){
+  if(!texto) return null;
+  const m = texto.match(regex);
+  if(!m) return null;
+  const n = parseFloat(m[1].replace(',','.'));
+  return isNaN(n) ? null : n;
+}
+function resumoTssIf(a){
+  const motivo = a.skills_output && a.skills_output['skill-0002'] ? a.skills_output['skill-0002'].motivo : null;
+  const tss = extrairNumero(/TSS[^=]*=\s*([\d.,]+)/i, motivo);
+  const iff = extrairNumero(/IF[^=]*=\s*([\d.,]+)/i, motivo);
+  return {tss, iff};
+}
+function feedbackDoTreino(activityId){
+  return FEEDBACK_TREINOS.filter(f=>f.activity_id===activityId);
+}
+function contagemDecisoes(activityId){
+  const itens = feedbackDoTreino(activityId);
+  return {
+    aprovado: itens.filter(i=>i.tipo==='aprovado').length,
+    reprovado: itens.filter(i=>i.tipo==='reprovado').length,
+    comentarios: itens.filter(i=>i.tipo==='comentario').length,
+  };
+}
+function treinoCard(a){
+  const {tss, iff} = resumoTssIf(a);
+  const dec = contagemDecisoes(a.activity_id);
+  const dataFmt = a.data_atividade ? new Date(a.data_atividade+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+  return `<button class="ncard" onclick="go({v:'treino',id:'${a.activity_id}'})">
+    <div class="top"><span class="cid">${dataFmt}</span>
+      <span class="miniline">${escapeHtml(a.tipo_sessao||'sessão')}</span></div>
+    <div class="tt">${escapeHtml(a.nome_atividade||('Atividade '+a.activity_id))}</div>
+    <div class="mt">
+      ${a.distancia_km!=null?`<span class="mini" style="background:var(--line)">${a.distancia_km.toFixed?a.distancia_km.toFixed(1):a.distancia_km} km</span>`:''}
+      ${tss!=null?`<span class="mini" style="background:var(--line)">TSS ${tss}</span>`:''}
+      ${iff!=null?`<span class="mini" style="background:var(--line)">IF ${iff}</span>`:''}
+      ${dec.aprovado?`<span class="mini" style="background:#DCEEDC">✓ ${dec.aprovado}</span>`:''}
+      ${dec.reprovado?`<span class="mini" style="background:#F3D9D6">✗ ${dec.reprovado}</span>`:''}
+      ${dec.comentarios?`<span class="mini" style="background:var(--line)">💬 ${dec.comentarios}</span>`:''}
+    </div>
+  </button>`;
+}
+function renderTreinos(){
+  const list = [...ANALISES].sort((a,b)=>(b.data_atividade||'').localeCompare(a.data_atividade||''));
+  view.innerHTML = `
+    <div class="h-eyebrow">Treinos analisados</div>
+    <h1>Sessões de ciclismo já processadas pelo cânone</h1>
+    <p class="lede">Cada treino abaixo foi analisado pelas 22 skills técnicas do LRF, com a origem de cada número exposta (Medido, Calculado, Estimado, Manual ou Ausente), e gerou a mensagem curta que o atleta recebeu por WhatsApp. Aberto pra qualquer pessoa ver e comentar — sem necessidade de conta.</p>
+    <div class="listsub">${list.length} treino(s) analisado(s).</div>
+    <div class="cards">${list.length?list.map(treinoCard).join(''):'<div class="empty">Nenhum treino analisado ainda.</div>'}</div>`;
+}
+function normLinhaAud(row, idx){
+  return {
+    numero: row.numero || (row.n!=null ? ('skill-'+String(row.n).padStart(4,'0')) : ('#'+(idx+1))),
+    skill: row.skill || '—',
+    provenencia: row.provenance || row.proveniencia || row.provenencia || '—',
+    resultado: row.resultado || '',
+    nota: row.nota || '',
+  };
+}
+function chipProvenencia(p){
+  const cores = {'Medido':'#DCEEDC','Calculado':'#DCEEDC','Estimado':'#F6E9C9','Manual':'#DCE3F3','Ausente':'#EDEDED'};
+  return `<span class="chip line" style="background:${cores[p]||'var(--line)'}">${escapeHtml(p)}</span>`;
+}
+function renderTreino(activityId){
+  const a = ANALISES.find(x=>x.activity_id===activityId);
+  if(!a){ go({v:'treinos'}); return; }
+  const dataFmt = a.data_atividade ? new Date(a.data_atividade+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+  const tabela = Array.isArray(a.tabela_auditoria) ? a.tabela_auditoria.map(normLinhaAud) : [];
+  const linhas = tabela.map(l=>`<tr>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap">${escapeHtml(l.numero)}</td>
+      <td>${escapeHtml(l.skill)}</td>
+      <td>${chipProvenencia(l.provenencia)}</td>
+      <td style="font-size:13px">${escapeHtml(l.resultado)}</td>
+    </tr>`).join('');
+  const comentarios = feedbackDoTreino(activityId).slice().reverse();
+  const rotuloTipo = {comentario:'💬 comentário', aprovado:'✓ aprovado', reprovado:'✗ reprovado'};
+  const comentariosHtml = comentarios.length ? comentarios.map(c=>`
+    <div class="commentitem">
+      <span class="ca">${escapeHtml(c.autor_nome)} · ${rotuloTipo[c.tipo]||c.tipo} · ${new Date(c.criado_em).toLocaleString('pt-BR')}</span>
+      ${c.comentario?escapeHtml(c.comentario):''}
+    </div>`).join('') : '<p class="hint">Nenhum comentário ainda.</p>';
+  view.innerHTML = `
+    <button class="back" onclick="go({v:'treinos'})">← voltar pros treinos</button>
+    <div class="badges">
+      <span class="tag-id">${dataFmt}</span>
+      ${chip(escapeHtml(a.tipo_sessao||'sessão'),'','line')}
+      ${a.distancia_km!=null?chip(`${a.distancia_km} km`,'','line'):''}
+      ${a.tempo_movimento_s?chip(`${Math.round(a.tempo_movimento_s/60)} min`,'','line'):''}
+    </div>
+    <h2 class="note">${escapeHtml(a.nome_atividade||('Atividade '+a.activity_id))}</h2>
+
+    <div class="panel" style="margin-top:18px;background:#FFF9EC;border-color:#EAD9A8">
+      <h3>Feedback enviado ao atleta (WhatsApp)</h3>
+      <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(a.feedback_atleta||'—')}</p>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <h3>Como foi analisado — as 22 skills do cânone</h3>
+      ${tabela.length ? `<table style="width:100%;border-collapse:collapse;margin-top:8px">
+        <thead><tr style="text-align:left;border-bottom:1px solid var(--line-strong)">
+          <th style="padding:6px 8px;font-size:11px;color:var(--muted)">Nº</th>
+          <th style="padding:6px 8px;font-size:11px;color:var(--muted)">Skill</th>
+          <th style="padding:6px 8px;font-size:11px;color:var(--muted)">Proveniência</th>
+          <th style="padding:6px 8px;font-size:11px;color:var(--muted)">Resultado</th>
+        </tr></thead>
+        <tbody>${linhas}</tbody>
+      </table>` : '<p class="hint">Tabela de auditoria não disponível pra esta sessão.</p>'}
+    </div>
+
+    <div class="revsection" style="margin-top:18px">
+      <div class="revhead"><span class="revdot conflito"></span>Comentários e decisão do treinador<span class="revcount">${comentarios.length}</span></div>
+      <p class="hint">Qualquer pessoa pode comentar ou marcar esta análise como aprovada/reprovada — serve pra dar retorno de como melhorar a IA.</p>
+      <div class="commentlist">${comentariosHtml}</div>
+      <div class="decisionrow" style="flex-direction:column;align-items:stretch;gap:8px;margin-top:12px">
+        <input id="ft-nome" type="text" placeholder="Seu nome" class="search" style="width:100%;max-width:320px">
+        <textarea id="ft-comentario" placeholder="Comentário (opcional pra aprovar/reprovar)" class="search" style="width:100%;max-width:520px;min-height:70px;font-family:var(--sans)"></textarea>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="enviarFeedbackTreino('${activityId}','aprovado')">Aprovar</button>
+          <button class="btn ghost" onclick="enviarFeedbackTreino('${activityId}','reprovado')">Reprovar</button>
+          <button class="btn ghost" onclick="enviarFeedbackTreino('${activityId}','comentario')">Só comentar</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function enviarFeedbackTreino(activityId, tipo){
+  const nomeEl = document.getElementById('ft-nome');
+  const comentarioEl = document.getElementById('ft-comentario');
+  const autor_nome = (nomeEl.value||'').trim();
+  const comentario = (comentarioEl.value||'').trim();
+  if(!autor_nome){ alert('Escreve seu nome antes de enviar.'); return; }
+  if(tipo==='comentario' && !comentario){ alert('Escreve um comentário, ou usa Aprovar/Reprovar.'); return; }
+  const { error } = await sb.from('feedback_treino_publico').insert({
+    activity_id: activityId, autor_nome, tipo, comentario: comentario || null,
+  });
+  if(error){ alert('Erro ao enviar: '+error.message); return; }
+  const { data } = await sb.from('feedback_treino_publico').select('*').order('criado_em', {ascending:true});
+  FEEDBACK_TREINOS = data || [];
+  renderTreino(activityId);
 }
 </script>
 
