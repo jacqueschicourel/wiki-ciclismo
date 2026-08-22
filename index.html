@@ -112,6 +112,8 @@
   .body ul{margin:0 0 14px;padding-left:22px}
   .body li{margin-bottom:6px}
   .body table{border-collapse:collapse;margin:6px 0 16px;font-size:14px;width:100%;max-width:620px}
+  .body.wide{max-width:none}
+  .body.wide table{max-width:100%}
   .body th,.body td{border:1px solid var(--line-strong);padding:7px 11px;text-align:left}
   .body th{background:var(--paper);font-weight:600;font-family:var(--serif)}
   .apply{background:#F6F4EC;border-left:3px solid var(--d-tipos);border-radius:0 8px 8px 0;
@@ -1276,6 +1278,12 @@ function renderTreino(activityId){
       <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(a.feedback_atleta||'—')}</p>
     </div>
 
+    ${a.analise_completa_md ? `
+    <div class="panel" style="margin-top:18px">
+      <h3>Análise técnica completa — as skills em ação</h3>
+      <p class="hint">Exatamente como foi processada: dado bruto, cada uma das 22 skills do cânone aplicada isoladamente, curadoria da mensagem e a auditoria de rastreabilidade frase-por-frase que liga o feedback de volta à fonte.</p>
+      <div class="body wide">${mdToHtml(a.analise_completa_md)}</div>
+    </div>` : `
     <div class="panel" style="margin-top:18px">
       <h3>Como foi analisado — as 22 skills do cânone</h3>
       ${tabela.length ? `<table style="width:100%;border-collapse:collapse;margin-top:8px">
@@ -1287,7 +1295,7 @@ function renderTreino(activityId){
         </tr></thead>
         <tbody>${linhas}</tbody>
       </table>` : '<p class="hint">Tabela de auditoria não disponível pra esta sessão.</p>'}
-    </div>
+    </div>`}
 
     <div class="revsection" style="margin-top:18px">
       <div class="revhead"><span class="revdot conflito"></span>Comentários e decisão do treinador<span class="revcount">${comentarios.length}</span></div>
