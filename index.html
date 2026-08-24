@@ -386,6 +386,7 @@
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
       <button class="navlink" id="nav-cadastro" onclick="go({v:'cadastro'})">Cadastro / conta</button>
       <button class="navlink" id="nav-treinos" onclick="go({v:'treinos'})">Treinos analisados</button>
+      <button class="navlink" id="nav-feedback" onclick="go({v:'feedback'})">Feedback dos treinos</button>
     </div>
     <div>
       <div class="lbl">Domínios</div>
@@ -807,6 +808,7 @@ function syncNav(){
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
   document.getElementById('nav-cadastro').classList.toggle('active', state.v==='cadastro');
   document.getElementById('nav-treinos').classList.toggle('active', state.v==='treinos'||state.v==='treino');
+  document.getElementById('nav-feedback').classList.toggle('active', state.v==='feedback');
 }
 
 function sidebar(){
@@ -839,6 +841,7 @@ function render(){
   if(state.v==='cadastro') return renderCadastro();
   if(state.v==='treinos') return renderTreinos();
   if(state.v==='treino') return renderTreino(state.id);
+  if(state.v==='feedback') return renderFeedback();
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
     const q=state.q;
@@ -1326,6 +1329,42 @@ async function enviarFeedbackTreino(activityId, tipo){
   const { data } = await sb.from('feedback_treino_publico').select('*').order('criado_em', {ascending:true});
   FEEDBACK_TREINOS = data || [];
   renderTreino(activityId);
+}
+const ROTULO_TIPO_FEEDBACK = {comentario:'💬 comentário', aprovado:'✓ aprovado', reprovado:'✗ reprovado'};
+function feedbackCard(f){
+  const a = ANALISES.find(x=>x.activity_id===f.activity_id);
+  const nomeTreino = a ? (a.nome_atividade||('Atividade '+f.activity_id)) : ('Atividade '+f.activity_id);
+  const dataFmt = a && a.data_atividade ? new Date(a.data_atividade+'T12:00:00').toLocaleDateString('pt-BR') : '';
+  return `<div class="commentitem" style="margin-bottom:8px">
+    <span class="ca">${escapeHtml(f.autor_nome)} · ${ROTULO_TIPO_FEEDBACK[f.tipo]||f.tipo} · ${new Date(f.criado_em).toLocaleString('pt-BR')}</span>
+    ${f.comentario ? `<div style="margin:4px 0">${escapeHtml(f.comentario)}</div>` : ''}
+    <button class="back" style="margin-top:2px" onclick="go({v:'treino',id:'${f.activity_id}'})">→ ${escapeHtml(nomeTreino)}${dataFmt?' · '+dataFmt:''}</button>
+  </div>`;
+}
+function renderFeedback(){
+  const filtro = state.tipo || 'todos';
+  const list = [...FEEDBACK_TREINOS].sort((a,b)=>(b.criado_em||'').localeCompare(a.criado_em||''));
+  const filtrado = filtro==='todos' ? list : list.filter(f=>f.tipo===filtro);
+  const total = {
+    todos: list.length,
+    aprovado: list.filter(f=>f.tipo==='aprovado').length,
+    reprovado: list.filter(f=>f.tipo==='reprovado').length,
+    comentario: list.filter(f=>f.tipo==='comentario').length,
+  };
+  const tabBtn = (key,label) => `<button class="chip line" style="cursor:pointer;border:0;font-family:inherit;${filtro===key?'background:var(--ink);color:#fff;border-color:var(--ink)':''}" onclick="go({v:'feedback',tipo:'${key}'})">${label} (${total[key]})</button>`;
+  view.innerHTML = `
+    <div class="h-eyebrow">Feedback dos treinos</div>
+    <h1>Comentários, aprovações e reprovações — todas as sessões</h1>
+    <p class="lede">Tudo que qualquer pessoa comentou/aprovou/reprovou nas análises técnicas, juntado aqui num só lugar. Clique num item pra abrir a sessão correspondente.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0">
+      ${tabBtn('todos','Todos')}
+      ${tabBtn('aprovado','✓ Aprovados')}
+      ${tabBtn('reprovado','✗ Reprovados')}
+      ${tabBtn('comentario','💬 Comentários')}
+    </div>
+    <div class="panel">
+      <div class="commentlist">${filtrado.length ? filtrado.map(feedbackCard).join('') : `<p class="hint">Nenhum registro ainda${filtro!=='todos'?' nesse filtro':''}.</p>`}</div>
+    </div>`;
 }
 </script>
 
