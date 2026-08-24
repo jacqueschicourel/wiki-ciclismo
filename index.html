@@ -156,7 +156,13 @@
   .ncard .cid{font-family:var(--mono);font-size:11px;color:var(--muted)}
   .ncard .tt{font-family:var(--serif);font-weight:600;font-size:14.5px;line-height:1.25}
   .ncard .mt{display:flex;gap:7px;align-items:center;margin-top:auto}
-  .ncard .mini{font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;color:var(--ink)}
+  .ncard .mini{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;color:var(--ink)}
+  .ncard .mini.km{background:#fff;border:1px solid var(--line-strong);color:var(--muted);font-weight:600}
+  .ncard .mini.tss{background:rgba(62,107,140,.14);color:#2C5470}
+  .ncard .mini.iff{background:rgba(110,143,63,.16);color:#4C6A2A}
+  .ncard .mini.ok{background:#2F7D4F;color:#fff}
+  .ncard .mini.no{background:var(--signal);color:#fff}
+  .ncard .mini.cm{background:#3E6B8C;color:#fff}
   .ncard .miniline{font-size:10.5px;color:var(--muted);font-family:var(--mono)}
   .empty{color:var(--muted);font-size:14px;padding:30px 0}
   .revsection{margin-top:30px}
@@ -1217,12 +1223,12 @@ function treinoCard(a){
       <span class="miniline">${escapeHtml(a.tipo_sessao||'sessão')}</span></div>
     <div class="tt">${escapeHtml(a.nome_atividade||('Atividade '+a.activity_id))}</div>
     <div class="mt">
-      ${a.distancia_km!=null?`<span class="mini" style="background:var(--line)">${a.distancia_km.toFixed?a.distancia_km.toFixed(1):a.distancia_km} km</span>`:''}
-      ${tss!=null?`<span class="mini" style="background:var(--line)">TSS ${tss}</span>`:''}
-      ${iff!=null?`<span class="mini" style="background:var(--line)">IF ${iff}</span>`:''}
-      ${dec.aprovado?`<span class="mini" style="background:#DCEEDC">✓ ${dec.aprovado}</span>`:''}
-      ${dec.reprovado?`<span class="mini" style="background:#F3D9D6">✗ ${dec.reprovado}</span>`:''}
-      ${dec.comentarios?`<span class="mini" style="background:var(--line)">💬 ${dec.comentarios}</span>`:''}
+      ${a.distancia_km!=null?`<span class="mini km">${a.distancia_km.toFixed?a.distancia_km.toFixed(1):a.distancia_km} km</span>`:''}
+      ${tss!=null?`<span class="mini tss">TSS ${tss}</span>`:''}
+      ${iff!=null?`<span class="mini iff">IF ${iff}</span>`:''}
+      ${dec.aprovado?`<span class="mini ok">✓ ${dec.aprovado}</span>`:''}
+      ${dec.reprovado?`<span class="mini no">✗ ${dec.reprovado}</span>`:''}
+      ${dec.comentarios?`<span class="mini cm">💬 ${dec.comentarios}</span>`:''}
     </div>
   </button>`;
 }
