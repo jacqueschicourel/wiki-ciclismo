@@ -425,6 +425,55 @@
     .gs-swipe-dots{display:flex}
     .gs-swipe-hint{display:block}
   }
+
+  /* ---- Painel "Gráficos" — seletor de sessão + 4 modos de visualização
+     (Desktop / Mobile / Desktop atleta / Mobile atleta), recriando o
+     artefato de teste _scratch_revisao_igor.html dentro do wiki de verdade.
+     Tudo escopado a #gsStage — nunca ao body inteiro — pra não afetar o
+     resto do wiki (sidebar, outras views). ---- */
+  .gsDeviceToggle{position:fixed;top:12px;right:12px;z-index:999;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid #d8d7d3;border-radius:9px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,0.10);flex-wrap:wrap;max-width:320px;justify-content:flex-end}
+  .gsDeviceToggle button{font-size:11.5px;padding:6px 10px;border-radius:6px;border:none;background:transparent;cursor:pointer;color:#6b6a61;font-weight:600;white-space:nowrap}
+  .gsDeviceToggle button.active{background:#3b5bfd;color:#fff}
+  .gsDeviceToggle .gs-sep{width:1px;height:20px;background:#e5e4dd;margin:0 2px}
+  .gs-cat-nav{display:none}
+  #gsStage.mobile-preview{background:#dedcd3;padding:56px 0 40px;border-radius:12px}
+  #gsStage.mobile-preview .gsStageInner{max-width:390px;margin:0 auto;background:#f7f7f5;box-shadow:0 0 0 1px #d8d7d3;min-height:400px;padding:16px}
+  #gsStage.athlete-mode .gs-fb{display:none}
+  #gsStage.athlete-mode .gs-badge-ia{display:none}
+  #gsStage.athlete-mode .gs-badge-calc{display:none}
+  #gsStage.athlete-mode .gs-cap{display:none}
+  #gsStage.athlete-mode.mobile-preview .gs-cat-nav{
+    display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    position:sticky;top:0;z-index:500;background:#f7f7f5;padding:8px 0 10px;margin:0 0 4px;
+  }
+  .gs-cat-nav::-webkit-scrollbar{display:none}
+  .gs-cat-nav button{flex:0 0 auto;font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;border:1px solid #d8d7d3;background:#fff;color:#3f3e37;white-space:nowrap;cursor:pointer}
+  .gs-cat-nav button.active{background:#3b5bfd;border-color:#3b5bfd;color:#fff}
+  .gs-acc-bar{display:none}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-acc-bar{
+    display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;color:#3b5bfd;
+    padding:10px 0 2px;margin-top:12px;border-top:1px solid #e5e4dd;-webkit-tap-highlight-color:transparent;
+  }
+  .gs-acc-chevron{display:inline-block;transition:transform .15s}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-acc-bar .gs-acc-chevron{transform:rotate(90deg)}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-mid,
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-right,
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-dots,
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-hint{
+    display:none;
+  }
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-viewport .gsCard3{
+    display:block;
+  }
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-mid{display:block}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-right{display:flex}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-dots{display:flex}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-hint{display:block}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3{
+    display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3::-webkit-scrollbar{display:none}
+  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
 </style>
 </head>
 <body>
@@ -440,6 +489,7 @@
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
       <button class="navlink" id="nav-cadastro" onclick="go({v:'cadastro'})">Cadastro / conta</button>
       <button class="navlink" id="nav-treinos" onclick="go({v:'treinos'})">Treinos analisados</button>
+      <button class="navlink" id="nav-graficos" onclick="go({v:'graficos'})">Gráficos</button>
       <button class="navlink" id="nav-feedback" onclick="go({v:'feedback'})">Feedback dos treinos</button>
     </div>
     <div>
@@ -862,6 +912,7 @@ function syncNav(){
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
   document.getElementById('nav-cadastro').classList.toggle('active', state.v==='cadastro');
   document.getElementById('nav-treinos').classList.toggle('active', state.v==='treinos'||state.v==='treino');
+  document.getElementById('nav-graficos').classList.toggle('active', state.v==='graficos');
   document.getElementById('nav-feedback').classList.toggle('active', state.v==='feedback');
 }
 
@@ -895,6 +946,7 @@ function render(){
   if(state.v==='cadastro') return renderCadastro();
   if(state.v==='treinos') return renderTreinos();
   if(state.v==='treino') return renderTreino(state.id);
+  if(state.v==='graficos') return renderGraficosPainel();
   if(state.v==='feedback') return renderFeedback();
   if(state.v==='dom')  return renderList(NOTES.filter(n=>n.dom===state.dom), shortDom(state.dom), domColor(state.dom), 'domínio');
   if(state.v==='search'){
@@ -1424,7 +1476,8 @@ function gsFeedbackBlock(activityId, graficoId, counts){
 function gsSwipeChrome(card3Html){
   return `<div class="gs-swipe-viewport">${card3Html}</div>
     <div class="gs-swipe-dots"><button class="active" data-i="0" aria-label="Pergunta e resumo"></button><button data-i="1" aria-label="Gráfico"></button><button data-i="2" aria-label="Interpretação"></button></div>
-    <div class="gs-swipe-hint">arraste pro lado pra ver o gráfico e a interpretação</div>`;
+    <div class="gs-swipe-hint">arraste pro lado pra ver o gráfico e a interpretação</div>
+    <div class="gs-acc-bar"><span class="gs-acc-chevron">›</span><span class="gs-acc-bar-txt">Toque para ver o gráfico</span></div>`;
 }
 function gsInitSwipeCarousels(){
   document.querySelectorAll('.gsCardWrap').forEach(card => {
@@ -2175,9 +2228,165 @@ async function carregarGraficosTreino(activityId){
   }
 }
 
+// ---------- Painel "Gráficos" — seção dedicada com seletor de sessão e os 4
+// modos de visualização (Desktop/Mobile/Desktop atleta/Mobile atleta), portado
+// de _scratch_revisao_igor.html. Escopado a #gsStage (nunca ao body) pra não
+// afetar o resto do wiki (sidebar, outras views).
+let gsCatNavObserver = null;
+
+function gsSlugify(s){
+  return String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
+function gsToggleAccordion(card){
+  const opening = !card.classList.contains('gs-acc-open');
+  card.classList.toggle('gs-acc-open');
+  const hintTxt = card.querySelector('.gs-acc-bar-txt');
+  if (hintTxt) hintTxt.textContent = opening ? 'Toque para fechar' : 'Toque para ver o gráfico';
+  if (opening) {
+    requestAnimationFrame(()=>{
+      const track = card.querySelector('.gs-swipe-viewport .gsCard3');
+      if (track) track.scrollTo({left: track.clientWidth, behavior:'auto'});
+      card.querySelectorAll('canvas').forEach(cv=>{
+        const ch = (window.Chart && Chart.getChart) ? Chart.getChart(cv) : null;
+        if (ch) ch.resize();
+      });
+    });
+  }
+}
+
+function gsBuildCatNav(){
+  const nav = document.getElementById('gsCatNav');
+  if (!nav) return;
+  nav.innerHTML = '';
+  if (gsCatNavObserver) { gsCatNavObserver.disconnect(); gsCatNavObserver = null; }
+  const items = [];
+  const vg = document.querySelector('#graficosCards [data-grafico="visao-geral"]');
+  if (vg) { if (!vg.id) vg.id = 'gs-card-visao-geral'; items.push({id: vg.id, label:'Visão geral'}); }
+  const CAT_CHIP_LABEL = { 'Intensidade':'IF', 'Frequência cardíaca':'FC', 'Cadência':'RPM', 'Potência':'Watts' };
+  document.querySelectorAll('#graficosCards .gs-cat-header').forEach((el,i)=>{
+    const id = 'gs-cat-'+gsSlugify(el.textContent)+'-'+i;
+    el.id = id;
+    items.push({id, label: el.textContent, chipLabel: CAT_CHIP_LABEL[el.textContent.trim()] || el.textContent});
+  });
+  if (!items.length) return;
+  items.forEach(it=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = it.chipLabel || it.label;
+    btn.title = it.label;
+    btn.addEventListener('click', ()=>{
+      const el = document.getElementById(it.id);
+      if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    nav.appendChild(btn);
+  });
+  const btns = Array.from(nav.querySelectorAll('button'));
+  gsCatNavObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if (!entry.isIntersecting) return;
+      const idx = items.findIndex(it=>it.id===entry.target.id);
+      if (idx<0) return;
+      btns.forEach(b=>b.classList.remove('active'));
+      if (btns[idx]) btns[idx].classList.add('active');
+    });
+  }, {root:null, rootMargin:'-96px 0px -70% 0px', threshold:0});
+  items.forEach(it=>{ const el=document.getElementById(it.id); if (el) gsCatNavObserver.observe(el); });
+}
+
+function gsApplyDeviceState(mobile, athlete){
+  const stage = document.getElementById('gsStage');
+  if (!stage) return;
+  stage.classList.toggle('mobile-preview', mobile);
+  stage.classList.toggle('athlete-mode', athlete);
+  document.querySelectorAll('.gs-device-btn').forEach(b=>{
+    const bm = b.getAttribute('data-mobile')==='1', ba = b.getAttribute('data-athlete')==='1';
+    b.classList.toggle('active', bm===mobile && ba===athlete);
+  });
+  gsBuildCatNav();
+}
+
+let GS_SESSOES_COM_GRAFICO = null; // cache: sessões (de ANALISES) que têm ao menos 1 linha em graficos_sessao
+
+async function gsCarregarListaSessoes(){
+  if (GS_SESSOES_COM_GRAFICO) return GS_SESSOES_COM_GRAFICO;
+  const { data, error } = await sb.from('graficos_sessao').select('activity_id').neq('grafico_id','if-terreno');
+  if (error) throw new Error(error.message);
+  const ids = new Set((data||[]).map(r=>r.activity_id));
+  GS_SESSOES_COM_GRAFICO = ANALISES.filter(a=>ids.has(a.activity_id)); // ANALISES já vem ordenado por data desc
+  return GS_SESSOES_COM_GRAFICO;
+}
+
+async function renderGraficosPainel(){
+  view.innerHTML = `
+    <div class="gsDeviceToggle" id="gsDeviceToggle">
+      <button class="gs-device-btn active" data-mobile="0" data-athlete="0">🖥️ Desktop</button>
+      <button class="gs-device-btn" data-mobile="1" data-athlete="0">📱 Mobile</button>
+      <span class="gs-sep"></span>
+      <button class="gs-device-btn" data-mobile="0" data-athlete="1">🖥️ Desktop atleta</button>
+      <button class="gs-device-btn" data-mobile="1" data-athlete="1">📱 Mobile atleta</button>
+    </div>
+    <h1>Gráficos</h1>
+    <p class="hint">Sessões com gráficos automáticos calculados. Os botões no canto superior direito simulam como o treinador (Desktop/Mobile) ou o atleta (Desktop atleta/Mobile atleta) veem essa tela.</p>
+    <div style="margin:14px 0">
+      <select id="gsSessaoSelect"><option>Carregando sessões…</option></select>
+    </div>
+    <div id="gsStage">
+      <div class="gsStageInner">
+        <div id="gsAusentesNote" class="hint"></div>
+        <div id="gsCatNav" class="gs-cat-nav"></div>
+        <div id="graficosCards"><div class="hint">Carregando…</div></div>
+      </div>
+    </div>
+  `;
+  try {
+    const sessoes = await gsCarregarListaSessoes();
+    const sel = document.getElementById('gsSessaoSelect');
+    if (!sel) return; // usuário já navegou pra outra tela
+    if (!sessoes.length) {
+      sel.innerHTML = '<option>Nenhuma sessão com gráficos ainda</option>';
+      const cont = document.getElementById('graficosCards');
+      if (cont) cont.innerHTML = '<div class="hint">Nenhuma sessão com gráficos automáticos calculados ainda.</div>';
+      return;
+    }
+    sel.innerHTML = sessoes.map(a=>{
+      const dataFmt = a.data_atividade ? new Date(a.data_atividade+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<option value="${a.activity_id}">${dataFmt} — ${escapeHtml(a.nome_atividade||('Atividade '+a.activity_id))}</option>`;
+    }).join('');
+    await carregarGraficosTreino(sessoes[0].activity_id);
+    gsBuildCatNav();
+  } catch (err) {
+    console.error('Erro ao carregar lista de sessões com gráficos', err);
+    const container = document.getElementById('graficosCards');
+    if (container) container.innerHTML = `<div class="hint">Não consegui carregar a lista de sessões: ${escapeHtml(err.message||String(err))}</div>`;
+  }
+}
+
 // Delegação de eventos ligada uma única vez em #view (persiste entre navegações — renderTreino só
 // substitui o innerHTML, o próprio nó #view nunca é recriado).
+view.addEventListener('change', (ev)=>{
+  const sel = ev.target.closest('#gsSessaoSelect');
+  if (sel) {
+    carregarGraficosTreino(sel.value).then(()=> gsBuildCatNav());
+  }
+});
 view.addEventListener('click', async (ev)=>{
+  const deviceBtn = ev.target.closest('.gs-device-btn');
+  if (deviceBtn) {
+    gsApplyDeviceState(deviceBtn.getAttribute('data-mobile')==='1', deviceBtn.getAttribute('data-athlete')==='1');
+    return;
+  }
+  const accBar = ev.target.closest('.gs-acc-bar');
+  if (accBar) {
+    const stage = document.getElementById('gsStage');
+    if (stage && stage.classList.contains('athlete-mode') && stage.classList.contains('mobile-preview')) {
+      const card = accBar.closest('.gsCardWrap[data-grafico]');
+      if (card && card.getAttribute('data-grafico') !== 'visao-geral') {
+        gsToggleAccordion(card);
+        return;
+      }
+    }
+  }
   const btn = ev.target.closest('.gs-fb-btn');
   if (btn) {
     const fb = btn.closest('.gs-fb');
@@ -2245,13 +2454,6 @@ function renderTreino(activityId){
       <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(a.feedback_atleta||'—')}</p>
     </div>
 
-    <div id="gsSecaoGraficos" style="margin-top:18px">
-      <div class="gsTitulo">Gráficos da sessão</div>
-      <p class="hint" style="margin:-2px 0 14px">Cada painel mostra a pergunta que ele responde, o gráfico em si e a interpretação — marque 👍/👎 pra dar retorno de qual gráfico vale a pena manter.</p>
-      <div id="gsAusentesNote" class="gsAusentes"></div>
-      <div id="graficosCards"><div class="hint">Carregando gráficos…</div></div>
-    </div>
-
     ${a.analise_completa_md ? `
     <div class="panel" style="margin-top:18px">
       <h3>Análise técnica completa — as skills em ação</h3>
@@ -2285,7 +2487,6 @@ function renderTreino(activityId){
         </div>
       </div>
     </div>`;
-  carregarGraficosTreino(activityId);
 }
 async function enviarFeedbackTreino(activityId, tipo){
   const nomeEl = document.getElementById('ft-nome');
