@@ -460,7 +460,7 @@
      alocava a altura do container pela página mais alta e o conteúdo da outra página vazava
      por baixo no mobile. Navegação por transform (JS ajusta altura da página ativa) evita isso. */
   .gs-rep-swipe-viewport{overflow:hidden;border-radius:8px}
-  .gs-rep-swipe-track{display:flex;transition:transform .25s ease,height .25s ease;align-items:flex-start}
+  .gs-rep-swipe-track{display:flex;transition:transform .25s ease,height .25s ease;align-items:flex-start;transform:translateX(0);will-change:transform}
   .gs-rep-swipe-track>div{flex:0 0 100%;width:100%;min-width:0}
 
   /* ---- Painel "Gráficos" — seletor de sessão + 4 modos de visualização
@@ -2389,11 +2389,18 @@ function gsInitRepetibilidade(d, activityId){
   const metricaLabel = temPotencia ? 'Potência média (W)' : 'FC média (bpm)';
   const metricaUnidade = temPotencia ? 'Watts' : 'bpm';
   const metricaValores = temPotencia ? reps.map(r=>r.potencia_media_w) : reps.map(r=>r.fc_media_bpm);
-  gsChartInstances.push(new Chart(ctx, {type:'bar', data:{labels:reps.map((r,i)=>(i+1)+'ª'), datasets:[{label:metricaLabel, data:metricaValores, backgroundColor:reps.map(r=>r.descartada?corDescartada:(r.abaixo_do_piso?corAbaixoPiso:corNormal)), borderRadius:4}]},
+  const gsChartRepInstance = new Chart(ctx, {type:'bar', data:{labels:reps.map((r,i)=>(i+1)+'ª'), datasets:[{label:metricaLabel, data:metricaValores, backgroundColor:reps.map(r=>r.descartada?corDescartada:(r.abaixo_do_piso?corAbaixoPiso:corNormal)), borderRadius:4}]},
     options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
       scales:{y:{beginAtZero:temPotencia, ticks:{color:gsTextMuted}, grid:{color:gsGridColor}, title:{display:true,text:metricaUnidade,color:gsTextMuted}}, x:{ticks:{color:gsTextMuted}, grid:{display:false}}}},
     plugins: piso==null ? [] : [{id:'gsPisoLine', afterDraw(chart){ const y=chart.scales.y.getPixelForValue(piso), x=chart.scales.x; const ctx2=chart.ctx; ctx2.save(); ctx2.strokeStyle=corPiso; ctx2.setLineDash([6,4]); ctx2.lineWidth=1.5; ctx2.beginPath(); ctx2.moveTo(x.left,y); ctx2.lineTo(x.right,y); ctx2.stroke(); ctx2.setLineDash([]); ctx2.fillStyle=corPiso; ctx2.font='11px sans-serif'; ctx2.fillText('piso 95% da 3ª ('+piso.toFixed(1)+'W)', x.left+4, y-6); ctx2.restore(); }}]
-  }));
+  });
+  gsChartInstances.push(gsChartRepInstance);
+  // Reforço independente da causa exata: alguns celulares (WebKit/Chrome mobile) deixam o
+  // canvas em branco no primeiro desenho dentro de um bloco recém-composto (transform), mesmo
+  // com o will-change no CSS. Forçar um resize/redraw em 2 frames seguintes depois da criação
+  // garante o repaint sem depender de acertar a causa raiz — é uma correção determinística,
+  // não uma aposta em timing de motor de renderização.
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{ try { gsChartRepInstance.resize(); } catch(e){} }));
   if (!temPotencia) {
     const cap = document.getElementById('gsCapRep');
     cap.style.display = '';
