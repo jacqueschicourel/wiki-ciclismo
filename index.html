@@ -447,17 +447,17 @@
   }
   /* mini-carrossel gráfico ↔ mapa dentro do card repetibilidade-segmento — sempre ativo
      (desktop e mobile), diferente do gs-swipe-* acima que só liga abaixo de 480px.
-     Navegação por setas laterais (não bolinhas): ficam sobrepostas ao conteúdo, sempre visíveis
-     sem precisar rolar até embaixo do card pra trocar de página. */
-  .gs-rep-swipe-viewport{position:relative;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:8px}
+     Navegação por par de setas no canto superior direito (não sobrepostas ao meio do
+     conteúdo, que ficava escondido/estranho em cards altos) — visível assim que o card abre. */
+  .gs-rep-swipe-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:8px}
+  .gs-rep-page-label{font-size:11px;color:#9b9a91}
+  .gs-rep-arrow-group{display:flex;gap:4px}
+  .gs-rep-arrow{width:26px;height:26px;border-radius:6px;border:1px solid var(--line-strong);background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;color:var(--ink);-webkit-tap-highlight-color:transparent}
+  .gs-rep-arrow:disabled{opacity:.3;cursor:default}
+  .gs-rep-swipe-viewport{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:8px}
   .gs-rep-swipe-viewport::-webkit-scrollbar{display:none}
   .gs-rep-swipe-track{display:flex}
   .gs-rep-swipe-track>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
-  .gs-rep-arrow{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:1px solid var(--line-strong);background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;cursor:pointer;color:var(--ink);box-shadow:0 1px 5px rgba(0,0,0,.14);z-index:2;-webkit-tap-highlight-color:transparent}
-  .gs-rep-arrow:disabled{opacity:.28;cursor:default;box-shadow:none}
-  .gs-rep-arrow-prev{left:6px}
-  .gs-rep-arrow-next{right:6px}
-  .gs-rep-page-label{position:absolute;top:6px;left:50%;transform:translateX(-50%);font-size:10.5px;color:#9b9a91;background:rgba(255,255,255,.85);padding:2px 8px;border-radius:10px;z-index:2}
 
   /* ---- Painel "Gráficos" — seletor de sessão + 4 modos de visualização
      (Desktop / Mobile / Desktop atleta / Mobile atleta), recriando o
@@ -2233,15 +2233,17 @@ function gsRenderRepetibilidade(row){
     const mapaPage = `<div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Piloto — mapa do trecho (não é regra do cânone ainda)</div>
       <div id="gsMapaRep" style="width:100%;height:260px;border-radius:8px;background:var(--paper);"></div>
       <div id="gsMapaRepLegenda" style="display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);"></div>`;
-    mid = `<div class="gs-rep-swipe-viewport">
-        <span class="gs-rep-page-label" data-label-idx="0">Gráfico de barras · 1/2</span>
-        <div class="gs-rep-swipe-track">
-          <div>${graficoPage}</div>
-          <div>${mapaPage}</div>
+    mid = `<div class="gs-rep-swipe-bar">
+        <span class="gs-rep-page-label">Gráfico de barras · 1/2</span>
+        <div class="gs-rep-arrow-group">
+          <button class="gs-rep-arrow gs-rep-arrow-prev" aria-label="Página anterior" disabled>‹</button>
+          <button class="gs-rep-arrow gs-rep-arrow-next" aria-label="Próxima página">›</button>
         </div>
-        <button class="gs-rep-arrow gs-rep-arrow-prev" data-dir="-1" aria-label="Página anterior" disabled>‹</button>
-        <button class="gs-rep-arrow gs-rep-arrow-next" data-dir="1" aria-label="Próxima página">›</button>
-      </div>`;
+      </div>
+      <div class="gs-rep-swipe-viewport"><div class="gs-rep-swipe-track">
+        <div>${graficoPage}</div>
+        <div>${mapaPage}</div>
+      </div></div>`;
   } else {
     mid = graficoPage;
   }
@@ -2256,9 +2258,9 @@ function gsInitRepSwipe(){
   document.querySelectorAll('.gsCardWrap[data-grafico="repetibilidade-segmento"]').forEach(card=>{
     const viewport = card.querySelector('.gs-rep-swipe-viewport');
     if (!viewport) return;
-    const prevBtn = viewport.querySelector('.gs-rep-arrow-prev');
-    const nextBtn = viewport.querySelector('.gs-rep-arrow-next');
-    const label = viewport.querySelector('.gs-rep-page-label');
+    const prevBtn = card.querySelector('.gs-rep-arrow-prev');
+    const nextBtn = card.querySelector('.gs-rep-arrow-next');
+    const label = card.querySelector('.gs-rep-page-label');
     const totalPaginas = viewport.querySelectorAll('.gs-rep-swipe-track > div').length;
     function irPara(idx){
       idx = Math.max(0, Math.min(totalPaginas-1, idx));
