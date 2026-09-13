@@ -2341,7 +2341,7 @@ async function gsCarregarListaSessoes(){
 async function renderGraficosPainel(){
   view.innerHTML = `
     <div class="gsDeviceToggle" id="gsDeviceToggle">
-      <button class="gs-device-btn active" data-mobile="0" data-athlete="0">🖥️ Desktop</button>
+      <button class="gs-device-btn" data-mobile="0" data-athlete="0">🖥️ Desktop</button>
       <button class="gs-device-btn" data-mobile="1" data-athlete="0">📱 Mobile</button>
       <span class="gs-sep"></span>
       <button class="gs-device-btn" data-mobile="0" data-athlete="1">🖥️ Desktop atleta</button>
@@ -2360,6 +2360,11 @@ async function renderGraficosPainel(){
       </div>
     </div>
   `;
+  // Em celular de verdade (tela estreita real, não a simulação de largura no desktop), abrir
+  // já direto no modo "Mobile atleta" — o atleta não vai clicar em botão nenhum, e o treinador
+  // testando do próprio celular também quer ver de cara a experiência real, não a de desktop.
+  const gsEhCelularReal = window.matchMedia && window.matchMedia('(max-width:480px)').matches;
+  gsApplyDeviceState(gsEhCelularReal, gsEhCelularReal);
   try {
     const sessoes = await gsCarregarListaSessoes();
     const sel = document.getElementById('gsSessaoSelect');
