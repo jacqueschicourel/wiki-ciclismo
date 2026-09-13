@@ -445,6 +445,34 @@
   }
   #gsStage.mobile-preview{background:#dedcd3;padding:56px 0 40px;border-radius:12px}
   #gsStage.mobile-preview .gsStageInner{max-width:390px;margin:0 auto;background:#f7f7f5;box-shadow:0 0 0 1px #d8d7d3;min-height:400px;padding:16px}
+  /* Em tela real de celular (não a simulação no desktop), o "quadro de celular dentro da
+     página" não faz sentido — é a própria tela. Aqui a largura vira 100% de verdade e as
+     fontes sobem, pra ficar igual ao que o atleta veria de fato no aparelho dele. */
+  @media (max-width:480px){
+    #gsStage.mobile-preview{background:transparent;padding:44px 0 24px;border-radius:0}
+    #gsStage.mobile-preview .gsStageInner{max-width:100%;box-shadow:none;min-height:0;padding:0 4px}
+    #gsStage.mobile-preview .gsTitulo{font-size:13.5px}
+    #gsStage.mobile-preview .gs-cat-header{font-size:13.5px}
+    #gsStage.mobile-preview .gsAusentes{font-size:13px}
+    #gsStage.mobile-preview .gsCard3 .gs-num{width:28px;height:28px;font-size:13.5px}
+    #gsStage.mobile-preview .gsCard3 .gs-mid-title{font-size:17px}
+    #gsStage.mobile-preview .gsCard3 .gs-pergunta{font-size:16px}
+    #gsStage.mobile-preview .gsCard3 .gs-resumo-txt{font-size:15px;line-height:1.6}
+    #gsStage.mobile-preview .gs-interp-ttl2{font-size:15px}
+    #gsStage.mobile-preview .gs-interp-txt2{font-size:14.5px;line-height:1.6}
+    #gsStage.mobile-preview .gs-cap{font-size:13px}
+    #gsStage.mobile-preview table.gs-matrix{font-size:14.5px}
+    #gsStage.mobile-preview .gs-badge-ia,
+    #gsStage.mobile-preview .gs-badge-calc{font-size:11px;padding:3px 9px}
+    #gsStage.mobile-preview .gs-fb-btn,
+    #gsStage.mobile-preview .gs-fb-comment,
+    #gsStage.mobile-preview .gs-fb-send{font-size:14.5px}
+    #gsStage.mobile-preview .gs-fb-counts,
+    #gsStage.mobile-preview .gs-fb-status{font-size:13px}
+    #gsStage.mobile-preview .gs-swipe-hint{font-size:12px}
+    #gsStage.mobile-preview .gs-cat-nav button{font-size:13.5px;padding:8px 15px}
+    #gsStage.mobile-preview .gs-acc-bar{font-size:13.5px}
+  }
   /* Modo "Mobile" (sem atleta): a largura simulada de 390px não dispara o @media de celular
      real, então o grid de 3 colunas do card (gs-col-left/mid/right) precisa virar carrossel de
      arraste horizontal via classe, igual ao artefato original — senão fica espremido e quebra. */
