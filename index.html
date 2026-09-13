@@ -438,6 +438,14 @@
   .gs-cat-nav{display:none}
   #gsStage.mobile-preview{background:#dedcd3;padding:56px 0 40px;border-radius:12px}
   #gsStage.mobile-preview .gsStageInner{max-width:390px;margin:0 auto;background:#f7f7f5;box-shadow:0 0 0 1px #d8d7d3;min-height:400px;padding:16px}
+  /* Modo "Mobile" (sem atleta): a largura simulada de 390px não dispara o @media de celular
+     real, então o grid de 3 colunas do card (gs-col-left/mid/right) precisa virar carrossel de
+     arraste horizontal via classe, igual ao artefato original — senão fica espremido e quebra. */
+  #gsStage.mobile-preview .gs-swipe-viewport .gsCard3{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;grid-template-columns:none;gap:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #gsStage.mobile-preview .gs-swipe-viewport .gsCard3::-webkit-scrollbar{display:none}
+  #gsStage.mobile-preview .gs-swipe-viewport .gsCard3>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
+  #gsStage.mobile-preview .gs-swipe-dots{display:flex}
+  #gsStage.mobile-preview .gs-swipe-hint{display:block}
   #gsStage.athlete-mode .gs-fb{display:none}
   #gsStage.athlete-mode .gs-badge-ia{display:none}
   #gsStage.athlete-mode .gs-badge-calc{display:none}
