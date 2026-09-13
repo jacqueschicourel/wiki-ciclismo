@@ -416,6 +416,17 @@
   .gs-fb-send{font-size:12.5px;padding:7px 14px;border-radius:8px;border:1px solid #d8d7d3;background:#f7f7f5;cursor:pointer}
   .gs-fb-send:disabled{opacity:.5;cursor:default}
   .gs-fb-status{font-size:11.5px;margin-top:6px;color:#3b6d11}
+  /* check-in rápido do atleta (dor/sono/hidratação) — logo após a Visão Geral, mesmo bloco do
+     site-atleta e do artefato de revisão do Igor, replicado aqui pra ficar visível na wiki pública. */
+  .gs-checkinBox{background:#eef1fd;border:1px solid #d3ddf9;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .gs-checkinBox .gs-ckHead{display:flex;align-items:center;gap:6px;margin-bottom:12px;font-size:12px;font-weight:700;color:#2649a8;text-transform:uppercase;letter-spacing:.03em}
+  .gs-checkinCard{background:#fff;border:1px solid #e5e4dd;border-radius:10px;padding:12px;margin-bottom:8px}
+  .gs-checkinCard:last-child{margin-bottom:0}
+  .gs-checkinCard .gs-ckQ{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:13px;font-weight:700;color:#1c1c17}
+  .gs-checkinCard .gs-ckIcon{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .gs-ckOpts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:420px}
+  .gs-ckOpt{font-size:12px;padding:7px 4px;line-height:1.2;border:1px solid #d8d7d3;border-radius:8px;background:#fff;color:#1c1c17;cursor:pointer;font-family:inherit}
+  .gs-ckOpt.sel{border:2px solid #3b5bfd;background:#e7ecfe;color:#2649a8}
   /* carrossel de arraste — só entra em cena de verdade abaixo de 480px (mobile real, não simulado) */
   .gs-swipe-dots{display:none;justify-content:center;align-items:center;gap:2px;margin-top:12px}
   .gs-swipe-dots button{-webkit-appearance:none;appearance:none;width:24px;height:24px;padding:0;margin:0;border:none;outline:none;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -473,6 +484,9 @@
     #gsStage.mobile-preview .gs-fb-send{font-size:14.5px}
     #gsStage.mobile-preview .gs-fb-counts,
     #gsStage.mobile-preview .gs-fb-status{font-size:13px}
+    #gsStage.mobile-preview .gs-checkinBox .gs-ckHead{font-size:13px}
+    #gsStage.mobile-preview .gs-checkinCard .gs-ckQ{font-size:15px}
+    #gsStage.mobile-preview .gs-ckOpt{font-size:14px;padding:9px 4px}
     #gsStage.mobile-preview .gs-swipe-hint{font-size:12px}
     #gsStage.mobile-preview .gs-cat-nav button{font-size:13.5px;padding:8px 15px}
     #gsStage.mobile-preview .gs-acc-bar{font-size:13.5px}
@@ -1454,6 +1468,52 @@ async function gsSendFeedback(activityId, graficoId, avaliacao, comentario){
   if (error) throw new Error(error.message);
 }
 
+// ---------- check-in rápido do atleta (dor, sono, hidratação) ----------
+// Aparece logo após a Visão Geral, antes dos gráficos — mesmo bloco aprovado pro site-atleta e
+// pro artefato de revisão do Igor. Grava direto em checkin_treino via upsert (só sobrescreve o
+// campo respondido, os outros 2 continuam intactos).
+const GS_CHECKIN_PERGUNTAS = [
+  { campo:'dor', titulo:'Sentiu dor ou desconforto?', iconBg:'#fdeee0', iconCor:'#a15b12',
+    svg:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    opcoes:[['Não senti','nao_senti'],['Um pouco','um_pouco'],['Bastante','bastante']] },
+  { campo:'sono', titulo:'Como foi o sono ontem à noite?', iconBg:'#ece7fb', iconCor:'#534ab7',
+    svg:'<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/>',
+    opcoes:[['Dormi bem','bem'],['Mais ou menos','mais_ou_menos'],['Dormi mal','mal']] },
+  { campo:'hidratacao', titulo:'Se hidratou bem durante o treino?', iconBg:'#dcf3ee', iconCor:'#0f6e56',
+    svg:'<path d="M12 2.69s6 7.31 6 11.31a6 6 0 0 1-12 0c0-4 6-11.31 6-11.31Z"/>',
+    opcoes:[['Sim','sim'],['Mais ou menos','mais_ou_menos'],['Não','nao']] }
+];
+function gsRenderCheckin(activityId, atletaId, checkin){
+  const ck = checkin || {};
+  const cards = GS_CHECKIN_PERGUNTAS.map(p => `
+    <div class="gs-checkinCard">
+      <div class="gs-ckQ">
+        <div class="gs-ckIcon" style="background:${p.iconBg}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="${p.iconCor}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${p.svg}</svg>
+        </div>
+        <span>${p.titulo}</span>
+      </div>
+      <div class="gs-ckOpts">
+        ${p.opcoes.map(([rotulo,valor]) => `<button class="gs-ckOpt${ck[p.campo]===valor?' sel':''}" data-campo="${p.campo}" data-valor="${valor}">${rotulo}</button>`).join('')}
+      </div>
+    </div>`).join('');
+  return `<div class="gs-checkinBox" data-checkin-activity="${activityId}" data-checkin-atleta="${atletaId||''}">
+    <div class="gs-ckHead">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2649a8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+      Como você estava nesse treino
+    </div>
+    ${cards}
+  </div>`;
+}
+async function gsSalvarCheckin(activityId, atletaId, campo, valor){
+  if (!atletaId) return;
+  const { error } = await sb.from('checkin_treino').upsert(
+    { activity_id: activityId, atleta_id: atletaId, [campo]: valor },
+    { onConflict: 'activity_id' }
+  );
+  if (error) throw new Error(error.message);
+}
+
 const GS_META = {
   'if-altitude': {titulo:'Faixa de altitude colorida por intensidade', pergunta:'Quando a intensidade mudou ao longo da sessão, isso aconteceu na subida, no plano ou na descida?', cat:'Intensidade'},
   'matriz-intensidade-terreno': {titulo:'Matriz de intensidade × terreno', pergunta:'Como meu tempo de treino se distribuiu entre intensidade e terreno?', cat:'Intensidade'},
@@ -2193,12 +2253,16 @@ async function carregarGraficosTreino(activityId){
   container.innerHTML = '<div class="hint">Carregando gráficos…</div>';
   if (ausentesEl) ausentesEl.textContent = '';
   try {
-    const [{data: rows, error: errRows}, {data: fb, error: errFb}] = await Promise.all([
+    const [{data: rows, error: errRows}, {data: fb, error: errFb}, {data: checkinRows, error: errCk}] = await Promise.all([
       sb.from('graficos_sessao').select('activity_id,grafico_id,dados,resumo,interpretacao').eq('activity_id', activityId).neq('grafico_id','if-terreno').order('grafico_id'),
-      sb.from('feedback_graficos_igor').select('grafico_id,avaliacao').eq('activity_id', activityId)
+      sb.from('feedback_graficos_igor').select('grafico_id,avaliacao').eq('activity_id', activityId),
+      sb.from('checkin_treino').select('dor,sono,hidratacao').eq('activity_id', activityId)
     ]);
     if (errRows) throw new Error(errRows.message);
     if (errFb) throw new Error(errFb.message);
+    if (errCk) throw new Error(errCk.message);
+    const sessaoAnalise = ANALISES.find(x=>x.activity_id===activityId);
+    const atletaIdSessao = sessaoAnalise ? sessaoAnalise.atleta_id : null;
     const byId = {}; (rows||[]).forEach(r=>{ byId[r.grafico_id] = r; });
     const fbByGrafico = {};
     (fb||[]).forEach(f=>{ fbByGrafico[f.grafico_id] = fbByGrafico[f.grafico_id]||{util:0,nao_util:0}; fbByGrafico[f.grafico_id][f.avaliacao] = (fbByGrafico[f.grafico_id][f.avaliacao]||0)+1; });
@@ -2220,6 +2284,9 @@ async function carregarGraficosTreino(activityId){
       if (ausentesEl && d.graficos_ausentes && d.graficos_ausentes.length) {
         ausentesEl.textContent = 'Gráficos não calculáveis nesta sessão: ' + d.graficos_ausentes.join(', ') + '.';
       }
+    }
+    if (atletaIdSessao) {
+      html += gsRenderCheckin(activityId, atletaIdSessao, (checkinRows && checkinRows[0]) ? checkinRows[0] : null);
     }
     let currentCat = null;
     const ifAltitudeUsavelChk = byId['if-altitude'] && byId['if-altitude'].dados && byId['if-altitude'].dados.blocos != null;
@@ -2432,6 +2499,22 @@ view.addEventListener('click', async (ev)=>{
   const deviceBtn = ev.target.closest('.gs-device-btn');
   if (deviceBtn) {
     gsApplyDeviceState(deviceBtn.getAttribute('data-mobile')==='1', deviceBtn.getAttribute('data-athlete')==='1');
+    return;
+  }
+  const ckBtn = ev.target.closest('.gs-ckOpt');
+  if (ckBtn) {
+    const box = ckBtn.closest('.gs-checkinBox');
+    const activityId = box ? box.getAttribute('data-checkin-activity') : null;
+    const atletaId = box ? box.getAttribute('data-checkin-atleta') : null;
+    const campo = ckBtn.dataset.campo, valor = ckBtn.dataset.valor;
+    const group = ckBtn.closest('.gs-ckOpts');
+    group.querySelectorAll('.gs-ckOpt').forEach(b=>b.classList.remove('sel'));
+    ckBtn.classList.add('sel');
+    try {
+      await gsSalvarCheckin(activityId, atletaId, campo, valor);
+    } catch (err) {
+      console.error('Erro ao salvar checkin', err);
+    }
     return;
   }
   const accBar = ev.target.closest('.gs-acc-bar');
