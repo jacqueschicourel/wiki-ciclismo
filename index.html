@@ -436,6 +436,13 @@
   .gsDeviceToggle button.active{background:#3b5bfd;color:#fff}
   .gsDeviceToggle .gs-sep{width:1px;height:20px;background:#e5e4dd;margin:0 2px}
   .gs-cat-nav{display:none}
+  /* Em celular de verdade (não a simulação de largura no desktop), a barra de categorias ajuda
+     a navegar mesmo fora do modo "atleta" — diferente do acordeão/selos escondidos, que são só
+     da simulação de atleta, isso aqui é conveniência de navegação em tela pequena de verdade. */
+  @media (max-width:480px){
+    .gs-cat-nav{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:0;z-index:500;background:#f7f7f5;padding:8px 0 10px;margin:0 0 4px}
+    .gs-cat-nav::-webkit-scrollbar{display:none}
+  }
   #gsStage.mobile-preview{background:#dedcd3;padding:56px 0 40px;border-radius:12px}
   #gsStage.mobile-preview .gsStageInner{max-width:390px;margin:0 auto;background:#f7f7f5;box-shadow:0 0 0 1px #d8d7d3;min-height:400px;padding:16px}
   /* Modo "Mobile" (sem atleta): a largura simulada de 390px não dispara o @media de celular
