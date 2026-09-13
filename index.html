@@ -2225,7 +2225,7 @@ function gsRenderRepetibilidade(row){
   const titulo = d.segmento_nome ? `Repetibilidade do trecho (${d.segmento_nome})` : GS_META['repetibilidade-segmento'].titulo;
   const ehPilotoMapa = PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(row.activity_id);
   const graficoPage = `<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
-    <table class="gs-matrix" id="gsTabelaRep"></table>
+    <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="gs-matrix" id="gsTabelaRep" style="width:auto;min-width:100%;white-space:nowrap;"></table></div>
     <div id="gsCapRep" class="gs-cap" style="display:none;"></div>`;
   let mid;
   if (ehPilotoMapa) {
@@ -2331,7 +2331,9 @@ async function gsInitMapaRepeticao(activityId, segmentoId, reps){
       legendaItens.push(`<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cor};margin-right:5px;"></span>${label}</span>`);
     });
     if (!todosPontos.length) throw new Error('nenhum ponto lat/lng recortado');
-    map.fitBounds(todosPontos, {padding:[16,16]});
+    // Padding maior + teto de zoom: sem isso o Leaflet enquadra exatamente o traçado (~1km),
+    // ficando "colado" na rua. Com o teto, sobra contexto de quarteirão ao redor.
+    map.fitBounds(todosPontos, {padding:[40,40], maxZoom:16});
     document.getElementById('gsMapaRepLegenda').innerHTML = legendaItens.join('');
   } catch (err) {
     el.innerHTML = `<div class="hint" style="padding:10px;">Mapa do trecho indisponível nesta sessão (${escapeHtml(err.message)}).</div>`;
