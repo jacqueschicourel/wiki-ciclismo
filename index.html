@@ -454,10 +454,13 @@
   .gs-rep-arrow-group{display:flex;gap:4px}
   .gs-rep-arrow{width:26px;height:26px;border-radius:6px;border:1px solid var(--line-strong);background:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;color:var(--ink);-webkit-tap-highlight-color:transparent}
   .gs-rep-arrow:disabled{opacity:.3;cursor:default}
-  .gs-rep-swipe-viewport{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:8px}
-  .gs-rep-swipe-viewport::-webkit-scrollbar{display:none}
-  .gs-rep-swipe-track{display:flex}
-  .gs-rep-swipe-track>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
+  /* overflow:hidden (não overflow-x:auto) de propósito: as duas páginas têm alturas bem
+     diferentes (tabela de 12 repetições vs. mapa de 260px) — com scroll nativo, o browser
+     alocava a altura do container pela página mais alta e o conteúdo da outra página vazava
+     por baixo no mobile. Navegação por transform (JS ajusta altura da página ativa) evita isso. */
+  .gs-rep-swipe-viewport{overflow:hidden;border-radius:8px}
+  .gs-rep-swipe-track{display:flex;transition:transform .25s ease,height .25s ease;align-items:flex-start}
+  .gs-rep-swipe-track>div{flex:0 0 100%;width:100%;min-width:0}
 
   /* ---- Painel "Gráficos" — seletor de sessão + 4 modos de visualização
      (Desktop / Mobile / Desktop atleta / Mobile atleta), recriando o
@@ -2257,28 +2260,33 @@ function gsInitRepSwipe(){
   const PAGINAS = ['Gráfico de barras', 'Mapa do trecho'];
   document.querySelectorAll('.gsCardWrap[data-grafico="repetibilidade-segmento"]').forEach(card=>{
     const viewport = card.querySelector('.gs-rep-swipe-viewport');
-    if (!viewport) return;
+    const track = card.querySelector('.gs-rep-swipe-track');
+    if (!viewport || !track) return;
+    const paginas = Array.from(track.children);
     const prevBtn = card.querySelector('.gs-rep-arrow-prev');
     const nextBtn = card.querySelector('.gs-rep-arrow-next');
     const label = card.querySelector('.gs-rep-page-label');
-    const totalPaginas = viewport.querySelectorAll('.gs-rep-swipe-track > div').length;
+    let idxAtual = 0;
+    // Exposto pra gsInitMapaRepeticao recalcular a altura quando a legenda do mapa
+    // (assíncrona) terminar de carregar depois da página já estar visível.
+    track._gsRepRecalc = () => irPara(idxAtual);
     function irPara(idx){
-      idx = Math.max(0, Math.min(totalPaginas-1, idx));
-      viewport.scrollTo({left: idx*viewport.clientWidth, behavior:'smooth'});
+      idxAtual = Math.max(0, Math.min(paginas.length-1, idx));
+      track.style.transform = `translateX(-${idxAtual*100}%)`;
+      // altura do viewport = altura só da página ativa, senão a página mais alta (a tabela de
+      // repetições) força o container inteiro a ficar com esse tamanho e o conteúdo da outra
+      // página fica com espaço vazio/vazando por baixo — foi o bug visto no mobile.
+      viewport.style.height = paginas[idxAtual].offsetHeight + 'px';
+      if (prevBtn) prevBtn.disabled = (idxAtual===0);
+      if (nextBtn) nextBtn.disabled = (idxAtual===paginas.length-1);
+      if (label) label.textContent = `${PAGINAS[idxAtual] || ''} · ${idxAtual+1}/${paginas.length}`;
+      // Página do mapa (índice 1) começa oculta — o Leaflet às vezes calcula o tamanho do tile
+      // errado quando inicializado assim. invalidateSize() corrige após a transição.
+      if (idxAtual === 1 && gsMapaRepInstance) setTimeout(()=> gsMapaRepInstance.invalidateSize(), 260);
     }
-    function atualizar(){
-      const idx = Math.round(viewport.scrollLeft / (viewport.clientWidth || 1));
-      if (prevBtn) prevBtn.disabled = (idx===0);
-      if (nextBtn) nextBtn.disabled = (idx===totalPaginas-1);
-      if (label) label.textContent = `${PAGINAS[idx] || ''} · ${idx+1}/${totalPaginas}`;
-      // Página do mapa (índice 1) começa fora da área visível do carrossel — o Leaflet às vezes
-      // calcula o tamanho do tile errado quando inicializado assim. invalidateSize() corrige.
-      if (idx === 1 && gsMapaRepInstance) setTimeout(()=> gsMapaRepInstance.invalidateSize(), 260);
-    }
-    viewport.addEventListener('scroll', atualizar, {passive:true});
-    if (prevBtn) prevBtn.addEventListener('click', ()=> irPara(Math.round(viewport.scrollLeft/(viewport.clientWidth||1)) - 1));
-    if (nextBtn) nextBtn.addEventListener('click', ()=> irPara(Math.round(viewport.scrollLeft/(viewport.clientWidth||1)) + 1));
-    atualizar();
+    if (prevBtn) prevBtn.addEventListener('click', ()=> irPara(idxAtual - 1));
+    if (nextBtn) nextBtn.addEventListener('click', ()=> irPara(idxAtual + 1));
+    irPara(0);
   });
 }
 // Piloto: busca o stream latlng + segment_efforts direto do dado_bruto_sessao e recorta o
@@ -2327,6 +2335,11 @@ async function gsInitMapaRepeticao(activityId, segmentoId, reps){
     document.getElementById('gsMapaRepLegenda').innerHTML = legendaItens.join('');
   } catch (err) {
     el.innerHTML = `<div class="hint" style="padding:10px;">Mapa do trecho indisponível nesta sessão (${escapeHtml(err.message)}).</div>`;
+  } finally {
+    // Legenda/erro chegam depois do fetch assíncrono — se a página do mapa já estiver
+    // visível, recalcula a altura do viewport pra não cortar esse conteúdo (overflow:hidden).
+    const track = el.closest('.gs-rep-swipe-track');
+    if (track && track._gsRepRecalc) track._gsRepRecalc();
   }
 }
 function gsInitRepetibilidade(d, activityId){
