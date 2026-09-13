@@ -9,6 +9,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<!-- Exceção ao CDN padrão (mesma convenção da skill sincronia-potencia-fc): Leaflet só carregado
+     porque o painel de repetibilidade-segmento precisa desenhar o mapa do trecho por baixo do
+     traçado. Piloto restrito a 1 sessão (2026-09-13) — ver PILOTO_MAPA_REPETICAO_ACTIVITY_ID. -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
   :root{
     --paper:#F3F3EF; --card:#FFFFFF; --ink:#17191E; --muted:#6A6E77;
@@ -1514,6 +1519,13 @@ async function gsSalvarCheckin(activityId, atletaId, campo, valor){
   if (error) throw new Error(error.message);
 }
 
+// Piloto pontual (2026-09-13): mostra mapa real (Leaflet+OpenStreetMap) sobreposto ao traçado
+// das repetições, só nestas sessões. Ainda não é regra do cânone nem parte da função SQL —
+// decisão de formalizar pra todas as sessões calculáveis fica pra depois, com o Jacques.
+// 19400365792 = Química USP (14 reps, bem_dimensionada) — primeira sessão do piloto.
+// 19891077606 = Sprint Bolinha 1,2 e3 (12 reps, zona_ambigua_5_a_10pct) — já carregada no
+// artefato de revisão do Igor (revisao-graficos-igor-layout2), escolhida por isso.
+const PILOTO_MAPA_REPETICAO_ACTIVITY_IDS = ['19400365792', '19891077606'];
 const GS_META = {
   'if-altitude': {titulo:'Faixa de altitude colorida por intensidade', pergunta:'Quando a intensidade mudou ao longo da sessão, isso aconteceu na subida, no plano ou na descida?', cat:'Intensidade'},
   'matriz-intensidade-terreno': {titulo:'Matriz de intensidade × terreno', pergunta:'Como meu tempo de treino se distribuiu entre intensidade e terreno?', cat:'Intensidade'},
@@ -2195,7 +2207,14 @@ function gsInitFcCadenciaSemPotencia(d){
 function gsRenderRepetibilidade(row){
   const d = row.dados;
   const titulo = d.segmento_nome ? `Repetibilidade do trecho (${d.segmento_nome})` : GS_META['repetibilidade-segmento'].titulo;
-  const mid = `<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
+  const ehPilotoMapa = PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(row.activity_id);
+  const mapaHtml = ehPilotoMapa ? `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Piloto — mapa do trecho (não é regra do cânone ainda)</div>
+      <div id="gsMapaRep" style="width:100%;height:260px;border-radius:8px;background:var(--paper);"></div>
+      <div id="gsMapaRepLegenda" style="display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);"></div>
+    </div>` : '';
+  const mid = `${mapaHtml}<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
     <table class="gs-matrix" id="gsTabelaRep"></table>
     <div id="gsCapRep" class="gs-cap" style="display:none;"></div>`;
   let html = gsCardWrapOpen('repetibilidade-segmento');
@@ -2204,7 +2223,52 @@ function gsRenderRepetibilidade(row){
   html += gsCardWrapClose();
   return html;
 }
-function gsInitRepetibilidade(d){
+// Piloto: busca o stream latlng + segment_efforts direto do dado_bruto_sessao e recorta o
+// trecho de cada repetição pelo mesmo método da fn_calcular_repetibilidade_segmento (start_index
+// recalculado aqui porque a função SQL não grava esse índice no resultado final).
+async function gsInitMapaRepeticao(activityId, segmentoId, reps){
+  const el = document.getElementById('gsMapaRep');
+  if (!el || !window.L) return;
+  try {
+    const { data, error } = await sb.from('dado_bruto_sessao').select('streams,performance').eq('activity_id', activityId).single();
+    if (error || !data) throw new Error(error ? error.message : 'sem dado bruto');
+    const latlng = data.streams && data.streams.latlng && data.streams.latlng.data;
+    const efforts = data.performance && data.performance.activity_detail && data.performance.activity_detail.segment_efforts;
+    if (!latlng || !efforts) throw new Error('stream latlng ou segment_efforts ausente');
+    const doSegmento = efforts.filter(e => e.segment && e.segment.id === segmentoId)
+      .sort((a,b)=> new Date(a.start_date) - new Date(b.start_date));
+    if (!doSegmento.length) throw new Error('nenhum segment_effort bate com o segmento_id');
+    const numeroParaEffort = {};
+    doSegmento.forEach((e,i)=>{ numeroParaEffort[i+1] = e; });
+    const numerosParaMostrar = [1, reps.length >= 3 ? 3 : reps.length, reps.length].filter((v,i,a)=>a.indexOf(v)===i);
+    const cores = {}; const paleta = ['#b9b9ae','#3b5bfd','#e0692f'];
+    numerosParaMostrar.forEach((n,i)=> cores[n]=paleta[i] || '#999');
+    const map = L.map(el, {zoomControl:true, scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap', maxZoom:19}).addTo(map);
+    const todosPontos = [];
+    const legendaItens = [];
+    numerosParaMostrar.forEach(numero=>{
+      const effort = numeroParaEffort[numero];
+      if (!effort || effort.start_index == null) return;
+      const dur = effort.moving_time || effort.elapsed_time || 0;
+      const pontos = latlng.slice(effort.start_index, effort.start_index + dur);
+      if (!pontos.length) return;
+      const cor = cores[numero];
+      L.polyline(pontos, {color:cor, weight: numero===3?4.5:3.5, opacity:0.9}).addTo(map);
+      L.circleMarker(pontos[0], {radius:5, color:'#fff', weight:1.5, fillColor:cor, fillOpacity:1}).addTo(map);
+      L.circleMarker(pontos[pontos.length-1], {radius:5, color:'#fff', weight:1.5, fillColor:cor, fillOpacity:1}).addTo(map);
+      todosPontos.push(...pontos);
+      const label = numero===1?'1ª':(numero===reps.length?`${numero}ª (última)`:`${numero}ª (referência)`);
+      legendaItens.push(`<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${cor};margin-right:5px;"></span>${label}</span>`);
+    });
+    if (!todosPontos.length) throw new Error('nenhum ponto lat/lng recortado');
+    map.fitBounds(todosPontos, {padding:[16,16]});
+    document.getElementById('gsMapaRepLegenda').innerHTML = legendaItens.join('');
+  } catch (err) {
+    el.innerHTML = `<div class="hint" style="padding:10px;">Mapa do trecho indisponível nesta sessão (${escapeHtml(err.message)}).</div>`;
+  }
+}
+function gsInitRepetibilidade(d, activityId){
   const corDescartada='#c7c7cc', corNormal='#3378DD', corAbaixoPiso='#D9483B', corPiso='#6b7280';
   const reps = d.reps || [];
   const temPotencia = reps.some(r=>r.potencia_media_w!=null);
@@ -2242,6 +2306,9 @@ function gsInitRepetibilidade(d){
     const cap = document.getElementById('gsCapRep');
     cap.style.display = '';
     cap.textContent = 'Sessão sem medidor de potência: a barra e a tabela mostram FC média em vez de watts. O veredito de piso/queda (95% da 3ª repetição) não se aplica sem potência — isso é esperado, não é erro.';
+  }
+  if (PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(activityId) && d.segmento_id != null) {
+    gsInitMapaRepeticao(activityId, d.segmento_id, reps);
   }
 }
 
@@ -2329,7 +2396,7 @@ async function carregarGraficosTreino(activityId){
     if (byId['custo-cardiovascular']) gsInitCustoCardiovascular(byId['custo-cardiovascular'].dados);
     if (byId['potencia-fc-cadencia']) gsInitPotenciaFcCadencia(byId['potencia-fc-cadencia'].dados);
     else if (byId['fc-cadencia-sem-potencia']) gsInitFcCadenciaSemPotencia(byId['fc-cadencia-sem-potencia'].dados);
-    if (byId['repetibilidade-segmento']) gsInitRepetibilidade(byId['repetibilidade-segmento'].dados);
+    if (byId['repetibilidade-segmento']) gsInitRepetibilidade(byId['repetibilidade-segmento'].dados, activityId);
     if (byId['matriz-nivel-fc-terreno-sem-potencia']) gsInitMatrizNivelFcTerrenoSemPotencia(byId['matriz-nivel-fc-terreno-sem-potencia'].dados);
     if (byId['matriz-fc-cadencia-sem-potencia']) gsInitMatrizFcCadenciaSemPotencia(byId['matriz-fc-cadencia-sem-potencia'].dados);
     Object.keys(GS_MATRIX_CONFIGS).forEach(id=>{
