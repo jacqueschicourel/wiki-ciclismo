@@ -11,7 +11,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <!-- Exceção ao CDN padrão (mesma convenção da skill sincronia-potencia-fc): Leaflet só carregado
      porque o painel de repetibilidade-segmento precisa desenhar o mapa do trecho por baixo do
-     traçado. Piloto restrito a 1 sessão (2026-09-13) — ver PILOTO_MAPA_REPETICAO_ACTIVITY_ID. -->
+     traçado. Estendido (2026-09-13) pra toda sessão com segmento_id calculável — ver condição
+     "d.segmento_id != null" em gsRenderRepetibilidade/gsInitRepetibilidade. -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
@@ -1535,13 +1536,12 @@ async function gsSalvarCheckin(activityId, atletaId, campo, valor){
   if (error) throw new Error(error.message);
 }
 
-// Piloto pontual (2026-09-13): mostra mapa real (Leaflet+OpenStreetMap) sobreposto ao traçado
-// das repetições, só nestas sessões. Ainda não é regra do cânone nem parte da função SQL —
-// decisão de formalizar pra todas as sessões calculáveis fica pra depois, com o Jacques.
-// 19400365792 = Química USP (14 reps, bem_dimensionada) — primeira sessão do piloto.
-// 19891077606 = Sprint Bolinha 1,2 e3 (12 reps, zona_ambigua_5_a_10pct) — já carregada no
-// artefato de revisão do Igor (revisao-graficos-igor-layout2), escolhida por isso.
-const PILOTO_MAPA_REPETICAO_ACTIVITY_IDS = ['19400365792', '19891077606'];
+// Mapa real (Leaflet+OpenStreetMap) sobreposto ao traçado das repetições (2026-09-13, estendido
+// pra todas as sessões calculáveis em 2026-09-13). Critério: d.segmento_id != null, ou seja,
+// qualquer sessão em que fn_calcular_repetibilidade_segmento conseguiu casar um segmento do
+// Strava. Continua sendo o wiki que busca o dado bruto direto (streams.latlng) — a função SQL
+// do cânone e o SKILL.md do gráfico ainda não sabem desse mapa, então isso ainda não é regra
+// formalizada do cânone, só uma camada de exibição a mais no wiki.
 const GS_META = {
   'if-altitude': {titulo:'Faixa de altitude colorida por intensidade', pergunta:'Quando a intensidade mudou ao longo da sessão, isso aconteceu na subida, no plano ou na descida?', cat:'Intensidade'},
   'matriz-intensidade-terreno': {titulo:'Matriz de intensidade × terreno', pergunta:'Como meu tempo de treino se distribuiu entre intensidade e terreno?', cat:'Intensidade'},
@@ -2223,7 +2223,7 @@ function gsInitFcCadenciaSemPotencia(d){
 function gsRenderRepetibilidade(row){
   const d = row.dados;
   const titulo = d.segmento_nome ? `Repetibilidade do trecho (${d.segmento_nome})` : GS_META['repetibilidade-segmento'].titulo;
-  const ehPilotoMapa = PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(row.activity_id);
+  const ehPilotoMapa = d.segmento_id != null;
   const graficoPage = `<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
     <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="gs-matrix" id="gsTabelaRep" style="width:auto;min-width:100%;white-space:nowrap;"></table></div>
     <div id="gsCapRep" class="gs-cap" style="display:none;"></div>`;
@@ -2233,7 +2233,7 @@ function gsRenderRepetibilidade(row){
     // do trecho — setas ficam sobrepostas ao conteúdo (sempre visíveis, sem rolar até embaixo do
     // card), diferente do carrossel maior que usa bolinhas abaixo do conteúdo. Ainda não é regra
     // do cânone.
-    const mapaPage = `<div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Piloto — mapa do trecho (não é regra do cânone ainda)</div>
+    const mapaPage = `<div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Mapa do trecho (exibição do wiki, ainda não é regra formal do cânone)</div>
       <div id="gsMapaRep" style="width:100%;height:260px;border-radius:8px;background:var(--paper);"></div>
       <div id="gsMapaRepLegenda" style="display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);"></div>`;
     mid = `<div class="gs-rep-swipe-bar">
@@ -2383,7 +2383,7 @@ function gsInitRepetibilidade(d, activityId){
     cap.style.display = '';
     cap.textContent = 'Sessão sem medidor de potência: a barra e a tabela mostram FC média em vez de watts. O veredito de piso/queda (95% da 3ª repetição) não se aplica sem potência — isso é esperado, não é erro.';
   }
-  if (PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(activityId) && d.segmento_id != null) {
+  if (d.segmento_id != null) {
     gsInitMapaRepeticao(activityId, d.segmento_id, reps);
     gsInitRepSwipe();
   }
