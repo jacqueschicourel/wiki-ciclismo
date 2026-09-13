@@ -377,6 +377,54 @@
   .dashwrap.mobile-mode .cards2{grid-template-columns:1fr}
   .dashwrap.mobile-mode .rec{grid-template-columns:1fr}
   .dashwrap.mobile-mode .maintabs{gap:2px}
+
+  /* ---- Gráficos da sessão (portado de _scratch_revisao_igor.html, validado com o Igor) ---- */
+  .gsTitulo{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:26px 0 4px}
+  .gsAusentes{font-size:11.5px;color:var(--muted);margin:0 0 14px}
+  .gs-cat-header{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#6b6a61;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e4dd}
+  .gsCardWrap{background:#fff;border:1px solid #e5e4dd;border-radius:12px;padding:18px 20px;margin-bottom:16px}
+  .gsCard3{display:grid;grid-template-columns:210px minmax(300px,1fr) 220px;gap:22px}
+  @media (max-width:880px){.gsCard3{grid-template-columns:1fr}}
+  .gsCard3 .gs-col-left{display:flex;flex-direction:column;gap:8px}
+  .gsCard3 .gs-num-row{display:flex;align-items:flex-start;gap:8px}
+  .gsCard3 .gs-num{width:24px;height:24px;border-radius:50%;background:#3b5bfd;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+  .gsCard3 .gs-mid-title{margin:0 0 12px;font-size:14.5px;font-weight:700;line-height:1.3;color:#1c1c17}
+  .gsCard3 .gs-pergunta{font-size:13.5px;font-weight:700;color:#1c1c17;line-height:1.35}
+  .gsCard3 .gs-badges-left{display:flex;gap:6px;flex-wrap:wrap}
+  .gsCard3 .gs-resumo-txt{font-size:12.5px;line-height:1.55;color:#1c1c17}
+  .gsCard3 .gs-col-mid{min-width:0;overflow-x:auto}
+  .gsCard3 .gs-col-right{display:flex;flex-direction:column;gap:6px}
+  .gs-badge-ia,.gs-badge-calc{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 7px;border-radius:10px}
+  .gs-badge-ia{background:rgba(160,110,224,0.12);color:#7c3aed}
+  .gs-badge-calc{background:rgba(55,138,221,0.10);color:#2266b0}
+  .gs-interp-ttl2{font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .gs-interp-txt2{font-size:12px;line-height:1.55;color:#3f3e37}
+  .gs-cap{font-size:11px;margin-top:12px;line-height:1.5;color:#6b6a61}
+  table.gs-matrix{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:4px}
+  table.gs-matrix th,table.gs-matrix td{padding:8px}
+  .gs-fb{margin-top:16px;padding-top:12px;border-top:1px dashed #e5e4dd}
+  .gs-fb-counts{font-size:11.5px;color:#6b6a61;margin-bottom:6px}
+  .gs-fb-buttons{display:flex;gap:8px;margin-bottom:8px}
+  .gs-fb-btn{font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid #d8d7d3;background:#fff;cursor:pointer}
+  .gs-fb-btn.selected[data-val="util"]{background:#eaf3de;border-color:#639922;color:#3b6d11}
+  .gs-fb-btn.selected[data-val="nao_util"]{background:#faece7;border-color:#d85a30;color:#993c1d}
+  .gs-fb-comment{width:100%;font-size:12.5px;padding:8px;border-radius:8px;border:1px solid #d8d7d3;resize:vertical;min-height:44px;font-family:inherit;margin-bottom:8px}
+  .gs-fb-send{font-size:12.5px;padding:7px 14px;border-radius:8px;border:1px solid #d8d7d3;background:#f7f7f5;cursor:pointer}
+  .gs-fb-send:disabled{opacity:.5;cursor:default}
+  .gs-fb-status{font-size:11.5px;margin-top:6px;color:#3b6d11}
+  /* carrossel de arraste — só entra em cena de verdade abaixo de 480px (mobile real, não simulado) */
+  .gs-swipe-dots{display:none;justify-content:center;align-items:center;gap:2px;margin-top:12px}
+  .gs-swipe-dots button{-webkit-appearance:none;appearance:none;width:24px;height:24px;padding:0;margin:0;border:none;outline:none;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .gs-swipe-dots button::after{content:'';display:block;width:6px;height:6px;border-radius:50%;background:#d8d7d3;transition:background .15s,transform .15s}
+  .gs-swipe-dots button.active::after{background:#3b5bfd;transform:scale(1.25)}
+  .gs-swipe-hint{display:none;font-size:10.5px;color:#9b9a91;text-align:center;margin-top:6px}
+  @media (max-width:480px){
+    .gs-swipe-viewport .gsCard3{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;grid-template-columns:none;gap:0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    .gs-swipe-viewport .gsCard3::-webkit-scrollbar{display:none}
+    .gs-swipe-viewport .gsCard3>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
+    .gs-swipe-dots{display:flex}
+    .gs-swipe-hint{display:block}
+  }
 </style>
 </head>
 <body>
@@ -1254,6 +1302,916 @@ function chipProvenencia(p){
   const cores = {'Medido':'#DCEEDC','Calculado':'#DCEEDC','Estimado':'#F6E9C9','Manual':'#DCE3F3','Ausente':'#EDEDED'};
   return `<span class="chip line" style="background:${cores[p]||'var(--line)'}">${escapeHtml(p)}</span>`;
 }
+/* ==========================================================================
+   Gráficos da sessão — portado de _scratch_revisao_igor.html (validado com
+   o Igor em várias rodadas). Só a camada de dados muda: lá era MCP/SQL cru
+   (window.cowork.callMcpTool), aqui é supabase-js direto, igual ao resto
+   do wiki. Toda a lógica de cálculo/desenho é a mesma, célula por célula.
+   ========================================================================== */
+const gsCorSubida = '#639922', gsCorPlano = '#378ADD', gsCorDescida = '#B4B2A9';
+const gsCorVerde = '#5a9e4a', gsCorAmarelo = '#d9b93a', gsCorLaranja = '#e08a2c', gsCorVermelho = '#c0392b', gsCorAusenteIF = '#999999';
+function gsCorPorIF(v){
+  if (v===null || v===undefined || Number.isNaN(v)) return null;
+  if (v<60) return gsCorVerde;
+  if (v<75) return gsCorAmarelo;
+  if (v<90) return gsCorLaranja;
+  return gsCorVermelho;
+}
+// Cortes de %FTHR (nota-0022) — usados nos gráficos sem potência (69/84/95), diferentes dos
+// cortes de %IF (60/75/90) usados nos gráficos com potência acima.
+function gsCorPorFC(v){
+  if (v===null || v===undefined || Number.isNaN(v)) return null;
+  if (v<69) return gsCorVerde;
+  if (v<84) return gsCorAmarelo;
+  if (v<95) return gsCorLaranja;
+  return gsCorVermelho;
+}
+const gsTextMain = '#1c1c17', gsTextMuted = '#6b6a61', gsGridColor = '#e5e4dd';
+function gsCorPorFaixaIF(rowKey){
+  if (rowKey === 'IF > 0,90') return gsCorVermelho;
+  if (rowKey === '0,75 - 0,90') return gsCorLaranja;
+  if (rowKey === '0,60 - 0,75') return gsCorAmarelo;
+  return gsCorVerde;
+}
+function gsFmtDur(totalSeconds){
+  const s = Math.round(totalSeconds||0);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  const pad = n => String(n).padStart(2,'0');
+  if (h>0) return h+'h'+pad(m)+'min'+pad(sec)+'s';
+  if (m>0) return m+'min'+pad(sec)+'s';
+  return sec+'s';
+}
+function gsFmtHMS(s){
+  if (s===null||s===undefined) return '—';
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = Math.floor(s%60);
+  return h+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function gsFmt(v, unidade, casas){ if (v===null||v===undefined) return '—'; return v.toFixed(casas)+(unidade?' '+unidade:''); }
+
+async function gsSendFeedback(activityId, graficoId, avaliacao, comentario){
+  const { error } = await sb.from('feedback_graficos_igor').insert({
+    activity_id: activityId, grafico_id: graficoId, avaliacao, comentario: comentario || null
+  });
+  if (error) throw new Error(error.message);
+}
+
+const GS_META = {
+  'if-altitude': {titulo:'Faixa de altitude colorida por intensidade', pergunta:'Quando a intensidade mudou ao longo da sessão, isso aconteceu na subida, no plano ou na descida?', cat:'Intensidade'},
+  'matriz-intensidade-terreno': {titulo:'Matriz de intensidade × terreno', pergunta:'Como meu tempo de treino se distribuiu entre intensidade e terreno?', cat:'Intensidade'},
+  'sincronia-potencia-fc': {titulo:'Sincronia entre potência e frequência cardíaca', pergunta:'O coração acompanhou a potência, ou ficou atrás/à frente?', cat:'Frequência cardíaca'},
+  'custo-cardiovascular': {titulo:'Custo cardiovascular ao longo da sessão', pergunta:'A relação entre potência e FC piorou da 1ª para a 2ª metade da sessão?', cat:'Frequência cardíaca'},
+  'matriz-cadencia-inclinacao': {titulo:'Matriz de cadência × inclinação', pergunta:'Como a cadência varia conforme a inclinação do terreno?', cat:'Cadência'},
+  'matriz-potencia-cadencia': {titulo:'Matriz de potência × cadência', pergunta:'Quais combinações de potência e cadência dominaram a sessão?', cat:'Cadência'},
+  'matriz-potencia-fc': {titulo:'Matriz de potência × frequência cardíaca', pergunta:'Quais combinações de potência e FC dominaram a sessão?', cat:'Potência'},
+  'potencia-fc-cadencia': {titulo:'Como potência, FC e cadência mudaram ao longo do treino?', pergunta:'Como potência, cadência e a relação potência/FC evoluíram ao longo do treino?', cat:'Potência'},
+  'matriz-zona-terreno': {titulo:'Matriz de zona de Coggan × terreno', pergunta:'Em quais zonas de esforço o tempo ficou concentrado, por tipo de terreno?', cat:'Potência'},
+  'terreno-metricas': {titulo:'Potência, FC, cadência e IF por tipo de terreno', pergunta:'Como potência, FC e cadência mudaram entre subida, plano e descida?', cat:'Terreno'},
+  'fadiga-plano-subida': {titulo:'Plano vs. subida na mesma intensidade', pergunta:'Pedalar na subida custa mais caro fisiologicamente que no plano, na mesma intensidade relativa?', cat:'Terreno'},
+  'repetibilidade-segmento': {titulo:'Repetibilidade do trecho', pergunta:'As repetições desse trecho mantiveram o desempenho, ou caíram ao longo da sessão?', cat:'Repetições'},
+  'fc-altitude-sem-potencia': {titulo:'Faixa de altitude colorida por esforço cardíaco', pergunta:'Quando o esforço do seu coração mudou ao longo da sessão, isso aconteceu na subida, no plano ou na descida?', cat:'Frequência cardíaca'},
+  'terreno-metricas-sem-potencia': {titulo:'FC e cadência por tipo de terreno', pergunta:'Meu coração trabalha mais forte nas subidas, ou o esforço fica parecido no plano e na descida também?', cat:'Terreno'},
+  'matriz-nivel-fc-terreno-sem-potencia': {titulo:'Matriz de nível de FC × terreno', pergunta:'Em quais combinações de terreno e esforço cardíaco você passou mais tempo?', cat:'Frequência cardíaca'},
+  'fc-cadencia-sem-potencia': {titulo:'Como FC e cadência mudaram ao longo do treino?', pergunta:'Como o esforço do coração e a cadência mudaram ao longo do treino?', cat:'Frequência cardíaca'},
+  'matriz-fc-cadencia-sem-potencia': {titulo:'Matriz de FC × cadência', pergunta:'Em qual combinação de esforço cardíaco e cadência você passou mais tempo pedalando?', cat:'Cadência'},
+  'fadiga-plano-subida-sem-potencia': {titulo:'Plano vs. subida na mesma intensidade cardíaca', pergunta:'Meu coração trabalha diferente na subida do que no plano, mesmo carregando o mesmo tanto de esforço?', cat:'Terreno'}
+};
+const GS_ORDEM = ['if-altitude','matriz-intensidade-terreno','sincronia-potencia-fc','custo-cardiovascular',
+  'matriz-cadencia-inclinacao','matriz-potencia-cadencia','matriz-potencia-fc','potencia-fc-cadencia',
+  'matriz-zona-terreno','terreno-metricas','fadiga-plano-subida','repetibilidade-segmento'];
+const GS_ORDEM_SEM_POTENCIA = [
+  'fc-altitude-sem-potencia', 'matriz-nivel-fc-terreno-sem-potencia', 'fc-cadencia-sem-potencia',
+  'matriz-cadencia-inclinacao', 'matriz-fc-cadencia-sem-potencia',
+  'terreno-metricas-sem-potencia', 'fadiga-plano-subida-sem-potencia',
+  'repetibilidade-segmento'
+];
+
+let gsChartInstances = [];
+function gsDestroyCharts(){ gsChartInstances.forEach(c=>{ try{c.destroy();}catch(e){} }); gsChartInstances = []; }
+
+function gsCardWrapOpen(id){ return `<div class="gsCardWrap" data-grafico="${id}">`; }
+function gsCardWrapClose(){ return `</div>`; }
+function gsCard3Inner(numero, titulo, pergunta, provBadges, resumo, midHtml, interpretacao){
+  const badgesHtml = (provBadges||[]).map(b=> b==='ia' ? `<span class="gs-badge-ia">🤖 IA</span>` : `<span class="gs-badge-calc">🔢 Calculado no banco</span>`).join('');
+  return `<div class="gsCard3">
+    <div class="gs-col-left">
+      <div class="gs-num-row">${numero!=null?`<div class="gs-num">${numero}</div>`:''}${pergunta?`<div class="gs-pergunta">${escapeHtml(pergunta)}</div>`:''}</div>
+      ${badgesHtml?`<div class="gs-badges-left">${badgesHtml}</div>`:''}
+      ${resumo?`<div class="gs-resumo-txt">${escapeHtml(resumo)}</div>`:''}
+    </div>
+    <div class="gs-col-mid">
+      <h3 class="gs-mid-title">${escapeHtml(titulo)}</h3>
+      ${midHtml}
+    </div>
+    <div class="gs-col-right">
+      <div class="gs-interp-ttl2">🔍 Interpretação <span class="gs-badge-ia">🤖 IA</span></div>
+      <div class="gs-interp-txt2">${escapeHtml(interpretacao)}</div>
+    </div>
+  </div>`;
+}
+function gsFeedbackBlock(activityId, graficoId, counts){
+  const u = (counts && counts.util) || 0, n = (counts && counts.nao_util) || 0;
+  return `<div class="gs-fb" data-fb-activity="${activityId}" data-fb-grafico="${graficoId}">
+    <div class="gs-fb-counts">👍 <span class="gs-n-util">${u}</span> útil · 👎 <span class="gs-n-nao">${n}</span> não útil</div>
+    <div class="gs-fb-buttons">
+      <button class="gs-fb-btn" data-val="util">👍 Útil</button>
+      <button class="gs-fb-btn" data-val="nao_util">👎 Não útil</button>
+    </div>
+    <textarea class="gs-fb-comment" placeholder="Comentário pro Igor deixar (opcional)"></textarea>
+    <button class="gs-fb-send" disabled>Enviar feedback</button>
+    <div class="gs-fb-status"></div>
+  </div>`;
+}
+function gsSwipeChrome(card3Html){
+  return `<div class="gs-swipe-viewport">${card3Html}</div>
+    <div class="gs-swipe-dots"><button class="active" data-i="0" aria-label="Pergunta e resumo"></button><button data-i="1" aria-label="Gráfico"></button><button data-i="2" aria-label="Interpretação"></button></div>
+    <div class="gs-swipe-hint">arraste pro lado pra ver o gráfico e a interpretação</div>`;
+}
+function gsInitSwipeCarousels(){
+  document.querySelectorAll('.gsCardWrap').forEach(card => {
+    const track = card.querySelector('.gs-swipe-viewport .gsCard3');
+    if (!track) return;
+    const dots = card.querySelectorAll('.gs-swipe-dots button');
+    if (!dots.length) return;
+    function updateDots(){
+      const idx = Math.round(track.scrollLeft / (track.clientWidth || 1));
+      dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
+    }
+    track.addEventListener('scroll', updateDots, {passive:true});
+    dots.forEach((d,i)=> d.addEventListener('click', ()=> track.scrollTo({left: i*track.clientWidth, behavior:'smooth'})));
+  });
+}
+
+function gsRenderVisaoGeral(row){
+  const d = row.dados || {};
+  let html = gsCardWrapOpen('visao-geral');
+  html += `<div class="gs-interp-ttl2">🔍 Interpretação <span class="gs-badge-ia">🤖 IA</span></div>`;
+  html += `<div class="gs-interp-txt2" style="font-size:13px;margin-top:4px;">${escapeHtml(row.interpretacao)}</div>`;
+  html += `<div class="gs-cap"><span class="gs-badge-calc">🔢 Calculado no banco</span> &nbsp;Baseado em ${d.total_incluidos ?? '—'} de ${d.total_possiveis ?? 12} gráficos desta sessão.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'visao-geral', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+
+function gsRenderIfAltitude(row){
+  const mid = `<div id="gsLegendaCores-if-altitude" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10.5px;"></div>
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;"><div id="gsChartHolder-if-altitude" style="position:relative;height:225px;"><canvas id="gsChart-if-altitude"></canvas></div></div>
+    <div style="flex:0 0 150px;">
+      <div style="position:relative;width:112px;height:112px;margin:0 auto;">
+        <canvas id="gsDonut-if-altitude"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <span style="font-size:9px;color:${gsTextMuted};">IF médio</span>
+          <span id="gsDonutCentro-if-altitude" style="font-size:16px;font-weight:700;"></span>
+        </div>
+      </div>
+      <div id="gsLegendaDonut-if-altitude" style="display:flex;flex-direction:column;gap:7px;font-size:11px;margin-top:12px;"></div>
+    </div>
+  </div>`;
+  let html = gsCardWrapOpen('if-altitude');
+  html += gsSwipeChrome(gsCard3Inner(1, GS_META['if-altitude'].titulo, GS_META['if-altitude'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += gsFeedbackBlock(row.activity_id, 'if-altitude', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitIfAltitude(d, terrenoRow){
+  const blocos = (d && Array.isArray(d.blocos)) ? d.blocos : null;
+  function labelFor(s){ const h=Math.floor(s/3600), m=Math.floor((s%3600)/60); return h+':'+String(m).padStart(2,'0'); }
+  const legendaEl = document.getElementById('gsLegendaCores-if-altitude');
+  const ctx = document.getElementById('gsChart-if-altitude');
+  if (blocos && blocos.length && ctx) {
+    if (legendaEl) legendaEl.innerHTML = [['IF < 60%',gsCorVerde],['IF 60–75%',gsCorAmarelo],['IF 75–90%',gsCorLaranja],['IF > 90%',gsCorVermelho]]
+      .map(([l,c])=>`<span style="color:${gsTextMuted};"><i style="display:inline-block;width:9px;height:9px;background:${c};border-radius:2px;margin-right:4px;vertical-align:middle;"></i>${escapeHtml(l)}</span>`).join('');
+    const labels = blocos.map(b=>labelFor(b.tempo_inicio_s));
+    const ifPct = blocos.map(b=>b.sem_amostra?null:b.if_pct_ponto);
+    const alt = blocos.map(b=>b.sem_amostra?null:b.altitude_m);
+    gsChartInstances.push(new Chart(ctx, {type:'line', data:{labels, datasets:[
+      {label:'Altitude (m)', data:alt, yAxisID:'y', fill:true, pointRadius:0, borderWidth:1.5, tension:0.25, spanGaps:false,
+        segment:{
+          borderColor: c2 => { const v = gsCorPorIF((ifPct[c2.p0DataIndex]+ifPct[c2.p1DataIndex])/2); return v || 'transparent'; },
+          backgroundColor: c2 => { const v = gsCorPorIF((ifPct[c2.p0DataIndex]+ifPct[c2.p1DataIndex])/2); return v ? v+'77' : 'transparent'; }
+        }
+      }
+    ]}, options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{
+        title:(items)=>'tempo em movimento: '+items[0].label+'h',
+        label:(item)=>{ if (item.parsed.y===null) return 'sem dado real gravado'; const ifb=ifPct[item.dataIndex]; return 'altitude: '+item.parsed.y+'m'+(ifb!=null?' · IF do bloco: '+ifb+'%':''); }
+      }}},
+      scales:{x:{ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}}, y:{position:'left',ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}}}}
+    }));
+  } else {
+    if (legendaEl) legendaEl.innerHTML = '';
+    const holder = document.getElementById('gsChartHolder-if-altitude');
+    if (holder) holder.innerHTML = `<div style="font-size:12px;color:${gsTextMuted};padding:20px 10px;text-align:center;">Sem gráfico — esta sessão não tem stream de potência (watts) registrado.</div>`;
+  }
+  const donutCtx = document.getElementById('gsDonut-if-altitude');
+  if (donutCtx && terrenoRow && terrenoRow.dados) {
+    const td = terrenoRow.dados;
+    document.getElementById('gsDonutCentro-if-altitude').textContent = (td.if_oficial_sessao!=null) ? (td.if_oficial_sessao*100).toFixed(0)+'%' : '—';
+    const terrenos = [
+      {label:'Subida', dados: td.terrenos.subida},
+      {label:'Plano', dados: td.terrenos.plano},
+      {label:'Descida', dados: td.terrenos.descida}
+    ].filter(t=>t.dados).map(t=>({...t, cor: gsCorPorIF(t.dados.if_pct) || gsCorAusenteIF}));
+    gsChartInstances.push(new Chart(donutCtx, {type:'doughnut', data:{labels:terrenos.map(t=>t.label), datasets:[{data:terrenos.map(t=>t.dados.pct_tempo), backgroundColor:terrenos.map(t=>t.cor), borderWidth:0}]},
+      options:{responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{display:false}}}}));
+    const leg = document.getElementById('gsLegendaDonut-if-altitude');
+    if (leg) leg.innerHTML = terrenos.map(t=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.cor};margin-right:5px;"></span><b>${escapeHtml(t.label)}</b> — ${t.dados.pct_tempo}% (${gsFmtHMS(t.dados.tempo_s)}) · IF ${t.dados.if_pct}%</span>`).join('');
+  } else if (donutCtx) {
+    donutCtx.parentElement.parentElement.style.display = 'none';
+  }
+}
+
+function gsRenderFcAltitudeSemPotencia(row){
+  const mid = `<div id="gsLegendaCores-fc-altitude-sp" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10.5px;"></div>
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;"><div id="gsChartHolder-fc-altitude-sp" style="position:relative;height:225px;"><canvas id="gsChart-fc-altitude-sp"></canvas></div></div>
+    <div style="flex:0 0 150px;">
+      <div style="position:relative;width:112px;height:112px;margin:0 auto;">
+        <canvas id="gsDonut-fc-altitude-sp"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <span style="font-size:9px;color:${gsTextMuted};">% do limiar de FC</span>
+          <span id="gsDonutCentro-fc-altitude-sp" style="font-size:16px;font-weight:700;"></span>
+        </div>
+      </div>
+      <div id="gsLegendaDonut-fc-altitude-sp" style="display:flex;flex-direction:column;gap:7px;font-size:11px;margin-top:12px;"></div>
+    </div>
+  </div>`;
+  let html = gsCardWrapOpen('fc-altitude-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(1, GS_META['fc-altitude-sem-potencia'].titulo, GS_META['fc-altitude-sem-potencia'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += `<div class="gs-cap">Sessão sem medidor de potência: cores por % do limiar de FC (FTHR), cortes 69/84/95% (nota-0022) — diferentes dos cortes de IF (60/75/90%) usados na versão com potência.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'fc-altitude-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitFcAltitudeSemPotencia(d, terrenoRow){
+  const blocos = (d && Array.isArray(d.blocos)) ? d.blocos : null;
+  function labelFor(s){ const h=Math.floor(s/3600), m=Math.floor((s%3600)/60); return h+':'+String(m).padStart(2,'0'); }
+  const legendaEl = document.getElementById('gsLegendaCores-fc-altitude-sp');
+  const ctx = document.getElementById('gsChart-fc-altitude-sp');
+  if (blocos && blocos.length && ctx) {
+    if (legendaEl) legendaEl.innerHTML = [['< 69%',gsCorVerde],['69–84%',gsCorAmarelo],['84–95%',gsCorLaranja],['> 95%',gsCorVermelho]]
+      .map(([l,c])=>`<span style="color:${gsTextMuted};"><i style="display:inline-block;width:9px;height:9px;background:${c};border-radius:2px;margin-right:4px;vertical-align:middle;"></i>${escapeHtml(l)}</span>`).join('');
+    const labels = blocos.map(b=>labelFor(b.tempo_inicio_s));
+    const pctFthrPonto = blocos.map(b=>b.sem_amostra?null:b.pct_fthr_ponto);
+    const alt = blocos.map(b=>b.sem_amostra?null:b.altitude_m);
+    gsChartInstances.push(new Chart(ctx, {type:'line', data:{labels, datasets:[
+      {label:'Altitude (m)', data:alt, yAxisID:'y', fill:true, pointRadius:0, borderWidth:1.5, tension:0.25, spanGaps:false,
+        segment:{
+          borderColor: c2 => { const v = gsCorPorFC((pctFthrPonto[c2.p0DataIndex]+pctFthrPonto[c2.p1DataIndex])/2); return v || 'transparent'; },
+          backgroundColor: c2 => { const v = gsCorPorFC((pctFthrPonto[c2.p0DataIndex]+pctFthrPonto[c2.p1DataIndex])/2); return v ? v+'77' : 'transparent'; }
+        }
+      }
+    ]}, options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false}, tooltip:{callbacks:{
+        title:(items)=>'tempo em movimento: '+items[0].label+'h',
+        label:(item)=>{ if (item.parsed.y===null) return 'sem dado real gravado'; const fb=pctFthrPonto[item.dataIndex]; return 'altitude: '+item.parsed.y+'m'+(fb!=null?' · esforço: '+fb+'% do limiar de FC':''); }
+      }}},
+      scales:{x:{ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}}, y:{position:'left',ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}}}}
+    }));
+  } else {
+    if (legendaEl) legendaEl.innerHTML = '';
+    const holder = document.getElementById('gsChartHolder-fc-altitude-sp');
+    if (holder) holder.innerHTML = `<div style="font-size:12px;color:${gsTextMuted};padding:20px 10px;text-align:center;">Sem gráfico — dados insuficientes nesta sessão.</div>`;
+  }
+  const donutCtx = document.getElementById('gsDonut-fc-altitude-sp');
+  if (donutCtx && terrenoRow && terrenoRow.dados) {
+    const td = terrenoRow.dados;
+    document.getElementById('gsDonutCentro-fc-altitude-sp').textContent = (td.pct_fthr_sessao!=null) ? td.pct_fthr_sessao.toFixed(0)+'%' : '—';
+    const terrenos = [
+      {label:'Subida', dados: td.terrenos.subida},
+      {label:'Plano', dados: td.terrenos.plano},
+      {label:'Descida', dados: td.terrenos.descida}
+    ].filter(t=>t.dados).map(t=>({...t, cor: gsCorPorFC(t.dados.pct_fthr) || gsCorAusenteIF}));
+    gsChartInstances.push(new Chart(donutCtx, {type:'doughnut', data:{labels:terrenos.map(t=>t.label), datasets:[{data:terrenos.map(t=>t.dados.pct_tempo), backgroundColor:terrenos.map(t=>t.cor), borderWidth:0}]},
+      options:{responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{display:false}}}}));
+    const leg = document.getElementById('gsLegendaDonut-fc-altitude-sp');
+    if (leg) leg.innerHTML = terrenos.map(t=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.cor};margin-right:5px;"></span><b>${escapeHtml(t.label)}</b> — ${t.dados.pct_tempo}% (${gsFmtHMS(t.dados.tempo_s)}) · ${t.dados.pct_fthr}% FTHR</span>`).join('');
+  } else if (donutCtx) {
+    donutCtx.parentElement.parentElement.style.display = 'none';
+  }
+}
+
+function gsRenderTerrenoMetricas(row){
+  const d = row.dados;
+  const terrenos = [
+    {label:'Subida', dados: d.terrenos.subida, cor: gsCorSubida},
+    {label:'Plano', dados: d.terrenos.plano, cor: gsCorPlano},
+    {label:'Descida', dados: d.terrenos.descida, cor: gsCorDescida}
+  ].filter(t=>t.dados);
+  let tbl = '<table class="gs-matrix"><tr><th></th>' + terrenos.map(t=>`<th style="text-align:left;color:${t.cor};border-bottom:2px solid ${gsGridColor};font-size:12px;">${escapeHtml(t.label)}</th>`).join('') + '</tr>';
+  const linhas = [['Tempo em movimento','tempo_s','hms',null],['% do tempo total','pct_tempo','%',1],['Potência média','potencia_media_w','W',1],['FC média','fc_media_bpm','bpm',1],['Cadência média','cadencia_media_rpm','rpm',1],['IF médio','if_pct','%',1]];
+  linhas.forEach(([label,campo,unidade,casas])=>{
+    tbl += `<tr><td style="color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};">${escapeHtml(label)}</td>` + terrenos.map(t=>{
+      const v = campo==='tempo_s' ? gsFmtHMS(t.dados[campo]) : gsFmt(t.dados[campo], unidade, casas);
+      return `<td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${v}</td>`;
+    }).join('') + '</tr>';
+  });
+  tbl += '</table>';
+  let html = gsCardWrapOpen('terreno-metricas');
+  html += gsSwipeChrome(gsCard3Inner(7, GS_META['terreno-metricas'].titulo, GS_META['terreno-metricas'].pergunta, ['ia','calc'], row.resumo, tbl, row.interpretacao));
+  html += `<div class="gs-cap">Limiar de terreno: acima de 2% = subida, abaixo de -2% = descida — decisão de produto, não é regra do cânone.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'terreno-metricas', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsRenderTerrenoMetricasSemPotencia(row){
+  const d = row.dados;
+  const terrenos = [
+    {label:'Subida', dados: d.terrenos.subida, cor: gsCorSubida},
+    {label:'Plano', dados: d.terrenos.plano, cor: gsCorPlano},
+    {label:'Descida', dados: d.terrenos.descida, cor: gsCorDescida}
+  ].filter(t=>t.dados);
+  const temCadencia = terrenos.some(t => t.dados.cadencia_provenance !== 'Ausente');
+  let tbl = '<table class="gs-matrix"><tr><th></th>' + terrenos.map(t=>`<th style="text-align:left;color:${t.cor};border-bottom:2px solid ${gsGridColor};font-size:12px;">${escapeHtml(t.label)}</th>`).join('') + '</tr>';
+  const linhas = [['Tempo em movimento','tempo_s','hms',null],['% do tempo total','pct_tempo','%',1],['FC média','fc_media_bpm','bpm',1],['% do limiar de FC','pct_fthr','%',1]];
+  if (temCadencia) linhas.push(['Cadência média','cadencia_media_rpm','rpm',1]);
+  linhas.forEach(([label,campo,unidade,casas])=>{
+    tbl += `<tr><td style="color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};">${escapeHtml(label)}</td>` + terrenos.map(t=>{
+      const valor = (campo==='cadencia_media_rpm' && t.dados.cadencia_provenance==='Ausente') ? null : t.dados[campo];
+      const v = campo==='tempo_s' ? gsFmtHMS(valor) : gsFmt(valor, unidade, casas);
+      return `<td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${v}</td>`;
+    }).join('') + '</tr>';
+  });
+  tbl += '</table>';
+  let html = gsCardWrapOpen('terreno-metricas-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(7, GS_META['terreno-metricas-sem-potencia'].titulo, GS_META['terreno-metricas-sem-potencia'].pergunta, ['ia','calc'], row.resumo, tbl, row.interpretacao));
+  html += `<div class="gs-cap">Limiar de terreno: acima de 2% = subida, abaixo de -2% = descida — decisão de produto, não é regra do cânone. Sessão sem medidor de potência: métricas calculadas a partir da frequência cardíaca.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'terreno-metricas-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+
+function gsRenderSincronia(row){
+  const mid = `<div style="font-size:12px;margin-bottom:6px;color:${gsTextMuted};">Resumo da sessão</div>
+    <div id="gsBarraSinc" style="display:flex;width:100%;height:24px;border-radius:6px;overflow:hidden;margin-bottom:6px;"></div>
+    <div id="gsLegendaBarraSinc" style="display:flex;gap:14px;margin-bottom:18px;font-size:12px;flex-wrap:wrap;"></div>
+    <div style="font-size:12px;margin-bottom:6px;color:${gsTextMuted};">Momento a momento — zona de potência vs. zona de FC (1 a 7)</div>
+    <div style="position:relative;height:220px;"><canvas id="gsChartSincronia"></canvas></div>
+    <div id="gsLegendaLinhaSinc" style="display:flex;gap:16px;margin-top:8px;font-size:12px;"></div>`;
+  let html = gsCardWrapOpen('sincronia-potencia-fc');
+  html += gsSwipeChrome(gsCard3Inner(12, GS_META['sincronia-potencia-fc'].titulo, GS_META['sincronia-potencia-fc'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += gsFeedbackBlock(row.activity_id, 'sincronia-potencia-fc', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitSincronia(d){
+  const corJunto='#0F6E56', corAtras='#D98A2B', corFrente='#C0392B', corPotencia='#378ADD', corFc='#D85A30';
+  const barra = document.getElementById('gsBarraSinc');
+  function seg(pct,cor,isFirst){ const el=document.createElement('div'); el.style.width=pct+'%'; el.style.background=cor; if(!isFirst) el.style.borderLeft='2px solid #fff'; return el; }
+  barra.appendChild(seg(d.pct_junto, corJunto, true));
+  barra.appendChild(seg(d.pct_fc_atras, corAtras));
+  barra.appendChild(seg(d.pct_fc_frente, corFrente));
+  const leg = document.getElementById('gsLegendaBarraSinc');
+  leg.innerHTML = [
+    ['Bateu junto — '+d.pct_junto+'%', corJunto],
+    ['Coração atrás das pernas — '+d.pct_fc_atras+'%', corAtras],
+    ['Coração à frente das pernas — '+d.pct_fc_frente+'%', corFrente]
+  ].map(([t,c])=>`<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${c};display:inline-block;"></span>${escapeHtml(t)}</span>`).join('');
+  const n = d.series.length;
+  const totalS = d.tempo_total_valido_s;
+  function labelFor(i){
+    if (!totalS) return String(i);
+    const tS = (i/(n-1))*totalS;
+    const mm = Math.floor(tS/60), ss = Math.round(tS%60);
+    return mm+':'+String(ss).padStart(2,'0');
+  }
+  const labels = d.series.map((p,i)=>labelFor(i));
+  const zonaPotencia = d.series.map(p=>p.zona_potencia);
+  const zonaFc = d.series.map(p=>p.zona_fc);
+  const bucketMeioIdx = d.bucket_meio - 1;
+  const meioLinePlugin = {id:'gsMeioLineSinc', afterDraw(chart){
+    const xScale = chart.scales.x;
+    const x = xScale.getPixelForValue(bucketMeioIdx);
+    const {top, bottom} = chart.chartArea;
+    const ctx2 = chart.ctx;
+    ctx2.save(); ctx2.strokeStyle = gsTextMuted; ctx2.setLineDash([4,4]); ctx2.lineWidth = 1;
+    ctx2.beginPath(); ctx2.moveTo(x, top); ctx2.lineTo(x, bottom); ctx2.stroke(); ctx2.restore();
+  }};
+  const ctxSinc = document.getElementById('gsChartSincronia');
+  gsChartInstances.push(new Chart(ctxSinc, {type:'line', data:{labels, datasets:[
+    {label:'Zona de potência', data:zonaPotencia, borderColor:corPotencia, backgroundColor:corPotencia, tension:0.2, pointRadius:0, borderWidth:2},
+    {label:'Zona de FC', data:zonaFc, borderColor:corFc, backgroundColor:corFc, tension:0.2, pointRadius:0, borderWidth:2, borderDash:[5,3]}
+  ]}, options:{responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index', intersect:false},
+    plugins:{legend:{display:false}, tooltip:{callbacks:{title:(items)=>'tempo em movimento: '+items[0].label}}},
+    scales:{
+      x:{ticks:{color:gsTextMuted, font:{size:11}, maxTicksLimit:7, autoSkip:true}, grid:{display:false}},
+      y:{min:1, max:7, ticks:{stepSize:1, color:gsTextMuted, font:{size:11}}, grid:{color:gsGridColor}}
+    }},
+    plugins:[meioLinePlugin]
+  }));
+  document.getElementById('gsLegendaLinhaSinc').innerHTML =
+    `<span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;border-top:2px solid ${corPotencia};display:inline-block;"></span>Zona de potência</span>
+     <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;border-top:2px dashed ${corFc};display:inline-block;"></span>Zona de FC</span>`;
+}
+
+function gsRenderCustoCardiovascular(row){
+  const mid = `<div style="position:relative;height:220px;"><canvas id="gsChartCusto"></canvas></div>
+    <table class="gs-matrix" id="gsTabelaCusto" style="margin-top:14px;"></table>`;
+  let html = gsCardWrapOpen('custo-cardiovascular');
+  html += gsSwipeChrome(gsCard3Inner(3, GS_META['custo-cardiovascular'].titulo, GS_META['custo-cardiovascular'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += gsFeedbackBlock(row.activity_id, 'custo-cardiovascular', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitCustoCardiovascular(d){
+  const corFc='#D64545', corPwFc='#378ADD', corSombra1='rgba(99,153,34,0.08)', corSombra2='rgba(214,69,69,0.08)';
+  const labels = d.curva.map(p=>p.minuto);
+  const fc = d.curva.map(p=>p.fc_bpm);
+  const pwfc = d.curva.map(p=>p.pw_fc_ratio);
+  const pontoMeioMin = d.ponto_meio_min, ratio1 = d.primeira_metade.pw_fc_ratio, ratio2 = d.segunda_metade.pw_fc_ratio;
+  const faixasPlugin = {id:'gsFaixas', beforeDraw(chart){
+    const {ctx, chartArea:{left,right,top,bottom}, scales:{x}} = chart;
+    const xMeio = x.getPixelForValue(pontoMeioMin);
+    ctx.save(); ctx.fillStyle=corSombra1; ctx.fillRect(left,top,xMeio-left,bottom-top);
+    ctx.fillStyle=corSombra2; ctx.fillRect(xMeio,top,right-xMeio,bottom-top);
+    ctx.fillStyle=gsTextMain; ctx.font='600 11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('1ª metade', (left+xMeio)/2, top+14);
+    ctx.font='700 12px sans-serif'; ctx.fillText('P/HR '+ratio1.toFixed(2), (left+xMeio)/2, top+30);
+    ctx.font='600 11px sans-serif'; ctx.fillText('2ª metade', (xMeio+right)/2, top+14);
+    ctx.font='700 12px sans-serif'; ctx.fillText('P/HR '+ratio2.toFixed(2), (xMeio+right)/2, top+30);
+    ctx.restore();
+  }};
+  const ctx = document.getElementById('gsChartCusto');
+  gsChartInstances.push(new Chart(ctx, {type:'line', data:{labels, datasets:[
+    {label:'FC (bpm)', data:fc, borderColor:corFc, backgroundColor:corFc, yAxisID:'yFc', tension:0.25, pointRadius:0},
+    {label:'Power/HR (W/bpm)', data:pwfc, borderColor:corPwFc, backgroundColor:corPwFc, yAxisID:'yRatio', tension:0.25, pointRadius:0}
+  ]}, options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{position:'top', labels:{boxWidth:10,font:{size:10.5},color:gsTextMuted}}},
+    scales:{x:{ticks:{color:gsTextMuted,font:{size:10}},grid:{display:false}}, yFc:{position:'left',ticks:{color:corFc,font:{size:10}},grid:{color:gsGridColor}}, yRatio:{position:'right',ticks:{color:corPwFc,font:{size:10}},grid:{display:false}}}},
+    plugins:[faixasPlugin]}));
+  const linhasTabela = [['IF médio', m=>m.if_pct,1,'%'],['Potência média', m=>m.potencia_media_w,1,'W'],['FC média', m=>m.fc_media_bpm,1,'bpm'],['Eficiência (W/FC)', m=>m.pw_fc_ratio,3,''],['Cadência média', m=>m.cadencia_provenance==='Ausente'?null:m.cadencia_media_rpm,1,'rpm']];
+  let t = '<tr><th style="text-align:left;border-bottom:2px solid '+gsGridColor+';font-size:11.5px;">Métrica</th><th style="text-align:left;border-bottom:2px solid '+gsGridColor+';font-size:11.5px;">1ª metade</th><th style="text-align:left;border-bottom:2px solid '+gsGridColor+';font-size:11.5px;">2ª metade</th><th style="text-align:left;border-bottom:2px solid '+gsGridColor+';font-size:11.5px;">Diferença</th></tr>';
+  linhasTabela.forEach(([label,get,casas,un])=>{
+    const v1=get(d.primeira_metade), v2=get(d.segunda_metade);
+    let diff = '—', diffColor = gsTextMuted;
+    if (v1!=null && v2!=null && v1!==0){ const delta=((v2-v1)/v1*100); diff=(delta>=0?'+':'')+delta.toFixed(0)+'%'; diffColor = delta>=0?corPwFc:corFc; }
+    t += `<tr><td style="padding:6px;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};">${escapeHtml(label)}</td><td style="padding:6px;color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(v1,un,casas)}</td><td style="padding:6px;color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(v2,un,casas)}</td><td style="padding:6px;font-weight:600;color:${diffColor};border-bottom:1px solid ${gsGridColor};">${diff}</td></tr>`;
+  });
+  document.getElementById('gsTabelaCusto').innerHTML = t;
+}
+
+function gsRenderMatrixCard(id, numero, row, capText){
+  const mid = `<div id="gsMatrixHolder-${id}"></div>`;
+  let html = gsCardWrapOpen(id);
+  html += gsSwipeChrome(gsCard3Inner(numero, GS_META[id].titulo, GS_META[id].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  if (capText) html += `<div class="gs-cap">${capText}</div>`;
+  html += gsFeedbackBlock(row.activity_id, id, row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrixCard(id, dados, rowKeys, colKeys, rowLabelFn, colLabelFn, cellGetter, rowColorFn){
+  const celulas = dados.celulas;
+  let maxMin = 0;
+  rowKeys.forEach(rk=>colKeys.forEach(ck=>{ const c = cellGetter(celulas,rk,ck); const m = c?c.minutos:0; if (m>maxMin) maxMin=m; }));
+  function color(rk, m){
+    if(!m||m<=0) return 'transparent';
+    const t=Math.min(m/maxMin,1);
+    if (rowColorFn) {
+      const a = 0.15+t*0.70;
+      const hex = rowColorFn(rk);
+      const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+      return `rgba(${r},${g},${b},${a.toFixed(2)})`;
+    }
+    const a = 0.12+t*0.65;
+    return `rgba(55,138,221,${a.toFixed(2)})`;
+  }
+  function colorTxt(m){
+    const t = maxMin>0?Math.min((m||0)/maxMin,1):0;
+    if (rowColorFn) return t>0.5 ? '#fff' : gsTextMain;
+    return t>0.45 ? '#042C53' : gsTextMain;
+  }
+  let thead = '<tr><th></th>' + colKeys.map(ck=>`<th style="text-align:center;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(colLabelFn(ck))}</th>`).join('') + '</tr>';
+  const totals = {}; colKeys.forEach(ck=>totals[ck]=0);
+  let body = rowKeys.map(rk=>{
+    const cells = colKeys.map(ck=>{
+      const c = cellGetter(celulas,rk,ck); const n = c?c.n_amostras:0; const m = c?c.minutos:0; totals[ck]+=n;
+      return `<td style="text-align:center;border-bottom:0.5px solid ${gsGridColor};background:${color(rk, m)};color:${colorTxt(m)};font-weight:500;">${gsFmtDur(n)}</td>`;
+    }).join('');
+    return `<tr><td style="color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(rowLabelFn(rk))}</td>${cells}</tr>`;
+  }).join('');
+  let foot = '<tr><td style="color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totals[ck])}</td>`).join('') + '</tr>';
+  const holder = document.getElementById('gsMatrixHolder-'+id);
+  if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+const GS_MATRIX_CONFIGS = {
+  'matriz-cadencia-inclinacao': {
+    rowKeys: ['6_subida forte (> 7%)','5_subida moderada (4% a 7%)','4_subida leve (2% a 4%)','3_plano (-2% a 2%)','2_descida leve (-4% a -2%)','1_descida forte (< -4%)'],
+    colKeys: ['< 60 rpm','60-69 rpm','70-79 rpm','80-89 rpm','90-99 rpm','>= 100 rpm'],
+    rowLabelFn: k=>k.replace(/^\d_/,''), colLabelFn: k=>k,
+    cellGetter: (cel,rk,ck)=> cel[rk] && cel[rk][ck],
+    cap: 'Inclinação: 6 faixas (cortes ±2%/4%/7%). Cadência: 6 faixas de resolução de exibição. Célula = tempo em movimento com cadência > 0.'
+  },
+  'matriz-potencia-cadencia': {
+    rowKeys: ['450-539W','360-449W','270-359W','180-269W','90-179W','0-89W'],
+    colKeys: ['< 75 rpm','75-94 rpm','95-109 rpm','>= 110 rpm'],
+    rowLabelFn: k=>k, colLabelFn: k=>k,
+    cellGetter: (cel,rk,ck)=> cel[ck] && cel[ck][rk],
+    cap: 'Potência: 6 faixas de 90W. Cadência: cortes de 75/95/110rpm (nota-0151, heurística de contexto). Célula = tempo em movimento (excluindo cadência zero).'
+  },
+  'matriz-potencia-fc': {
+    rowKeys: ['450-539W','360-449W','270-359W','180-269W','90-179W','0-89W'],
+    colKeys: ['< 100 bpm','100-119 bpm','120-139 bpm','140-159 bpm','160-179 bpm','>= 180 bpm'],
+    rowLabelFn: k=>k, colLabelFn: k=>k,
+    cellGetter: (cel,rk,ck)=> cel[ck] && cel[ck][rk],
+    cap: 'Potência: 6 faixas de 90W. FC: 6 faixas de resolução de exibição — não é zona de FC validada. FC responde com atraso à potência e é afetada por calor/hidratação/fadiga.'
+  },
+  'matriz-zona-terreno': {
+    rowKeys: ['Z7 >150%','Z6 121-150%','Z5 106-120%','Z4 91-105%','Z3 76-90%','Z2 56-75%','Z1 <55%'],
+    colKeys: ['descida','plano','subida'],
+    rowLabelFn: k=>k, colLabelFn: k=>({descida:'Descida',plano:'Plano',subida:'Subida'}[k]),
+    cellGetter: (cel,rk,ck)=> cel[ck] && cel[ck][rk],
+    cap: 'Terreno: ±2%. Zonas: 7 níveis clássicos de Coggan (nota-0022, validado). Célula = tempo em movimento.'
+  },
+  'matriz-intensidade-terreno': {
+    rowKeys: ['IF > 0,90','0,75 - 0,90','0,60 - 0,75','0,45 - 0,60','< 0,45'],
+    colKeys: ['descida','plano','subida'],
+    rowLabelFn: k=>k, colLabelFn: k=>({descida:'Descida',plano:'Plano',subida:'Subida'}[k]),
+    cellGetter: (cel,rk,ck)=> cel[ck] && cel[ck][rk],
+    rowColorFn: gsCorPorFaixaIF,
+    cap: 'Terreno: ±2%. Faixas de IF: 45%/60%/75%/90% — decisão de produto, não é regra do cânone. Cor da célula = faixa de IF da linha (mesma escala do gráfico de intensidade); força da cor = tempo em movimento. Célula = tempo em movimento.'
+  }
+};
+const GS_MATRIX_NUM = {'matriz-cadencia-inclinacao':12,'matriz-potencia-cadencia':10,'matriz-potencia-fc':11,'matriz-zona-terreno':9,'matriz-intensidade-terreno':8};
+
+function gsRenderMatrizNivelFcTerrenoSemPotencia(row){
+  const mid = `<div id="gsMatrixHolder-matriz-nivel-fc-terreno-sem-potencia"></div>`;
+  let html = gsCardWrapOpen('matriz-nivel-fc-terreno-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(9, GS_META['matriz-nivel-fc-terreno-sem-potencia'].titulo, GS_META['matriz-nivel-fc-terreno-sem-potencia'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += `<div class="gs-cap">N = nível de esforço cardíaco (equivalente conceitual às zonas de potência da versão com medidor, mas baseado em %FTHR — não são as mesmas 7 zonas de Coggan). Terreno: ±2% de inclinação. Cortes dos níveis: 69/84/95% do FTHR (nota-0022). Célula = tempo em movimento. Sessão sem medidor de potência.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'matriz-nivel-fc-terreno-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrizNivelFcTerrenoSemPotencia(d){
+  const celulas = d.celulas || {};
+  const terrenos = ['descida', 'plano', 'subida'];
+  const terrenosLabel = {descida:'Descida', plano:'Plano', subida:'Subida'};
+  const niveis = ['N4+ >=95%', 'N3 84-95%', 'N2 69-84%', 'N1 <69%'];
+  let maxMin = 0;
+  niveis.forEach(n => terrenos.forEach(t => {
+    const c = (celulas[t] && celulas[t][n]) ? celulas[t][n].minutos : 0;
+    if (c > maxMin) maxMin = c;
+  }));
+  function cor(m){
+    if(!m || m<=0) return 'transparent';
+    const t = Math.min(m/maxMin,1);
+    const alpha = 0.12 + t*0.65;
+    return 'rgba(217,83,79,' + alpha.toFixed(2) + ')';
+  }
+  function corTexto(m){
+    const t = maxMin > 0 ? Math.min((m||0)/maxMin,1) : 0;
+    return t>0.45 ? '#4A1B0C' : gsTextMain;
+  }
+  const holder = document.getElementById('gsMatrixHolder-matriz-nivel-fc-terreno-sem-potencia');
+  if (!holder) return;
+  let thead = '<tr><th style="padding:8px;border-bottom:1px solid '+gsGridColor+';"></th>' + terrenos.map(t=>`<th style="text-align:center;padding:8px;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(terrenosLabel[t])}</th>`).join('') + '</tr>';
+  const totaisSeg = {descida:0, plano:0, subida:0};
+  let body = niveis.map(nivel=>{
+    const cells = terrenos.map(t=>{
+      const cel = (celulas[t] && celulas[t][nivel]) ? celulas[t][nivel] : null;
+      const m = cel ? cel.minutos : 0;
+      const segs = cel ? cel.n_amostras : 0;
+      totaisSeg[t] += segs;
+      return `<td style="text-align:center;padding:8px;border-bottom:0.5px solid ${gsGridColor};background:${cor(m)};color:${corTexto(m)};font-weight:500;">${gsFmtDur(segs)}</td>`;
+    }).join('');
+    return `<tr><td style="padding:8px;color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(nivel)}</td>${cells}</tr>`;
+  }).join('');
+  let foot = '<tr><td style="padding:8px;color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + terrenos.map(t=>`<td style="text-align:center;padding:8px;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totaisSeg[t])}</td>`).join('') + '</tr>';
+  holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
+function gsRenderMatrizFcCadenciaSemPotencia(row){
+  const mid = `<div id="gsMatrixHolder-matriz-fc-cadencia-sem-potencia"></div>`;
+  let html = gsCardWrapOpen('matriz-fc-cadencia-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(10, GS_META['matriz-fc-cadencia-sem-potencia'].titulo, GS_META['matriz-fc-cadencia-sem-potencia'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += `<div class="gs-cap">Esforço cardíaco: 4 níveis de %FTHR (cortes 69/84/95%, nota-0022). Cadência: 6 faixas de resolução de exibição. Célula = tempo em movimento com cadência > 0. Sessão sem medidor de potência.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'matriz-fc-cadencia-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrizFcCadenciaSemPotencia(d){
+  const celulas = d.celulas || {};
+  const cadencias = ['< 60 rpm', '60-69 rpm', '70-79 rpm', '80-89 rpm', '90-99 rpm', '>= 100 rpm'];
+  const faixasFc = ['4_muito forte (>= 95% FTHR)','3_forte (84-95% FTHR)','2_moderado (69-84% FTHR)','1_leve (< 69% FTHR)'];
+  function nomeFc(chave){ return chave.replace(/^\d_/, ''); }
+  let maxN = 0;
+  faixasFc.forEach(ff => cadencias.forEach(fc => {
+    const v = (celulas[ff] && celulas[ff][fc]) ? celulas[ff][fc].n_amostras : 0;
+    if (v > maxN) maxN = v;
+  }));
+  function cor(n){
+    if(!n || n<=0) return 'transparent';
+    const t = Math.min(n/maxN,1);
+    const alpha = 0.12 + t*0.65;
+    return 'rgba(160,110,224,' + alpha.toFixed(2) + ')';
+  }
+  function corTexto(n){
+    const t = maxN > 0 ? Math.min((n||0)/maxN,1) : 0;
+    return t>0.45 ? '#26215C' : gsTextMain;
+  }
+  const holder = document.getElementById('gsMatrixHolder-matriz-fc-cadencia-sem-potencia');
+  if (!holder) return;
+  let thead = '<tr><th style="padding:8px;border-bottom:1px solid '+gsGridColor+';"></th>' + cadencias.map(fc=>`<th style="text-align:center;padding:8px;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(fc)}</th>`).join('') + '</tr>';
+  const totais = {}; cadencias.forEach(fc=>totais[fc]=0);
+  let body = faixasFc.map(ff=>{
+    const cells = cadencias.map(fc=>{
+      const cel = (celulas[ff] && celulas[ff][fc]) ? celulas[ff][fc] : null;
+      const n = cel ? cel.n_amostras : 0;
+      totais[fc]+=n;
+      return `<td style="text-align:center;padding:8px;border-bottom:0.5px solid ${gsGridColor};background:${cor(n)};color:${corTexto(n)};font-weight:500;">${gsFmtDur(n)}</td>`;
+    }).join('');
+    return `<tr><td style="padding:8px;color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(nomeFc(ff))}</td>${cells}</tr>`;
+  }).join('');
+  let foot = '<tr><td style="padding:8px;color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + cadencias.map(fc=>`<td style="text-align:center;padding:8px;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totais[fc])}</td>`).join('') + '</tr>';
+  holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
+function gsRenderFadigaPlanoSubida(row){
+  const d = row.dados;
+  const plano = d.buckets.plano, subida = d.buckets.subida;
+  const faixaTxt = 'Comparação na mesma faixa de intensidade (IF ' + d.faixa_if_min.toFixed(2).replace('.', ',') + ' – ' + d.faixa_if_max.toFixed(2).replace('.', ',') + ')';
+  const linhas = [['Potência média','potencia_media_w','W',1],['FC média','fc_media_bpm','bpm',1],['Cadência média','cadencia_media_rpm','rpm',1],['Potência/FC','power_hr_ratio','W/bpm',3],['Custo energético','custo_energetico_kj_min','kJ/min',1]];
+  const ambos = plano.provenance==='Calculado' && subida.provenance==='Calculado';
+  let tbl = `<div style="font-size:11.5px;color:${gsTextMuted};margin-bottom:8px;">${escapeHtml(faixaTxt)}</div>`;
+  tbl += `<table class="gs-matrix"><tr><th></th><th style="text-align:left;color:#0f6e56;border-bottom:2px solid ${gsGridColor};font-size:12px;">Plano (grad. &lt; 2%)</th><th style="text-align:left;color:#993c1d;border-bottom:2px solid ${gsGridColor};font-size:12px;">Subida (grad. &gt; 5%)</th></tr>`;
+  linhas.forEach(([label,campo,un,casas])=>{
+    let badge = '';
+    if (ambos && plano[campo]!=null && subida[campo]!=null){ const delta=((subida[campo]-plano[campo])/plano[campo]*100); badge = ` <span style="font-size:11px;font-weight:700;color:${delta>=0?'#993c1d':'#0f6e56'};">${(delta>=0?'+':'')+delta.toFixed(0)}%</span>`; }
+    tbl += `<tr><td style="color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};">${escapeHtml(label)}</td><td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(plano[campo],un,casas)}</td><td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(subida[campo],un,casas)}${badge}</td></tr>`;
+  });
+  tbl += '</table>';
+  const avisos = [];
+  if (plano.provenance!=='Calculado') avisos.push('Trechos planos: '+plano.provenance+'.');
+  if (subida.provenance!=='Calculado') avisos.push('Subidas: '+subida.provenance+'.');
+  let html = gsCardWrapOpen('fadiga-plano-subida');
+  html += gsSwipeChrome(gsCard3Inner(6, GS_META['fadiga-plano-subida'].titulo, GS_META['fadiga-plano-subida'].pergunta, ['ia','calc'], row.resumo, tbl, row.interpretacao));
+  if (avisos.length) html += `<div class="gs-cap">${escapeHtml(avisos.join(' '))}</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'fadiga-plano-subida', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsRenderFadigaPlanoSubidaSemPotencia(row){
+  const d = row.dados;
+  const plano = d.buckets.plano, subida = d.buckets.subida;
+  const faixaMin = Math.round((d.faixa_pct_fthr_min!=null?d.faixa_pct_fthr_min:0.7)*100);
+  const faixaMax = Math.round((d.faixa_pct_fthr_max!=null?d.faixa_pct_fthr_max:1)*100);
+  const faixaTxt = 'Comparação na mesma faixa de esforço cardíaco (' + faixaMin + '% – ' + faixaMax + '% FTHR)';
+  const corPlanoTxt = '#0f6e56', corSubidaTxt = '#993c1d';
+  const linhas = [['FC média','fc_media_bpm','bpm',1],['% FTHR médio','pct_fthr_medio','%',1],['Cadência média','cadencia_media_rpm','rpm',1]];
+  let tbl = `<div style="font-size:11.5px;color:${gsTextMuted};margin-bottom:8px;">${escapeHtml(faixaTxt)}</div>`;
+  tbl += `<table class="gs-matrix"><tr><th></th><th style="text-align:left;color:${corPlanoTxt};border-bottom:2px solid ${gsGridColor};font-size:12px;">Trechos planos (gradiente &lt; 2%)</th><th style="text-align:left;color:${corSubidaTxt};border-bottom:2px solid ${gsGridColor};font-size:12px;">Subidas moderadas/fortes (gradiente &gt; 5%)</th></tr>`;
+  linhas.forEach(([label,campo,un,casas])=>{
+    tbl += `<tr><td style="color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};">${escapeHtml(label)}</td><td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(plano[campo],un,casas)}</td><td style="color:${gsTextMain};font-weight:600;border-bottom:1px solid ${gsGridColor};">${gsFmt(subida[campo],un,casas)}</td></tr>`;
+  });
+  tbl += '</table>';
+  const avisos = [];
+  if (plano.provenance!=='Calculado') avisos.push('Trechos planos: '+plano.provenance+'.');
+  if (subida.provenance!=='Calculado') avisos.push('Subidas: '+subida.provenance+'.');
+  let html = gsCardWrapOpen('fadiga-plano-subida-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(6, GS_META['fadiga-plano-subida-sem-potencia'].titulo, GS_META['fadiga-plano-subida-sem-potencia'].pergunta, ['ia','calc'], row.resumo, tbl, row.interpretacao));
+  if (avisos.length) html += `<div class="gs-cap">${escapeHtml(avisos.join(' '))}</div>`;
+  html += `<div class="gs-cap">Sessão sem medidor de potência: comparação feita na mesma faixa de %FTHR (não %FTP). Sem colunas de potência/custo energético — não existem sem watts.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'fadiga-plano-subida-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+
+function gsRenderPotenciaFcCadencia(row){
+  const mid = `<div style="position:relative;height:210px;"><canvas id="gsChartPfc"></canvas></div>
+    <div id="gsLegendaPfc" style="display:flex;gap:16px;font-size:12px;margin-top:8px;flex-wrap:wrap;"></div>`;
+  let html = gsCardWrapOpen('potencia-fc-cadencia');
+  html += gsSwipeChrome(gsCard3Inner(1, GS_META['potencia-fc-cadencia'].titulo, GS_META['potencia-fc-cadencia'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += `<div class="gs-cap">Todas as curvas normalizadas em % do valor no início da sessão (janela 0 = 100%).</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'potencia-fc-cadencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitPotenciaFcCadencia(d){
+  const ref = d.referencia_janela0;
+  const labels = d.janelas.map(j=>j.minuto_inicio+' min');
+  const potencia = d.janelas.map(j=> ref.potencia_media_w ? j.potencia_media_w/ref.potencia_media_w*100 : null);
+  const cadencia = d.janelas.map(j=> (j.cadencia_provenance==='Ausente'||!ref.cadencia_media_rpm) ? null : j.cadencia_media_rpm/ref.cadencia_media_rpm*100);
+  const pwfc = d.janelas.map(j=> ref.pw_fc_ratio ? j.pw_fc_ratio/ref.pw_fc_ratio*100 : null);
+  const corPotencia='#378ADD', corCadencia='#639922', corPwFc='#D98A2B';
+  const ctx = document.getElementById('gsChartPfc');
+  gsChartInstances.push(new Chart(ctx, {type:'line', data:{labels, datasets:[
+    {label:'Potência', data:potencia, borderColor:corPotencia, backgroundColor:corPotencia, tension:0.25, spanGaps:false, pointRadius:2},
+    {label:'Cadência', data:cadencia, borderColor:corCadencia, backgroundColor:corCadencia, tension:0.25, spanGaps:false, pointRadius:2},
+    {label:'Potência/FC', data:pwfc, borderColor:corPwFc, backgroundColor:corPwFc, tension:0.25, spanGaps:false, pointRadius:2}
+  ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:gsTextMuted,font:{size:10}},grid:{color:gsGridColor}}, y:{ticks:{color:gsTextMuted,font:{size:10},callback:v=>v+'%'},grid:{color:gsGridColor}}}}}));
+  document.getElementById('gsLegendaPfc').innerHTML = [['Potência',corPotencia],['Cadência',corCadencia],['Potência/FC',corPwFc]]
+    .map(([l,c])=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:6px;"></span>${l}</span>`).join('');
+}
+
+function gsRenderFcCadenciaSemPotencia(row){
+  const mid = `<div style="position:relative;height:210px;"><canvas id="gsChartFcCadSp"></canvas></div>
+    <div id="gsLegendaFcCadSp" style="display:flex;gap:16px;font-size:12px;margin-top:8px;flex-wrap:wrap;"></div>`;
+  let html = gsCardWrapOpen('fc-cadencia-sem-potencia');
+  html += gsSwipeChrome(gsCard3Inner(1, GS_META['fc-cadencia-sem-potencia'].titulo, GS_META['fc-cadencia-sem-potencia'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += `<div class="gs-cap">Curvas normalizadas em % do valor no início da sessão (janela 0 = 100%). Sessão sem medidor de potência: sem curva de potência nem de potência/FC.</div>`;
+  html += gsFeedbackBlock(row.activity_id, 'fc-cadencia-sem-potencia', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitFcCadenciaSemPotencia(d){
+  const ref = d.referencia_janela0;
+  const labels = d.janelas.map(j=>j.minuto_inicio+' min');
+  const fc = d.janelas.map(j=> ref.fc_media_bpm ? j.fc_media_bpm/ref.fc_media_bpm*100 : null);
+  const cadencia = d.janelas.map(j=> (j.cadencia_provenance==='Ausente'||!ref.cadencia_media_rpm) ? null : j.cadencia_media_rpm/ref.cadencia_media_rpm*100);
+  const corFcSp='#D9534F', corCadenciaSp='#639922';
+  const ctx = document.getElementById('gsChartFcCadSp');
+  gsChartInstances.push(new Chart(ctx, {type:'line', data:{labels, datasets:[
+    {label:'FC', data:fc, borderColor:corFcSp, backgroundColor:corFcSp, tension:0.25, spanGaps:false, pointRadius:2},
+    {label:'Cadência', data:cadencia, borderColor:corCadenciaSp, backgroundColor:corCadenciaSp, tension:0.25, spanGaps:false, pointRadius:2, borderDash:[5,3]}
+  ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:(item)=> item.dataset.label + ': ' + (item.parsed.y===null ? 'sem amostra' : item.parsed.y.toFixed(0) + '%')}}},
+    scales:{x:{ticks:{color:gsTextMuted,font:{size:10}},grid:{color:gsGridColor}}, y:{ticks:{color:gsTextMuted,font:{size:10},callback:v=>v+'%'},grid:{color:gsGridColor}}}}}));
+  document.getElementById('gsLegendaFcCadSp').innerHTML = [['FC',corFcSp],['Cadência',corCadenciaSp]]
+    .map(([l,c])=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:6px;"></span>${l}</span>`).join('');
+}
+
+function gsRenderRepetibilidade(row){
+  const d = row.dados;
+  const titulo = d.segmento_nome ? `Repetibilidade do trecho (${d.segmento_nome})` : GS_META['repetibilidade-segmento'].titulo;
+  const mid = `<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
+    <table class="gs-matrix" id="gsTabelaRep"></table>
+    <div id="gsCapRep" class="gs-cap" style="display:none;"></div>`;
+  let html = gsCardWrapOpen('repetibilidade-segmento');
+  html += gsSwipeChrome(gsCard3Inner(1, titulo, GS_META['repetibilidade-segmento'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += gsFeedbackBlock(row.activity_id, 'repetibilidade-segmento', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitRepetibilidade(d){
+  const corDescartada='#c7c7cc', corNormal='#3378DD', corAbaixoPiso='#D9483B', corPiso='#6b7280';
+  const reps = d.reps || [];
+  const temPotencia = reps.some(r=>r.potencia_media_w!=null);
+  const temDescanso = reps.some(r=>r.descanso_antes_s!=null);
+  const colunas = ['Bloco'];
+  if (temPotencia) colunas.push('Potência');
+  colunas.push('FC média','Cadência','Duração');
+  if (temDescanso) colunas.push('Descanso antes');
+  if (temPotencia) colunas.push('% do 3º');
+  function fmtDescanso(s){ if (s==null) return '—'; const m=Math.floor(s/60), sec=Math.round(s%60); return m+':'+String(sec).padStart(2,'0')+' min'; }
+  let t = '<tr>'+colunas.map(c=>`<th style="text-align:${c==='Bloco'?'left':'right'};border-bottom:2px solid ${gsGridColor};color:${gsTextMain};">${escapeHtml(c)}</th>`).join('')+'</tr>';
+  reps.forEach((r,i)=>{
+    const label = (i+1)+'ª'+(r.descartada?' (descartada)':(temPotencia?(r.pct_do_3o===100?' (referência)':''):(i===2?' (referência)':'')));
+    const vals = [label];
+    if (temPotencia) vals.push(r.potencia_media_w!=null?r.potencia_media_w.toFixed(1)+' W':'—');
+    vals.push(r.fc_media_bpm!=null?r.fc_media_bpm.toFixed(1)+' bpm':'—', r.cadencia_media_rpm!=null?r.cadencia_media_rpm.toFixed(1)+' rpm':'—', r.duracao_s!=null?r.duracao_s+'s':'—');
+    if (temDescanso) vals.push(fmtDescanso(r.descanso_antes_s));
+    if (temPotencia) vals.push(r.pct_do_3o!=null?r.pct_do_3o.toFixed(1)+'%':'—');
+    const idxPotencia = temPotencia ? 1 : -1;
+    const op = r.descartada ? 'opacity:0.6;' : '';
+    t += `<tr style="${op}">` + vals.map((v,ci)=>`<td style="text-align:${ci===0?'left':'right'};border-bottom:1px solid ${gsGridColor};color:${(ci===idxPotencia&&r.abaixo_do_piso)?corAbaixoPiso:gsTextMain};font-weight:${(ci===idxPotencia&&r.abaixo_do_piso)?600:400};">${escapeHtml(v)}</td>`).join('') + '</tr>';
+  });
+  document.getElementById('gsTabelaRep').innerHTML = t;
+  const ctx = document.getElementById('gsChartRep');
+  const piso = d.piso_parada_tempo_real_w;
+  const metricaLabel = temPotencia ? 'Potência média (W)' : 'FC média (bpm)';
+  const metricaUnidade = temPotencia ? 'Watts' : 'bpm';
+  const metricaValores = temPotencia ? reps.map(r=>r.potencia_media_w) : reps.map(r=>r.fc_media_bpm);
+  gsChartInstances.push(new Chart(ctx, {type:'bar', data:{labels:reps.map((r,i)=>(i+1)+'ª'), datasets:[{label:metricaLabel, data:metricaValores, backgroundColor:reps.map(r=>r.descartada?corDescartada:(r.abaixo_do_piso?corAbaixoPiso:corNormal)), borderRadius:4}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:temPotencia, ticks:{color:gsTextMuted}, grid:{color:gsGridColor}, title:{display:true,text:metricaUnidade,color:gsTextMuted}}, x:{ticks:{color:gsTextMuted}, grid:{display:false}}}},
+    plugins: piso==null ? [] : [{id:'gsPisoLine', afterDraw(chart){ const y=chart.scales.y.getPixelForValue(piso), x=chart.scales.x; const ctx2=chart.ctx; ctx2.save(); ctx2.strokeStyle=corPiso; ctx2.setLineDash([6,4]); ctx2.lineWidth=1.5; ctx2.beginPath(); ctx2.moveTo(x.left,y); ctx2.lineTo(x.right,y); ctx2.stroke(); ctx2.setLineDash([]); ctx2.fillStyle=corPiso; ctx2.font='11px sans-serif'; ctx2.fillText('piso 95% da 3ª ('+piso.toFixed(1)+'W)', x.left+4, y-6); ctx2.restore(); }}]
+  }));
+  if (!temPotencia) {
+    const cap = document.getElementById('gsCapRep');
+    cap.style.display = '';
+    cap.textContent = 'Sessão sem medidor de potência: a barra e a tabela mostram FC média em vez de watts. O veredito de piso/queda (95% da 3ª repetição) não se aplica sem potência — isso é esperado, não é erro.';
+  }
+}
+
+async function carregarGraficosTreino(activityId){
+  gsDestroyCharts();
+  const container = document.getElementById('graficosCards');
+  const ausentesEl = document.getElementById('gsAusentesNote');
+  if (!container) return; // usuário já navegou pra outra tela
+  container.innerHTML = '<div class="hint">Carregando gráficos…</div>';
+  if (ausentesEl) ausentesEl.textContent = '';
+  try {
+    const [{data: rows, error: errRows}, {data: fb, error: errFb}] = await Promise.all([
+      sb.from('graficos_sessao').select('activity_id,grafico_id,dados,resumo,interpretacao').eq('activity_id', activityId).neq('grafico_id','if-terreno').order('grafico_id'),
+      sb.from('feedback_graficos_igor').select('grafico_id,avaliacao').eq('activity_id', activityId)
+    ]);
+    if (errRows) throw new Error(errRows.message);
+    if (errFb) throw new Error(errFb.message);
+    const byId = {}; (rows||[]).forEach(r=>{ byId[r.grafico_id] = r; });
+    const fbByGrafico = {};
+    (fb||[]).forEach(f=>{ fbByGrafico[f.grafico_id] = fbByGrafico[f.grafico_id]||{util:0,nao_util:0}; fbByGrafico[f.grafico_id][f.avaliacao] = (fbByGrafico[f.grafico_id][f.avaliacao]||0)+1; });
+    (rows||[]).forEach(r=>{ r._fb = fbByGrafico[r.grafico_id]; r.activity_id = activityId; });
+
+    // Se ainda não existe NENHUM gráfico calculado pra essa sessão, não mostrar a seção vazia —
+    // sessões antigas (pré-2026-09) não têm gráficos automáticos.
+    if (!rows || !rows.length) {
+      const secaoEl = document.getElementById('gsSecaoGraficos');
+      if (secaoEl) secaoEl.style.display = 'none';
+      return;
+    }
+
+    let html = '';
+    const vg = byId['visao-geral'];
+    if (vg) {
+      html += gsRenderVisaoGeral(vg);
+      const d = vg.dados||{};
+      if (ausentesEl && d.graficos_ausentes && d.graficos_ausentes.length) {
+        ausentesEl.textContent = 'Gráficos não calculáveis nesta sessão: ' + d.graficos_ausentes.join(', ') + '.';
+      }
+    }
+    let currentCat = null;
+    const ifAltitudeUsavelChk = byId['if-altitude'] && byId['if-altitude'].dados && byId['if-altitude'].dados.blocos != null;
+    const isSemPotencia = !ifAltitudeUsavelChk && !!byId['fc-altitude-sem-potencia'];
+    const listaRender = isSemPotencia ? GS_ORDEM_SEM_POTENCIA : GS_ORDEM;
+    listaRender.forEach(id=>{
+      let row = byId[id];
+      let renderAs = id;
+      if (!isSemPotencia) {
+        const rowUsavel = (id === 'if-altitude') ? ifAltitudeUsavelChk : !!row;
+        if (!rowUsavel) { row = null; }
+      }
+      if (!row) return;
+      const cat = GS_META[renderAs].cat;
+      if (cat !== currentCat) { html += `<div class="gs-cat-header">${escapeHtml(cat)}</div>`; currentCat = cat; }
+      if (renderAs === 'if-altitude') html += gsRenderIfAltitude(row);
+      else if (renderAs === 'fc-altitude-sem-potencia') html += gsRenderFcAltitudeSemPotencia(row);
+      else if (renderAs === 'terreno-metricas') html += gsRenderTerrenoMetricas(row);
+      else if (renderAs === 'terreno-metricas-sem-potencia') html += gsRenderTerrenoMetricasSemPotencia(row);
+      else if (renderAs === 'sincronia-potencia-fc') html += gsRenderSincronia(row);
+      else if (renderAs === 'custo-cardiovascular') html += gsRenderCustoCardiovascular(row);
+      else if (renderAs === 'fadiga-plano-subida') html += gsRenderFadigaPlanoSubida(row);
+      else if (renderAs === 'fadiga-plano-subida-sem-potencia') html += gsRenderFadigaPlanoSubidaSemPotencia(row);
+      else if (renderAs === 'potencia-fc-cadencia') html += gsRenderPotenciaFcCadencia(row);
+      else if (renderAs === 'fc-cadencia-sem-potencia') html += gsRenderFcCadenciaSemPotencia(row);
+      else if (renderAs === 'matriz-nivel-fc-terreno-sem-potencia') html += gsRenderMatrizNivelFcTerrenoSemPotencia(row);
+      else if (renderAs === 'matriz-fc-cadencia-sem-potencia') html += gsRenderMatrizFcCadenciaSemPotencia(row);
+      else if (renderAs === 'repetibilidade-segmento') html += gsRenderRepetibilidade(row);
+      else if (GS_MATRIX_CONFIGS[renderAs]) {
+        const cfg = GS_MATRIX_CONFIGS[renderAs];
+        html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
+      }
+    });
+    container.innerHTML = html || '<div class="hint">Nenhum gráfico calculado ainda pra essa sessão.</div>';
+
+    const ifAltitudeUsavel = byId['if-altitude'] && byId['if-altitude'].dados && byId['if-altitude'].dados.blocos != null;
+    if (ifAltitudeUsavel) gsInitIfAltitude(byId['if-altitude'].dados, byId['terreno-metricas']);
+    else if (byId['fc-altitude-sem-potencia']) gsInitFcAltitudeSemPotencia(byId['fc-altitude-sem-potencia'].dados, byId['terreno-metricas-sem-potencia']);
+    if (byId['sincronia-potencia-fc']) gsInitSincronia(byId['sincronia-potencia-fc'].dados);
+    if (byId['custo-cardiovascular']) gsInitCustoCardiovascular(byId['custo-cardiovascular'].dados);
+    if (byId['potencia-fc-cadencia']) gsInitPotenciaFcCadencia(byId['potencia-fc-cadencia'].dados);
+    else if (byId['fc-cadencia-sem-potencia']) gsInitFcCadenciaSemPotencia(byId['fc-cadencia-sem-potencia'].dados);
+    if (byId['repetibilidade-segmento']) gsInitRepetibilidade(byId['repetibilidade-segmento'].dados);
+    if (byId['matriz-nivel-fc-terreno-sem-potencia']) gsInitMatrizNivelFcTerrenoSemPotencia(byId['matriz-nivel-fc-terreno-sem-potencia'].dados);
+    if (byId['matriz-fc-cadencia-sem-potencia']) gsInitMatrizFcCadenciaSemPotencia(byId['matriz-fc-cadencia-sem-potencia'].dados);
+    Object.keys(GS_MATRIX_CONFIGS).forEach(id=>{
+      if (byId[id]) { const cfg = GS_MATRIX_CONFIGS[id]; gsInitMatrixCard(id, byId[id].dados, cfg.rowKeys, cfg.colKeys, cfg.rowLabelFn, cfg.colLabelFn, cfg.cellGetter, cfg.rowColorFn); }
+    });
+    gsInitSwipeCarousels();
+  } catch (err) {
+    console.error('Erro ao carregar gráficos da sessão', err);
+    container.innerHTML = `<div class="hint">Não consegui carregar os gráficos: ${escapeHtml(err.message||String(err))}</div>`;
+  }
+}
+
+// Delegação de eventos ligada uma única vez em #view (persiste entre navegações — renderTreino só
+// substitui o innerHTML, o próprio nó #view nunca é recriado).
+view.addEventListener('click', async (ev)=>{
+  const btn = ev.target.closest('.gs-fb-btn');
+  if (btn) {
+    const fb = btn.closest('.gs-fb');
+    fb.querySelectorAll('.gs-fb-btn').forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    fb.querySelector('.gs-fb-send').disabled = false;
+    return;
+  }
+  const send = ev.target.closest('.gs-fb-send');
+  if (send) {
+    const fb = send.closest('.gs-fb');
+    const selected = fb.querySelector('.gs-fb-btn.selected');
+    if (!selected) return;
+    const activityId = fb.getAttribute('data-fb-activity');
+    const graficoId = fb.getAttribute('data-fb-grafico');
+    const comentario = fb.querySelector('.gs-fb-comment').value.trim();
+    const status = fb.querySelector('.gs-fb-status');
+    send.disabled = true;
+    status.textContent = 'Enviando…';
+    try {
+      await gsSendFeedback(activityId, graficoId, selected.getAttribute('data-val'), comentario);
+      status.textContent = 'Obrigado! Feedback registrado.';
+      const counterSel = selected.getAttribute('data-val')==='util' ? '.gs-n-util' : '.gs-n-nao';
+      const counterEl = fb.querySelector(counterSel);
+      counterEl.textContent = (parseInt(counterEl.textContent,10)||0) + 1;
+      fb.querySelectorAll('.gs-fb-btn, .gs-fb-comment').forEach(el=>el.disabled=true);
+    } catch (err) {
+      console.error('Erro ao enviar feedback', err);
+      status.textContent = 'Erro ao enviar — tenta de novo.';
+      send.disabled = false;
+    }
+  }
+});
+
 function renderTreino(activityId){
   const a = ANALISES.find(x=>x.activity_id===activityId);
   if(!a){ go({v:'treinos'}); return; }
@@ -1285,6 +2243,13 @@ function renderTreino(activityId){
     <div class="panel" style="margin-top:18px;background:#FFF9EC;border-color:#EAD9A8">
       <h3>Feedback enviado ao atleta (WhatsApp)</h3>
       <p style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(a.feedback_atleta||'—')}</p>
+    </div>
+
+    <div id="gsSecaoGraficos" style="margin-top:18px">
+      <div class="gsTitulo">Gráficos da sessão</div>
+      <p class="hint" style="margin:-2px 0 14px">Cada painel mostra a pergunta que ele responde, o gráfico em si e a interpretação — marque 👍/👎 pra dar retorno de qual gráfico vale a pena manter.</p>
+      <div id="gsAusentesNote" class="gsAusentes"></div>
+      <div id="graficosCards"><div class="hint">Carregando gráficos…</div></div>
     </div>
 
     ${a.analise_completa_md ? `
@@ -1320,6 +2285,7 @@ function renderTreino(activityId){
         </div>
       </div>
     </div>`;
+  carregarGraficosTreino(activityId);
 }
 async function enviarFeedbackTreino(activityId, tipo){
   const nomeEl = document.getElementById('ft-nome');
