@@ -2280,9 +2280,17 @@ function gsInitRepSwipe(){
       if (prevBtn) prevBtn.disabled = (idxAtual===0);
       if (nextBtn) nextBtn.disabled = (idxAtual===paginas.length-1);
       if (label) label.textContent = `${PAGINAS[idxAtual] || ''} · ${idxAtual+1}/${paginas.length}`;
-      // Página do mapa (índice 1) começa oculta — o Leaflet às vezes calcula o tamanho do tile
-      // errado quando inicializado assim. invalidateSize() corrige após a transição.
-      if (idxAtual === 1 && gsMapaRepInstance) setTimeout(()=> gsMapaRepInstance.invalidateSize(), 260);
+      // Página do mapa (índice 1) começa oculta — o mapa é montado em segundo plano assim que
+      // o card abre, então o Leaflet pode medir o container errado e enquadrar o traçado
+      // cortado. invalidateSize() corrige o tamanho do tile depois da transição, e reenquadrar
+      // de novo (_gsFitBounds) garante o percurso inteiro centralizado, sem precisar de zoom
+      // out manual.
+      if (idxAtual === 1 && gsMapaRepInstance) {
+        setTimeout(()=>{
+          gsMapaRepInstance.invalidateSize();
+          if (gsMapaRepInstance._gsFitBounds) gsMapaRepInstance._gsFitBounds();
+        }, 260);
+      }
     }
     if (prevBtn) prevBtn.addEventListener('click', ()=> irPara(idxAtual - 1));
     if (nextBtn) nextBtn.addEventListener('click', ()=> irPara(idxAtual + 1));
@@ -2333,7 +2341,15 @@ async function gsInitMapaRepeticao(activityId, segmentoId, reps){
     if (!todosPontos.length) throw new Error('nenhum ponto lat/lng recortado');
     // Padding maior + teto de zoom: sem isso o Leaflet enquadra exatamente o traçado (~1km),
     // ficando "colado" na rua. Com o teto, sobra contexto de quarteirão ao redor.
-    map.fitBounds(todosPontos, {padding:[40,40], maxZoom:16});
+    // Guardamos a função de enquadrar no próprio mapa porque o Leaflet mede o tamanho do
+    // container no momento do fitBounds — se essa página do carrossel ainda não estava
+    // visível (ex.: o mapa é montado em segundo plano assim que o card abre, antes do
+    // usuário clicar na seta), o cálculo pode sair errado e o traçado fica cortado, exigindo
+    // zoom out manual. gsInitRepSwipe chama isso de novo sempre que a página do mapa vira a
+    // ativa, garantindo o enquadramento correto mesmo que o cálculo inicial tenha sido feito
+    // com o container ainda fora de vista.
+    map._gsFitBounds = () => map.fitBounds(todosPontos, {padding:[40,40], maxZoom:16});
+    map._gsFitBounds();
     document.getElementById('gsMapaRepLegenda').innerHTML = legendaItens.join('');
   } catch (err) {
     el.innerHTML = `<div class="hint" style="padding:10px;">Mapa do trecho indisponível nesta sessão (${escapeHtml(err.message)}).</div>`;
