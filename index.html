@@ -445,6 +445,16 @@
     .gs-swipe-dots{display:flex}
     .gs-swipe-hint{display:block}
   }
+  /* mini-carrossel gráfico ↔ mapa dentro do card repetibilidade-segmento — sempre ativo
+     (desktop e mobile), diferente do gs-swipe-* acima que só liga abaixo de 480px */
+  .gs-rep-swipe-viewport{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:8px}
+  .gs-rep-swipe-viewport::-webkit-scrollbar{display:none}
+  .gs-rep-swipe-track{display:flex}
+  .gs-rep-swipe-track>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
+  .gs-rep-dots{display:flex;justify-content:center;align-items:center;gap:2px;margin:8px 0 12px}
+  .gs-rep-dots button{-webkit-appearance:none;appearance:none;width:24px;height:24px;padding:0;margin:0;border:none;outline:none;background:transparent;box-shadow:none;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .gs-rep-dots button::after{content:'';display:block;width:6px;height:6px;border-radius:50%;background:#d8d7d3;transition:background .15s,transform .15s}
+  .gs-rep-dots button.active::after{background:#3b5bfd;transform:scale(1.25)}
 
   /* ---- Painel "Gráficos" — seletor de sessão + 4 modos de visualização
      (Desktop / Mobile / Desktop atleta / Mobile atleta), recriando o
@@ -2208,27 +2218,55 @@ function gsRenderRepetibilidade(row){
   const d = row.dados;
   const titulo = d.segmento_nome ? `Repetibilidade do trecho (${d.segmento_nome})` : GS_META['repetibilidade-segmento'].titulo;
   const ehPilotoMapa = PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(row.activity_id);
-  const mapaHtml = ehPilotoMapa ? `
-    <div style="margin-bottom:14px;">
-      <div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Piloto — mapa do trecho (não é regra do cânone ainda)</div>
-      <div id="gsMapaRep" style="width:100%;height:260px;border-radius:8px;background:var(--paper);"></div>
-      <div id="gsMapaRepLegenda" style="display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);"></div>
-    </div>` : '';
-  const mid = `${mapaHtml}<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
+  const graficoPage = `<div style="position:relative;height:190px;margin-bottom:14px;"><canvas id="gsChartRep"></canvas></div>
     <table class="gs-matrix" id="gsTabelaRep"></table>
     <div id="gsCapRep" class="gs-cap" style="display:none;"></div>`;
+  let mid;
+  if (ehPilotoMapa) {
+    // Piloto (2026-09-13): mini-carrossel por bolinhas entre o gráfico de barras e o mapa do
+    // trecho, mesmo mecanismo (scroll-snap + dots) do carrossel maior do card, sempre ativo
+    // (desktop e mobile) — não é regra do cânone ainda.
+    const mapaPage = `<div style="font-size:11px;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Piloto — mapa do trecho (não é regra do cânone ainda)</div>
+      <div id="gsMapaRep" style="width:100%;height:260px;border-radius:8px;background:var(--paper);"></div>
+      <div id="gsMapaRepLegenda" style="display:flex;gap:14px;margin-top:8px;font-size:12px;color:var(--muted);"></div>`;
+    mid = `<div class="gs-rep-swipe-viewport"><div class="gs-rep-swipe-track">
+        <div>${graficoPage}</div>
+        <div>${mapaPage}</div>
+      </div></div>
+      <div class="gs-rep-dots"><button class="active" data-i="0" aria-label="Gráfico de barras"></button><button data-i="1" aria-label="Mapa do trecho"></button></div>`;
+  } else {
+    mid = graficoPage;
+  }
   let html = gsCardWrapOpen('repetibilidade-segmento');
   html += gsSwipeChrome(gsCard3Inner(1, titulo, GS_META['repetibilidade-segmento'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
   html += gsFeedbackBlock(row.activity_id, 'repetibilidade-segmento', row._fb);
   html += gsCardWrapClose();
   return html;
 }
+function gsInitRepSwipe(){
+  document.querySelectorAll('.gsCardWrap[data-grafico="repetibilidade-segmento"]').forEach(card=>{
+    const viewport = card.querySelector('.gs-rep-swipe-viewport');
+    const dots = card.querySelectorAll('.gs-rep-dots button');
+    if (!viewport || !dots.length) return;
+    function updateDots(){
+      const idx = Math.round(viewport.scrollLeft / (viewport.clientWidth || 1));
+      dots.forEach((btn,i)=> btn.classList.toggle('active', i===idx));
+      // Página do mapa (índice 1) começa fora da área visível do carrossel — o Leaflet às vezes
+      // calcula o tamanho do tile errado quando inicializado assim. invalidateSize() corrige.
+      if (idx === 1 && gsMapaRepInstance) setTimeout(()=> gsMapaRepInstance.invalidateSize(), 260);
+    }
+    viewport.addEventListener('scroll', updateDots, {passive:true});
+    dots.forEach((btn,i)=> btn.addEventListener('click', ()=> viewport.scrollTo({left: i*viewport.clientWidth, behavior:'smooth'})));
+  });
+}
 // Piloto: busca o stream latlng + segment_efforts direto do dado_bruto_sessao e recorta o
 // trecho de cada repetição pelo mesmo método da fn_calcular_repetibilidade_segmento (start_index
 // recalculado aqui porque a função SQL não grava esse índice no resultado final).
+let gsMapaRepInstance = null;
 async function gsInitMapaRepeticao(activityId, segmentoId, reps){
   const el = document.getElementById('gsMapaRep');
   if (!el || !window.L) return;
+  if (gsMapaRepInstance) { gsMapaRepInstance.remove(); gsMapaRepInstance = null; }
   try {
     const { data, error } = await sb.from('dado_bruto_sessao').select('streams,performance').eq('activity_id', activityId).single();
     if (error || !data) throw new Error(error ? error.message : 'sem dado bruto');
@@ -2244,6 +2282,7 @@ async function gsInitMapaRepeticao(activityId, segmentoId, reps){
     const cores = {}; const paleta = ['#b9b9ae','#3b5bfd','#e0692f'];
     numerosParaMostrar.forEach((n,i)=> cores[n]=paleta[i] || '#999');
     const map = L.map(el, {zoomControl:true, scrollWheelZoom:false});
+    gsMapaRepInstance = map;
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'&copy; OpenStreetMap', maxZoom:19}).addTo(map);
     const todosPontos = [];
     const legendaItens = [];
@@ -2309,6 +2348,7 @@ function gsInitRepetibilidade(d, activityId){
   }
   if (PILOTO_MAPA_REPETICAO_ACTIVITY_IDS.includes(activityId) && d.segmento_id != null) {
     gsInitMapaRepeticao(activityId, d.segmento_id, reps);
+    gsInitRepSwipe();
   }
 }
 
