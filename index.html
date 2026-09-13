@@ -2310,10 +2310,16 @@ let GS_SESSOES_COM_GRAFICO = null; // cache: sessões (de ANALISES) que têm ao 
 
 async function gsCarregarListaSessoes(){
   if (GS_SESSOES_COM_GRAFICO) return GS_SESSOES_COM_GRAFICO;
-  const { data, error } = await sb.from('graficos_sessao').select('activity_id').neq('grafico_id','if-terreno');
+  // O cálculo automático (camada 1, gatilho no INSERT em analises_sessao) roda pra toda sessão
+  // nova e não grava o card "visao-geral" — esse card só é escrito no passo final de quando os
+  // gráficos de uma sessão são de fato processados (skill-grafico-visao-geral, que sintetiza os
+  // outros gráficos já revisados). Por isso "existe linha grafico_id='visao-geral'" é o sinal
+  // correto de "essa sessão foi processada pra graficos" — não um limiar arbitrário, e continua
+  // valendo pra qualquer sessão nova que for processada daqui pra frente.
+  const { data, error } = await sb.from('graficos_sessao').select('activity_id').eq('grafico_id','visao-geral');
   if (error) throw new Error(error.message);
-  const ids = new Set((data||[]).map(r=>r.activity_id));
-  GS_SESSOES_COM_GRAFICO = ANALISES.filter(a=>ids.has(a.activity_id)); // ANALISES já vem ordenado por data desc
+  const idsProcessados = new Set((data||[]).map(r=>r.activity_id));
+  GS_SESSOES_COM_GRAFICO = ANALISES.filter(a=>idsProcessados.has(a.activity_id)); // ANALISES já vem ordenado por data desc
   return GS_SESSOES_COM_GRAFICO;
 }
 
