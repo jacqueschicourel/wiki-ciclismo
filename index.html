@@ -457,7 +457,7 @@
   #gsStage.athlete-mode .gs-badge-ia{display:none}
   #gsStage.athlete-mode .gs-badge-calc{display:none}
   #gsStage.athlete-mode .gs-cap{display:none}
-  #gsStage.athlete-mode.mobile-preview .gs-cat-nav{
+  #gsStage.mobile-preview .gs-cat-nav{
     display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
     position:sticky;top:0;z-index:500;background:#f7f7f5;padding:8px 0 10px;margin:0 0 4px;
   }
@@ -465,30 +465,30 @@
   .gs-cat-nav button{flex:0 0 auto;font-size:12px;font-weight:600;padding:6px 13px;border-radius:20px;border:1px solid #d8d7d3;background:#fff;color:#3f3e37;white-space:nowrap;cursor:pointer}
   .gs-cat-nav button.active{background:#3b5bfd;border-color:#3b5bfd;color:#fff}
   .gs-acc-bar{display:none}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-acc-bar{
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-acc-bar{
     display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:600;color:#3b5bfd;
     padding:10px 0 2px;margin-top:12px;border-top:1px solid #e5e4dd;-webkit-tap-highlight-color:transparent;
   }
   .gs-acc-chevron{display:inline-block;transition:transform .15s}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-acc-bar .gs-acc-chevron{transform:rotate(90deg)}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-mid,
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-right,
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-dots,
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-hint{
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-acc-bar .gs-acc-chevron{transform:rotate(90deg)}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-mid,
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gsCard3 .gs-col-right,
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-dots,
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-hint{
     display:none;
   }
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-viewport .gsCard3{
+  #gsStage.mobile-preview .gsCardWrap[data-grafico]:not([data-grafico="visao-geral"]) .gs-swipe-viewport .gsCard3{
     display:block;
   }
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-mid{display:block}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-right{display:flex}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-dots{display:flex}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-hint{display:block}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3{
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-mid{display:block}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gsCard3 .gs-col-right{display:flex}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-dots{display:flex}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-hint{display:block}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3{
     display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;
   }
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3::-webkit-scrollbar{display:none}
-  #gsStage.athlete-mode.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3::-webkit-scrollbar{display:none}
+  #gsStage.mobile-preview .gsCardWrap[data-grafico].gs-acc-open .gs-swipe-viewport .gsCard3>div{flex:0 0 100%;width:100%;scroll-snap-align:start}
 </style>
 </head>
 <body>
@@ -2400,7 +2400,7 @@ view.addEventListener('click', async (ev)=>{
   const accBar = ev.target.closest('.gs-acc-bar');
   if (accBar) {
     const stage = document.getElementById('gsStage');
-    if (stage && stage.classList.contains('athlete-mode') && stage.classList.contains('mobile-preview')) {
+    if (stage && stage.classList.contains('mobile-preview')) {
       const card = accBar.closest('.gsCardWrap[data-grafico]');
       if (card && card.getAttribute('data-grafico') !== 'visao-geral') {
         gsToggleAccordion(card);
