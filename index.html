@@ -2540,6 +2540,21 @@ function gsToggleAccordion(card){
   const hintTxt = card.querySelector('.gs-acc-bar-txt');
   if (hintTxt) hintTxt.textContent = opening ? 'Toque para fechar' : 'Toque para ver o gráfico';
   if (opening) {
+    // CAUSA RAIZ REAL do gráfico de repetibilidade em branco (achada em 2026-09-14 reproduzindo
+    // ao vivo, depois de duas tentativas anteriores terem mirado no lugar errado): NÃO é o
+    // canvas do Chart.js — o canvas desenha certinho o tempo todo (confirmado via getImageData
+    // e até trocando por um canvas novo em branco). O problema é puramente de CSS: o
+    // .gs-rep-swipe-viewport (mini-carrossel gráfico/mapa de dentro do card) fixa sua própria
+    // altura via JS (irPara(), em gsInitRepSwipe) lendo o offsetHeight da página ativa — e essa
+    // leitura acontece na carga da página, com o card AINDA FECHADO (offsetHeight = 0 porque um
+    // ancestral está display:none). Isso trava viewport.style.height em "0px" com
+    // overflow:hidden, cortando o gráfico e a tabela por baixo — mesmo eles estando desenhados e
+    // posicionados corretamente. Chamar track._gsRepRecalc() (já exposto pra esse fim) recalcula
+    // a altura agora que o card está de verdade visível. É exatamente isso que "ir pro mapa e
+    // voltar" fazia manualmente: cada clique nas setas chama irPara() de novo, com o card já
+    // aberto, medindo certo dessa vez.
+    const repTrack = card.querySelector('.gs-rep-swipe-track');
+    if (repTrack && repTrack._gsRepRecalc) repTrack._gsRepRecalc();
     requestAnimationFrame(()=>{
       const track = card.querySelector('.gs-swipe-viewport .gsCard3');
       if (track) track.scrollTo({left: track.clientWidth, behavior:'auto'});
@@ -2547,19 +2562,16 @@ function gsToggleAccordion(card){
         const ch = (window.Chart && Chart.getChart) ? Chart.getChart(cv) : null;
         if (ch) ch.resize();
       });
+      if (repTrack && repTrack._gsRepRecalc) repTrack._gsRepRecalc();
     });
-    // Reforço via setTimeout (não requestAnimationFrame): achado ao reproduzir o bug relatado
-    // (gráfico de repetibilidade não aparecia ao abrir o card, só depois de ir pro mapa e
-    // voltar) — em teste ao vivo, requestAnimationFrame NÃO disparou de forma confiável nesse
-    // fluxo, então o resize acima pode silenciosamente não rodar. setTimeout não depende do
-    // ciclo de paint/compositor pra disparar, e é o mesmo padrão já comprovado no mini-carrossel
-    // do mapa de repetição (gsInitRepSwipe/irPara, linha ~2289). Mantido junto com o rAF acima
-    // como reforço, não substituição — não temos prova de que rAF falha em todo dispositivo.
+    // Reforço via setTimeout (não requestAnimationFrame) pro resize do canvas em cards sem o
+    // mini-carrossel de mapa — mantido por precaução mesmo não sendo a causa do bug relatado.
     setTimeout(()=>{
       card.querySelectorAll('canvas').forEach(cv=>{
         const ch = (window.Chart && Chart.getChart) ? Chart.getChart(cv) : null;
         if (ch) ch.resize();
       });
+      if (repTrack && repTrack._gsRepRecalc) repTrack._gsRepRecalc();
     }, 300);
   }
 }
