@@ -2291,6 +2291,21 @@ function gsInitRepSwipe(){
           if (gsMapaRepInstance._gsFitBounds) gsMapaRepInstance._gsFitBounds();
         }, 260);
       }
+      // Espelha o mesmo reforço acima pro gráfico de barras (página 0): esse é o mecanismo real
+      // por trás do "vou pro mapa e volto e o gráfico aparece" relatado no celular — ao voltar
+      // pra essa página, o canvas criado enquanto o card estava fechado (0×0, ver
+      // gsInitRepetibilidade) nunca tinha sido redimensionado de verdade. Antes, isso só
+      // "funcionava" de vez em quando por efeito colateral do reflow do carrossel; agora é
+      // determinístico, chamando resize() explicitamente sempre que essa página vira a ativa.
+      if (idxAtual === 0) {
+        const cvBarras = paginas[0].querySelector('canvas');
+        if (cvBarras) {
+          setTimeout(()=>{
+            const ch = (window.Chart && Chart.getChart) ? Chart.getChart(cvBarras) : null;
+            if (ch) ch.resize();
+          }, 260);
+        }
+      }
     }
     if (prevBtn) prevBtn.addEventListener('click', ()=> irPara(idxAtual - 1));
     if (nextBtn) nextBtn.addEventListener('click', ()=> irPara(idxAtual + 1));
@@ -2533,6 +2548,19 @@ function gsToggleAccordion(card){
         if (ch) ch.resize();
       });
     });
+    // Reforço via setTimeout (não requestAnimationFrame): achado ao reproduzir o bug relatado
+    // (gráfico de repetibilidade não aparecia ao abrir o card, só depois de ir pro mapa e
+    // voltar) — em teste ao vivo, requestAnimationFrame NÃO disparou de forma confiável nesse
+    // fluxo, então o resize acima pode silenciosamente não rodar. setTimeout não depende do
+    // ciclo de paint/compositor pra disparar, e é o mesmo padrão já comprovado no mini-carrossel
+    // do mapa de repetição (gsInitRepSwipe/irPara, linha ~2289). Mantido junto com o rAF acima
+    // como reforço, não substituição — não temos prova de que rAF falha em todo dispositivo.
+    setTimeout(()=>{
+      card.querySelectorAll('canvas').forEach(cv=>{
+        const ch = (window.Chart && Chart.getChart) ? Chart.getChart(cv) : null;
+        if (ch) ch.resize();
+      });
+    }, 300);
   }
 }
 
