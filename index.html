@@ -568,6 +568,7 @@
       <button class="navlink active" id="nav-map" onclick="go({v:'home'})">Mapa de relações</button>
       <button class="navlink" id="nav-skills" onclick="go({v:'skills'})">Skills (raciocínio)</button>
       <button class="navlink" id="nav-skills-entrega" onclick="go({v:'skills-entrega'})">Skills de curadoria</button>
+      <button class="navlink" id="nav-skills-grafico" onclick="go({v:'skills-grafico'})">Skills de gráfico</button>
       <button class="navlink" id="nav-revisao" onclick="go({v:'revisao'})">Revisão pendente</button>
       <button class="navlink" id="nav-fila" onclick="go({v:'fila'})">Fila de processamento</button>
       <button class="navlink" id="nav-cadastro" onclick="go({v:'cadastro'})">Cadastro / conta</button>
@@ -626,7 +627,7 @@ const DOMINIO_COLOR_VAR = {
 };
 const DOMS = Object.fromEntries(Object.entries(DOMINIO_LABELS).map(([k,v])=>[k,{nm:v,c:DOMINIO_COLOR_VAR[k]}]));
 
-let NOTES = [], SKILLS = [], REVISOES = [];
+let NOTES = [], SKILLS = [], REVISOES = [], SKILLS_GRAFICO = [];
 const REV_LABELS = {'baixa-confianca':'Baixa confiança','conflito':'Conflito','modelo-concorrente':'Modelo concorrente'};
 let FILA = [];      // ingestao_jobs (só visível autenticado)
 let REVISAO_PIPE = []; // revisao_pendente (só visível autenticado)
@@ -637,11 +638,12 @@ let meuPerfil = null; // {tipo:'assessoria', row} ou {tipo:'atleta', row} ou nul
 let vinculoEscolhido = {}; // prefixo do form -> id de assessoria escolhido via busca por código
 
 async function carregarDados(){
-  const [{data: notasRows}, {data: fontesRows}, {data: relRows}, {data: skillsRows}, {data: legadoRows}, {data: analisesRows}, {data: feedbackTreinosRows}] = await Promise.all([
+  const [{data: notasRows}, {data: fontesRows}, {data: relRows}, {data: skillsRows}, {data: skillsGraficoRows}, {data: legadoRows}, {data: analisesRows}, {data: feedbackTreinosRows}] = await Promise.all([
     sb.from('notas').select('*').eq('status','ativo'),
     sb.from('notas_fontes').select('*'),
     sb.from('notas_relacoes').select('*'),
     sb.from('skills').select('*'),
+    sb.from('skills_grafico').select('*'),
     sb.from('revisao_legado').select('*'),
     sb.from('analises_sessao').select('*').order('data_atividade', {ascending:false}),
     sb.from('feedback_treino_publico').select('*').order('criado_em', {ascending:true}),
@@ -666,10 +668,19 @@ async function carregarDados(){
     dados_necessarios: s.dados_necessarios || [], skills_relacionadas: s.skills_relacionadas || [],
     log_de_teste: s.log_de_teste || [], status: s.status, body: s.corpo,
   }));
+  SKILLS_GRAFICO = (skillsGraficoRows||[]).map(s => ({
+    id: s.id, titulo: s.titulo, versao: s.versao, dominio: s.dominio_slug,
+    descricao: s.descricao, o_que_responde: s.o_que_responde,
+    notas_usadas: (s.notas_usadas||[]).map(x => ({id:x})),
+    condicao_nao_calculavel: s.condicao_nao_calculavel,
+    dados_necessarios: s.dados_necessarios || [], skills_relacionadas: s.skills_relacionadas || [],
+    log_de_teste: s.log_de_teste || [], status: s.status, deprecado_motivo: s.deprecado_motivo, body: s.corpo,
+  }));
   REVISOES = (legadoRows||[]).map(r => ({tipo:r.tipo, titulo:r.titulo, notas:r.notas||[], body:r.corpo, confianca: r.confianca!=null?parseFloat(r.confianca):null}));
 
   NOTES.forEach(n => { n.rel = n.relacionadas || []; n.tipo = n.tipo_nota; n.dom = n.dominio; n.conf = n.confianca; });
   SKILLS.forEach(s => { s.notasUsadas = s.notas_usadas || []; s.skillsRel = s.skills_relacionadas || []; s.dom = s.dominio; });
+  SKILLS_GRAFICO.forEach(s => { s.notasUsadas = s.notas_usadas || []; s.skillsRel = s.skills_relacionadas || []; s.dom = s.dominio; });
 }
 
 async function carregarFilaERevisao(){
@@ -716,6 +727,26 @@ function skillIncomingRel(id){
     .map(s => ({from: s.id, tipo: (s.skillsRel.find(r=>r.id===id)||{}).tipo}));
 }
 
+/* ---- Skills de gráfico (camada automática, seção separada das skills de raciocínio) ---- */
+const skillGraficoById = {};
+function reindexSkillsGrafico(){
+  Object.keys(skillGraficoById).forEach(k=>delete skillGraficoById[k]);
+  SKILLS_GRAFICO.forEach(s=>skillGraficoById[s.id]=s);
+  SKILLS_GRAFICO.forEach(s => (s.notasUsadas||[]).forEach(nu => {
+    (NOTA_TO_SKILLS[nu.id] = NOTA_TO_SKILLS[nu.id] || []).push({skillId: s.id, uso: nu.uso, grafico: true});
+  }));
+}
+// resolve um id de "skills_relacionadas" tanto pra skill de raciocínio (skill-XXXX) quanto pra skill de gráfico (grafico-XXXX)
+function anyEntityById(id){
+  return skillGraficoById[id] || skillById[id] || null;
+}
+function skillGraficoIncomingRel(id){
+  const out = [];
+  SKILLS.forEach(s => (s.skillsRel||[]).forEach(r => { if(r.id===id) out.push({from: s.id, tipo: r.tipo, grafico:false}); }));
+  SKILLS_GRAFICO.forEach(s => (s.skillsRel||[]).forEach(r => { if(r.id===id) out.push({from: s.id, tipo: r.tipo, grafico:true}); }));
+  return out;
+}
+
 let EDGES = [], byId = {};
 function reindexNotes(){
   EDGES = [];
@@ -725,16 +756,21 @@ function reindexNotes(){
 function incoming(id){ return EDGES.filter(e=>e.to===id).map(e=>({from:e.from,tipo:e.tipo,just:e.just})); }
 
 /* ---------------- Auto-link de nota-XXXX / skill-... mencionados dentro de texto livre ---------------- */
-let SKILL_ID_RE = null;
+let SKILL_ID_RE = null, SKILL_GRAFICO_ID_RE = null;
 function reindexLinkify(){
   const SKILL_ID_SORTED = SKILLS.map(s=>s.id).sort((a,b)=>b.length-a.length);
   SKILL_ID_RE = SKILL_ID_SORTED.length
     ? new RegExp('(' + SKILL_ID_SORTED.map(id=>id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'g')
     : null;
+  const SKILL_GRAFICO_ID_SORTED = SKILLS_GRAFICO.map(s=>s.id).sort((a,b)=>b.length-a.length);
+  SKILL_GRAFICO_ID_RE = SKILL_GRAFICO_ID_SORTED.length
+    ? new RegExp('(' + SKILL_GRAFICO_ID_SORTED.map(id=>id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')', 'g')
+    : null;
 }
 const NOTA_ID_RE = /nota-\d{4}/g;
 function linkifyIds(html){
   html = html.replace(NOTA_ID_RE, m => byId[m] ? `<a href="javascript:void(0)" class="idlink" onclick="go({v:'note',id:'${m}'})">${m}</a>` : m);
+  if(SKILL_GRAFICO_ID_RE) html = html.replace(SKILL_GRAFICO_ID_RE, m => skillGraficoById[m] ? `<a href="javascript:void(0)" class="idlink" onclick="go({v:'skill-grafico',id:'${m}'})">${m}</a>` : m);
   if(SKILL_ID_RE) html = html.replace(SKILL_ID_RE, m => skillById[m] ? `<a href="javascript:void(0)" class="idlink" onclick="go({v:'skill',id:'${m}'})">${m}</a>` : m);
   return html;
 }
@@ -991,6 +1027,7 @@ function syncNav(){
   document.getElementById('nav-map').classList.toggle('active', state.v==='home');
   document.getElementById('nav-skills').classList.toggle('active', state.v==='skills'||(state.v==='skill'&&skillById[state.id]&&skillById[state.id].dom!=='entrega-feedback'));
   document.getElementById('nav-skills-entrega').classList.toggle('active', state.v==='skills-entrega'||(state.v==='skill'&&skillById[state.id]&&skillById[state.id].dom==='entrega-feedback'));
+  document.getElementById('nav-skills-grafico').classList.toggle('active', state.v==='skills-grafico'||state.v==='skill-grafico');
   document.getElementById('nav-revisao').classList.toggle('active', state.v==='revisao');
   document.getElementById('nav-fila').classList.toggle('active', state.v==='fila');
   document.getElementById('nav-cadastro').classList.toggle('active', state.v==='cadastro');
@@ -1009,7 +1046,7 @@ function sidebar(){
       <span class="nm">${DOMS[d].nm}</span><span class="ct">${c}</span></button>`;
   }).join('');
   document.getElementById('foot').innerHTML =
-    `Base de conhecimento atômica — <b>${NOTES.length} notas</b> extraídas do cânone de 4 obras sobre treino de ciclismo, organizadas por domínio, com relações explícitas entre si. <b>${SKILLS.length} skills</b> traduzem essas notas em procedimentos de cálculo. Dados ao vivo do Supabase.`;
+    `Base de conhecimento atômica — <b>${NOTES.length} notas</b> extraídas do cânone de 4 obras sobre treino de ciclismo, organizadas por domínio, com relações explícitas entre si. <b>${SKILLS.length} skills</b> traduzem essas notas em procedimentos de cálculo, e <b>${SKILLS_GRAFICO.length} skills de gráfico</b> calculam painéis automaticamente em SQL. Dados ao vivo do Supabase.`;
 }
 
 document.getElementById('search').addEventListener('input', e=>{
@@ -1024,6 +1061,8 @@ function render(){
   if(state.v==='note') return renderNote(state.id);
   if(state.v==='skills') return renderSkillsList();
   if(state.v==='skills-entrega') return renderSkillsEntrega();
+  if(state.v==='skills-grafico') return renderSkillsGraficoList();
+  if(state.v==='skill-grafico') return renderSkillGrafico(state.id);
   if(state.v==='skill') return renderSkill(state.id);
   if(state.v==='fila') return renderFila();
   if(state.v==='cadastro') return renderCadastro();
@@ -1036,7 +1075,8 @@ function render(){
     const q=state.q;
     const resNotes=NOTES.filter(n=>(n.titulo+' '+n.id+' '+(n.sinais||[]).join(' ')+' '+(n.body||'')).toLowerCase().includes(q));
     const resSkills=SKILLS.filter(s=>(s.titulo+' '+s.id+' '+s.numero+' '+(s.body||'')).toLowerCase().includes(q));
-    return renderSearchCombined(resNotes, resSkills, state.q);
+    const resSkillsGrafico=SKILLS_GRAFICO.filter(s=>(s.titulo+' '+s.id+' '+(s.body||'')).toLowerCase().includes(q));
+    return renderSearchCombined(resNotes, resSkills, state.q, resSkillsGrafico);
   }
 }
 function chip(txt,bg,cls){ return `<span class="chip ${cls||''}" style="${bg?`background:${bg}`:''}">${txt}</span>`; }
@@ -1056,14 +1096,16 @@ function skillCard(s){
     <div class="mt"><span class="mini" style="background:${domColor(s.dom)}">${shortDom(s.dom)}</span></div>
   </button>`;
 }
-function renderSearchCombined(resNotes, resSkills, q){
+function renderSearchCombined(resNotes, resSkills, q, resSkillsGrafico){
+  resSkillsGrafico = resSkillsGrafico || [];
   view.innerHTML = `
     <button class="back" onclick="history.back()">← voltar</button>
     <div class="listhead"><span class="dot" style="background:var(--ink)"></span>Busca: "${escapeHtml(q)}"</div>
-    <div class="listsub">${resNotes.length} nota(s) · ${resSkills.length} skill(s).</div>
+    <div class="listsub">${resNotes.length} nota(s) · ${resSkills.length} skill(s) · ${resSkillsGrafico.length} skill(s) de gráfico.</div>
     ${resNotes.length?`<div class="lbl" style="margin:18px 0 8px">Notas</div><div class="cards">${resNotes.map(noteCard).join('')}</div>`:''}
     ${resSkills.length?`<div class="lbl" style="margin:18px 0 8px">Skills</div><div class="cards">${resSkills.map(skillCard).join('')}</div>`:''}
-    ${(!resNotes.length && !resSkills.length)?'<div class="empty">Nada encontrado.</div>':''}`;
+    ${resSkillsGrafico.length?`<div class="lbl" style="margin:18px 0 8px">Skills de gráfico</div><div class="cards">${resSkillsGrafico.map(skillGraficoCard).join('')}</div>`:''}
+    ${(!resNotes.length && !resSkills.length && !resSkillsGrafico.length)?'<div class="empty">Nada encontrado.</div>':''}`;
 }
 function renderSkillsList(){
   const list = [...SKILLS].sort((a,b)=>(a.numero||'').localeCompare(b.numero||''));
@@ -1106,6 +1148,86 @@ function renderSkillsEntrega(){
     <div class="listsub" style="margin-top:24px">${entrega.length} skill(s) de entrega.</div>
     <div class="cards">${entrega.map(skillCard).join('')}</div>`;
 }
+function skillGraficoCard(s){
+  return `<button class="ncard" onclick="go({v:'skill-grafico',id:'${s.id}'})">
+    <div class="top"><span class="cid">${s.id.replace('grafico-','')}</span>
+      <span class="miniline">${s.status==='deprecado'?'deprecado':'camada automática'}</span></div>
+    <div class="tt">${escapeHtml(s.titulo)}</div>
+    <div class="mt">${s.dom?`<span class="mini" style="background:${domColor(s.dom)}">${shortDom(s.dom)}</span>`:''}${s.status==='deprecado'?'<span class="mini no">deprecado</span>':''}</div>
+  </button>`;
+}
+function renderSkillsGraficoList(){
+  const list = [...SKILLS_GRAFICO].sort((a,b)=>a.id.localeCompare(b.id));
+  const ativas = list.filter(s=>s.status!=='deprecado');
+  const deprecadas = list.filter(s=>s.status==='deprecado');
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="h-eyebrow">Skills de gráfico (camada automática)</div>
+    <h1>Os painéis calculados sem IA</h1>
+    <p class="lede">Cada skill de gráfico roda em SQL puro, sem IA, assim que o dado bruto da sessão chega — calcula a camada 1 (números) e depois a camada 2 (resumo/interpretação) lê esses números. São uma categoria separada das skills de raciocínio: aqui a IA nunca inventa o cálculo, só interpreta o que a função SQL já produziu.</p>
+    <div class="listsub" style="margin-top:24px">${ativas.length} skill(s) de gráfico ativas${deprecadas.length?` · ${deprecadas.length} deprecada(s)`:''}.</div>
+    <div class="cards">${ativas.map(skillGraficoCard).join('')}</div>
+    ${deprecadas.length?`<div class="lbl" style="margin:24px 0 8px">Deprecadas</div><div class="cards">${deprecadas.map(skillGraficoCard).join('')}</div>`:''}`;
+}
+function relAnyItem(id, tipo){
+  const g = skillGraficoById[id];
+  if(g) return `<button class="relitem" onclick="go({v:'skill-grafico',id:'${id}'})">
+    <div class="rrow">${tipo?`<span class="rt" style="color:#2266b0;border-color:#c7dcee">${tipo}</span>`:''}
+    <span class="rx"><b>${id}</b>${escapeHtml(g.titulo)}</span></div>
+    </button>`;
+  return relSkillItem(id, tipo);
+}
+function logDeTesteHtml(list){
+  if(!list || !list.length) return '';
+  const rows = list.map(l => `
+    <div class="dnrow">
+      <div class="dnhead">
+        <span class="dncampo">${escapeHtml(l.data||'')}</span>
+        <span class="dntag ${l.veredito==='ok'?'calculado':'estimado'}">${escapeHtml(l.veredito||'')}</span>
+      </div>
+      ${l.caso?`<div class="dnfonte"><b>Caso:</b> ${inlineMd(l.caso)}</div>`:''}
+      ${l.resultado?`<div class="dnobs">${inlineMd(l.resultado)}</div>`:''}
+    </div>`).join('');
+  return `<div class="panel" style="margin:16px 0"><h3>Log de teste</h3><div class="dnlist">${rows}</div></div>`;
+}
+function renderSkillGrafico(id){
+  const s = skillGraficoById[id]; if(!s){ go({v:'skills-grafico'}); return; }
+  const notasHtml = (s.notasUsadas||[]).map(nu=>notaRefItem(nu.id, nu.uso)).join('') || '<div class="hint">Nenhuma.</div>';
+  const relOutHtml = (s.skillsRel||[]).map(r=>relAnyItem(r.id, r.tipo)).join('') || '<div class="hint">Nenhuma.</div>';
+  const relInHtml = skillGraficoIncomingRel(id).map(r=>relAnyItem(r.from, r.tipo)).join('') || '<div class="hint">Nenhuma.</div>';
+  const condicaoHtml = s.condicao_nao_calculavel ? `<div class="skillbadge"><span class="k">Condição de não-calculável</span>${inlineMd(s.condicao_nao_calculavel)}</div>` : '';
+  const deprecadoHtml = s.status==='deprecado' ? `<div class="skillbadge fb"><span class="k">Skill deprecada</span>${inlineMd(s.deprecado_motivo||'Substituída por outra skill de gráfico — ver skills relacionadas.')}</div>` : '';
+  const respondeHtml = s.o_que_responde ? `<div class="apply"><span class="k">O que este painel responde</span>${inlineMd(s.o_que_responde)}</div>` : '';
+  view.innerHTML = `
+    <button class="back" onclick="history.back()">← voltar</button>
+    <div class="badges">
+      <span class="tag-id">${s.id}</span>
+      ${s.dom?chip(shortDom(s.dom), domColor(s.dom)):''}
+      ${chip('camada automática','','type')}
+      ${s.versao?chip('v'+s.versao,'','line'):''}
+      ${s.status?chip(s.status,'','line'):''}
+    </div>
+    <h2 class="note">${escapeHtml(s.titulo)}</h2>
+    ${s.descricao?`<p class="lede">${inlineMd(s.descricao)}</p>`:''}
+    ${respondeHtml}
+    <div class="body">${mdToHtml(s.body)}</div>
+    ${deprecadoHtml}
+    ${condicaoHtml}
+    ${dadosNecessariosHtml(s)}
+    ${logDeTesteHtml(s.log_de_teste)}
+    <div class="cols">
+      <div class="panel">
+        <h3>Notas do cânone usadas</h3>
+        <div class="rel">${notasHtml}</div>
+      </div>
+      <div class="panel">
+        <h3>Skills relacionadas (esta skill aponta para)</h3>
+        <div class="rel">${relOutHtml}</div>
+        <h3 style="margin-top:18px">Referenciada por</h3>
+        <div class="rel">${relInHtml}</div>
+      </div>
+    </div>`;
+}
 function relSkillItem(id, tipo){
   const s = skillById[id]; const title = s?s.titulo:id;
   return `<button class="relitem" onclick="go({v:'skill',id:'${id}'})">
@@ -1113,7 +1235,14 @@ function relSkillItem(id, tipo){
     <span class="rx"><b>${s?s.numero:id}</b>${escapeHtml(title)}</span></div>
     </button>`;
 }
-function relSkillItemWithUso(skillId, uso){
+function relSkillItemWithUso(skillId, uso, grafico){
+  if(grafico || skillGraficoById[skillId]){
+    const g = skillGraficoById[skillId]; const title = g?g.titulo:skillId;
+    return `<button class="relitem" onclick="go({v:'skill-grafico',id:'${skillId}'})">
+      <div class="rrow"><span class="rt" style="color:#2266b0;border-color:#c7dcee">gráfico</span><span class="rx"><b>${skillId}</b>${escapeHtml(title)}</span></div>
+      ${uso?`<div class="rj">${escapeHtml(uso)}</div>`:''}
+      </button>`;
+  }
   const s = skillById[skillId]; const title = s?s.titulo:skillId;
   return `<button class="relitem" onclick="go({v:'skill',id:'${skillId}'})">
     <div class="rrow"><span class="rx"><b>${s?s.numero:skillId}</b>${escapeHtml(title)}</span></div>
@@ -1353,7 +1482,7 @@ function renderNote(id){
         <div class="rel">${relIn}</div>
       </div>
     </div>
-    ${skillsUsingNota(id).length ? `<div class="panel" style="margin-top:20px"><h3>Usada por estas skills (raciocínio aplicado)</h3><div class="rel">${skillsUsingNota(id).map(u=>relSkillItemWithUso(u.skillId,u.uso)).join('')}</div></div>` : ''}`;
+    ${skillsUsingNota(id).length ? `<div class="panel" style="margin-top:20px"><h3>Usada por estas skills (raciocínio aplicado e gráficos)</h3><div class="rel">${skillsUsingNota(id).map(u=>relSkillItemWithUso(u.skillId,u.uso,u.grafico)).join('')}</div></div>` : ''}`;
 }
 function relItem(id,tipo,just){
   const t=byId[id]; const title = t?t.titulo:id;
@@ -3667,6 +3796,7 @@ async function boot(){
   session = s;
   await carregarDados();
   reindexSkills();
+  reindexSkillsGrafico();
   reindexNotes();
   reindexDegree();
   reindexSkillGraph();
