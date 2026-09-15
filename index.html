@@ -22,7 +22,7 @@
     --d-fisiologia:#6E8F3F; --d-limiares:#3F9E96; --d-metricas:#3E6B8C;
     --d-metodologia:#8A6DB0; --d-tipos:#C46A2B; --d-avaliacao:#55809E;
     --d-nutricao:#B08A2E; --d-recuperacao:#C24D57; --d-contexto:#7A7E86;
-    --d-templates:#A6ACB4;
+    --d-templates:#A6ACB4; --d-carga:#4F8A6D;
     --r:14px;
     --serif: "Space Grotesk", system-ui, sans-serif;
     --sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -611,6 +611,7 @@ const DOMINIO_LABELS = {
   "recuperacao-e-fadiga": "Recuperação e fadiga",
   "contexto-atleta": "Contexto do atleta",
   "templates-feedback": "Templates de feedback",
+  "carga-e-monitoramento": "Carga e monitoramento",
 };
 const DOM_ORDER = Object.keys(DOMINIO_LABELS);
 const DOMINIO_COLOR_VAR = {
@@ -624,6 +625,7 @@ const DOMINIO_COLOR_VAR = {
   "recuperacao-e-fadiga": "var(--d-recuperacao)",
   "contexto-atleta": "var(--d-contexto)",
   "templates-feedback": "var(--d-templates)",
+  "carga-e-monitoramento": "var(--d-carga)",
 };
 const DOMS = Object.fromEntries(Object.entries(DOMINIO_LABELS).map(([k,v])=>[k,{nm:v,c:DOMINIO_COLOR_VAR[k]}]));
 
