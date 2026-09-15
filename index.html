@@ -1560,11 +1560,12 @@ const GS_META = {
   'matriz-nivel-fc-terreno-sem-potencia': {titulo:'Matriz de nível de FC × terreno', pergunta:'Em quais combinações de terreno e esforço cardíaco você passou mais tempo?', cat:'Frequência cardíaca'},
   'fc-cadencia-sem-potencia': {titulo:'Como FC e cadência mudaram ao longo do treino?', pergunta:'Como o esforço do coração e a cadência mudaram ao longo do treino?', cat:'Frequência cardíaca'},
   'matriz-fc-cadencia-sem-potencia': {titulo:'Matriz de FC × cadência', pergunta:'Em qual combinação de esforço cardíaco e cadência você passou mais tempo pedalando?', cat:'Cadência'},
-  'fadiga-plano-subida-sem-potencia': {titulo:'Plano vs. subida na mesma intensidade cardíaca', pergunta:'Meu coração trabalha diferente na subida do que no plano, mesmo carregando o mesmo tanto de esforço?', cat:'Terreno'}
+  'fadiga-plano-subida-sem-potencia': {titulo:'Plano vs. subida na mesma intensidade cardíaca', pergunta:'Meu coração trabalha diferente na subida do que no plano, mesmo carregando o mesmo tanto de esforço?', cat:'Terreno'},
+  'durabilidade-kj': {titulo:'Durabilidade — NP por faixa de trabalho acumulado (kJ)', pergunta:'Minha potência caiu conforme o trabalho acumulado (kJ) foi subindo na sessão?', cat:'Potência'}
 };
 const GS_ORDEM = ['if-altitude','matriz-intensidade-terreno','sincronia-potencia-fc','custo-cardiovascular',
   'matriz-cadencia-inclinacao','matriz-potencia-cadencia','matriz-potencia-fc','potencia-fc-cadencia',
-  'matriz-zona-terreno','terreno-metricas','fadiga-plano-subida','repetibilidade-segmento'];
+  'matriz-zona-terreno','terreno-metricas','fadiga-plano-subida','repetibilidade-segmento','durabilidade-kj'];
 const GS_ORDEM_SEM_POTENCIA = [
   'fc-altitude-sem-potencia', 'matriz-nivel-fc-terreno-sem-potencia', 'fc-cadencia-sem-potencia',
   'matriz-cadencia-inclinacao', 'matriz-fc-cadencia-sem-potencia',
@@ -2427,6 +2428,38 @@ function gsInitRepetibilidade(d, activityId){
   }
 }
 
+function gsRenderDurabilidadeKj(row){
+  const mid = `<div style="position:relative;height:220px;"><canvas id="gsChartDurKj"></canvas></div>
+    <table class="gs-matrix" id="gsTabelaDurKj" style="margin-top:14px;"></table>`;
+  let html = gsCardWrapOpen('durabilidade-kj');
+  html += gsSwipeChrome(gsCard3Inner(13, GS_META['durabilidade-kj'].titulo, GS_META['durabilidade-kj'].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
+  html += gsFeedbackBlock(row.activity_id, 'durabilidade-kj', row._fb);
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitDurabilidadeKj(d){
+  const corBarra = '#3378DD';
+  const faixas = d.faixas || [];
+  const labels = faixas.map(f=> f.kj_inicio.toFixed(0)+'–'+f.kj_fim.toFixed(0));
+  const valores = faixas.map(f=> f.np_w);
+  const ctx = document.getElementById('gsChartDurKj');
+  const chart = new Chart(ctx, {type:'bar', data:{labels, datasets:[{label:'NP (W)', data:valores, backgroundColor:corBarra, borderRadius:4}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+      tooltip:{callbacks:{title:(items)=> items[0].label+' kJ', label:(item)=> item.parsed.y.toFixed(1)+' W (NP)'}}},
+      scales:{y:{beginAtZero:true, ticks:{color:gsTextMuted}, grid:{color:gsGridColor}, title:{display:true,text:'NP (W)',color:gsTextMuted}},
+        x:{ticks:{color:gsTextMuted, font:{size:10}}, grid:{display:false}, title:{display:true,text:'Trabalho acumulado (kJ)',color:gsTextMuted,font:{size:10}}}}}
+  });
+  gsChartInstances.push(chart);
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{ try { chart.resize(); } catch(e){} }));
+  let t = '<tr>'+['Faixa (kJ)','NP (W)','% da 1ª faixa'].map(c=>`<th style="text-align:${c==='Faixa (kJ)'?'left':'right'};border-bottom:2px solid ${gsGridColor};color:${gsTextMain};">${escapeHtml(c)}</th>`).join('')+'</tr>';
+  faixas.forEach(f=>{
+    t += `<tr><td style="text-align:left;border-bottom:1px solid ${gsGridColor};color:${gsTextMain};">${f.kj_inicio.toFixed(0)}–${f.kj_fim.toFixed(0)}</td>`+
+      `<td style="text-align:right;border-bottom:1px solid ${gsGridColor};color:${gsTextMain};">${f.np_w.toFixed(1)} W</td>`+
+      `<td style="text-align:right;border-bottom:1px solid ${gsGridColor};color:${gsTextMain};">${f.potencia_pct_ref!=null?f.potencia_pct_ref.toFixed(1)+'%':'—'}</td></tr>`;
+  });
+  document.getElementById('gsTabelaDurKj').innerHTML = t;
+}
+
 async function carregarGraficosTreino(activityId){
   gsDestroyCharts();
   const container = document.getElementById('graficosCards');
@@ -2497,6 +2530,7 @@ async function carregarGraficosTreino(activityId){
       else if (renderAs === 'matriz-nivel-fc-terreno-sem-potencia') html += gsRenderMatrizNivelFcTerrenoSemPotencia(row);
       else if (renderAs === 'matriz-fc-cadencia-sem-potencia') html += gsRenderMatrizFcCadenciaSemPotencia(row);
       else if (renderAs === 'repetibilidade-segmento') html += gsRenderRepetibilidade(row);
+      else if (renderAs === 'durabilidade-kj') html += gsRenderDurabilidadeKj(row);
       else if (GS_MATRIX_CONFIGS[renderAs]) {
         const cfg = GS_MATRIX_CONFIGS[renderAs];
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
@@ -2512,6 +2546,7 @@ async function carregarGraficosTreino(activityId){
     if (byId['potencia-fc-cadencia']) gsInitPotenciaFcCadencia(byId['potencia-fc-cadencia'].dados);
     else if (byId['fc-cadencia-sem-potencia']) gsInitFcCadenciaSemPotencia(byId['fc-cadencia-sem-potencia'].dados);
     if (byId['repetibilidade-segmento']) gsInitRepetibilidade(byId['repetibilidade-segmento'].dados, activityId);
+    if (byId['durabilidade-kj']) gsInitDurabilidadeKj(byId['durabilidade-kj'].dados);
     if (byId['matriz-nivel-fc-terreno-sem-potencia']) gsInitMatrizNivelFcTerrenoSemPotencia(byId['matriz-nivel-fc-terreno-sem-potencia'].dados);
     if (byId['matriz-fc-cadencia-sem-potencia']) gsInitMatrizFcCadenciaSemPotencia(byId['matriz-fc-cadencia-sem-potencia'].dados);
     Object.keys(GS_MATRIX_CONFIGS).forEach(id=>{
