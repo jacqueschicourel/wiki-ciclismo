@@ -2114,6 +2114,60 @@ function gsInitMatrixCard(id, dados, rowKeys, colKeys, rowLabelFn, colLabelFn, c
   const holder = document.getElementById('gsMatrixHolder-'+id);
   if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
+// ===== TESTE (2026-09) — pedido do Igor: coluna de Total à direita na matriz de zona × terreno.
+// Ativo só pra activity_id 19891077606 (sessão de 25/08), card extra logo abaixo do oficial pra comparar.
+// NÃO é skill: usa os mesmos dados já calculados (celulas.plano/subida/descida), só soma as 3
+// colunas em JS na hora de desenhar a tabela — sem nova função SQL, sem SKILL.md, sem
+// graficos_sessao novo. Remover este bloco + as 2 chamadas condicionais (render e init) se o
+// Igor não aprovar.
+function gsRenderMatrizZonaTerrenoTotalTeste(row){
+  const mid = `<div id="gsMatrixHolder-matriz-zona-terreno-teste-total"></div>`;
+  let html = gsCardWrapOpen('matriz-zona-terreno-teste-total');
+  html += gsSwipeChrome(gsCard3Inner(null, '[TESTE] Mesma matriz, com coluna de Total', 'Versão experimental — mostrar pro Igor comparar com o card oficial acima', ['calc'], null, mid,
+    'Mesma matriz de zona de Coggan × terreno do card oficial. Adicionada uma coluna à direita somando os minutos de cada zona nos 3 terrenos (descida + plano + subida). Não muda o cálculo — só soma o que já existe. Card de teste, visível só nesta sessão.'));
+  html += `<div class="gs-cap">TESTE (2026-09) — não é oficial ainda. Card visível só na sessão de 25/08, pra comparação com o card acima antes de decidir com o Igor.</div>`;
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrizZonaTerrenoTotalTeste(dados){
+  const cfg = GS_MATRIX_CONFIGS['matriz-zona-terreno'];
+  const celulas = dados.celulas;
+  const rowKeys = cfg.rowKeys, colKeys = cfg.colKeys;
+  let maxMin = 0, maxTotalMin = 0;
+  const rowTotals = {};
+  rowKeys.forEach(rk=>{
+    let totalM = 0;
+    colKeys.forEach(ck=>{ const c = cfg.cellGetter(celulas,rk,ck); const m = c?c.minutos:0; if (m>maxMin) maxMin=m; totalM += m; });
+    rowTotals[rk] = totalM;
+    if (totalM > maxTotalMin) maxTotalMin = totalM;
+  });
+  function color(m, max){
+    if(!m||m<=0) return 'transparent';
+    const t=Math.min(m/max,1);
+    return `rgba(55,138,221,${(0.12+t*0.65).toFixed(2)})`;
+  }
+  function colorTxt(m, max){
+    const t = max>0?Math.min((m||0)/max,1):0;
+    return t>0.45 ? '#042C53' : gsTextMain;
+  }
+  let thead = '<tr><th></th>' + colKeys.map(ck=>`<th style="text-align:center;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(cfg.colLabelFn(ck))}</th>`).join('')
+    + `<th style="text-align:center;color:${gsTextMain};border-bottom:1px solid ${gsGridColor};border-left:1px solid ${gsGridColor};font-weight:600;">Total</th></tr>`;
+  const totals = {}; colKeys.forEach(ck=>totals[ck]=0); let totalGeralAmostras = 0;
+  let body = rowKeys.map(rk=>{
+    const cells = colKeys.map(ck=>{
+      const c = cfg.cellGetter(celulas,rk,ck); const n = c?c.n_amostras:0; const m = c?c.minutos:0; totals[ck]+=n;
+      return `<td style="text-align:center;border-bottom:0.5px solid ${gsGridColor};background:${color(m,maxMin)};color:${colorTxt(m,maxMin)};font-weight:500;">${gsFmtDur(n)}</td>`;
+    }).join('');
+    const totalAmostrasLinha = colKeys.reduce((acc,ck)=>{ const c = cfg.cellGetter(celulas,rk,ck); return acc + (c?c.n_amostras:0); }, 0);
+    totalGeralAmostras += totalAmostrasLinha;
+    return `<tr><td style="color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(cfg.rowLabelFn(rk))}</td>${cells}<td style="text-align:center;border-bottom:0.5px solid ${gsGridColor};border-left:1px solid ${gsGridColor};background:${color(rowTotals[rk],maxTotalMin)};color:${colorTxt(rowTotals[rk],maxTotalMin)};font-weight:600;">${gsFmtDur(totalAmostrasLinha)}</td></tr>`;
+  }).join('');
+  let foot = '<tr><td style="color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totals[ck])}</td>`).join('')
+    + `<td style="text-align:center;color:${gsTextMain};font-weight:700;border-top:1px solid ${gsGridColor};border-left:1px solid ${gsGridColor};">${gsFmtDur(totalGeralAmostras)}</td></tr>`;
+  const holder = document.getElementById('gsMatrixHolder-matriz-zona-terreno-teste-total');
+  if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
 const GS_MATRIX_CONFIGS = {
   'matriz-cadencia-inclinacao': {
     rowKeys: ['6_subida forte (> 7%)','5_subida moderada (4% a 7%)','4_subida leve (2% a 4%)','3_plano (-2% a 2%)','2_descida leve (-4% a -2%)','1_descida forte (< -4%)'],
@@ -2711,6 +2765,11 @@ async function carregarGraficosTreino(activityId){
       else if (renderAs === 'matriz-fc-cadencia-sem-potencia') html += gsRenderMatrizFcCadenciaSemPotencia(row);
       else if (renderAs === 'repetibilidade-segmento') html += gsRenderRepetibilidade(row);
       else if (renderAs === 'durabilidade-kj') html += gsRenderDurabilidadeKj(row);
+      else if (renderAs === 'matriz-zona-terreno') {
+        const cfg = GS_MATRIX_CONFIGS[renderAs];
+        html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
+        if (activityId === GS_TESTE_ALT_ACTIVITY_ID) html += gsRenderMatrizZonaTerrenoTotalTeste(row);
+      }
       else if (GS_MATRIX_CONFIGS[renderAs]) {
         const cfg = GS_MATRIX_CONFIGS[renderAs];
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
@@ -2735,6 +2794,7 @@ async function carregarGraficosTreino(activityId){
     Object.keys(GS_MATRIX_CONFIGS).forEach(id=>{
       if (byId[id]) { const cfg = GS_MATRIX_CONFIGS[id]; gsInitMatrixCard(id, byId[id].dados, cfg.rowKeys, cfg.colKeys, cfg.rowLabelFn, cfg.colLabelFn, cfg.cellGetter, cfg.rowColorFn); }
     });
+    if (byId['matriz-zona-terreno'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitMatrizZonaTerrenoTotalTeste(byId['matriz-zona-terreno'].dados);
     gsInitSwipeCarousels();
   } catch (err) {
     console.error('Erro ao carregar gráficos da sessão', err);
