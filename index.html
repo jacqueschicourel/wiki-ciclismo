@@ -2325,6 +2325,52 @@ function gsInitPotenciaFcCadencia(d){
     .map(([l,c])=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:6px;"></span>${l}</span>`).join('');
 }
 
+// ===== TESTE (2026-09) — pedido do Igor: mostrar a altitude real junto com potência/FC/cadência.
+// Ativo só pra activity_id 19891077606 (sessão de 25/08), pra comparação lado a lado com o card oficial.
+// NÃO é skill: sem SKILL.md, sem função SQL, sem gravação em graficos_sessao — dado de altitude
+// hardcoded aqui (blocos de 30s do stream Strava dessa sessão, mesma lógica do grafico-if-altitude).
+// Remover este bloco + as 2 chamadas condicionais (render e init) se o Igor não aprovar.
+const GS_TESTE_ALT_ACTIVITY_ID = '19891077606';
+const GS_TESTE_ALT_TINI_S = [0,30,60,90,120,150,180,210,240,270,300,330,360,390,420,450,480,510,540,570,600,630,660,690,720,750,780,810,840,870,900,930,960,990,1020,1050,1080,1110,1140,1170,1200,1230,1260,1290,1320,1350,1380,1410,1440,1470,1500,1530,1560,1590,1620,1650,1680,1710,1740,1770,1800,1830,1860,1890,1920,1950,1980,2010,2040,2070,2100,2130,2160,2190,2220,2250,2280,2310,2340,2370,2400,2430,2460,2490,2520,2550,2580,2610,2640,2670,2700,2730,2760,2790,2820,2850,2880,2910,2940,2970,3000,3030,3060,3090,3120,3150,3180,3210,3240,3270,3300,3330,3360,3390,3420,3450,3480,3510,3540,3570,3600,3630,3660,3690,3720,3750,3780,3810,3840,3870,3900,3930,3960,3990,4020,4050,4080,4110,4140,4170,4200,4230,4260,4290,4320,4350,4380,4410,4440,4470,4500,4530,4560,4590,4620,4650,4680,4710,4740,4770,4800,4830,4860,4890,4920,4950,4980,5010,5040,5070,5100,5130,5160,5190,5220,5250,5280,5310,5340,5370,5400,5430,5460,5490,5520,5550,5580,5610,5640,5670,5700,5730,5760,5790,5820,5850,5880,5910,5940,5970,6000,6030,6060,6090,6120,6150,6180,6210,6240,6270,6300,6330,6360,6410,6446,6450,6480,6510,6540,6570,6600,6630,6660,6690,6720,6750,6780,6810,6840,6883,6900,6930,6960,6990,7020,7050,7080,7110,7140,7170,7200,7230,7260,7290,7320,7350,7380,7410,7440,7470,7500,7530,7560,7590,7620,7650,7680,7710,7740,7770,7800,7830,7860,7890,7920,7950,7980,8010,8040,8070,8100,8130,8160,8190,8220,8250,8280,8310,8340,8370,8400,8430,8460,8490,8520,8550,8580,8610,8640,8670,8700,8730,8760,8790,8820,8850,8880,8910,8940,8970,9000,9030,9060,9090,9120,9150,9180,9210,9240,9270,9300,9330];
+const GS_TESTE_ALT_M = [725,723,725,730,729,725,726,728,730,728,727,726,724,722,725,723,723,723,723,724,725,725,726,734,738,745,753,760,764,768,774,780,783,769,757,741,737,733,727,734,738,744,752,758,762,766,770,776,782,777,764,750,736,727,729,737,741,748,756,762,765,770,775,782,783,770,758,741,732,727,733,738,742,750,757,762,765,769,774,780,784,775,763,749,738,728,729,737,738,744,750,757,761,764,767,774,780,778,764,753,737,728,726,733,736,740,747,754,759,763,768,775,780,771,759,743,732,725,731,737,740,747,754,760,764,768,775,781,774,762,748,734,725,729,735,738,745,751,758,762,765,771,778,781,770,758,740,731,726,733,736,740,746,752,758,762,766,771,778,781,769,757,741,733,725,729,736,737,741,748,754,759,762,766,771,778,781,771,759,743,733,726,728,735,737,741,748,755,760,763,768,774,780,777,763,749,735,725,729,736,738,744,751,757,761,765,769,776,781,771,759,742,736,737,737,734,725,725,725,724,724,725,725,725,730,731,729,725,722,721,719,720,720,721,721,721,721,721,721,721,721,720,720,720,720,719,719,719,719,719,719,719,720,720,720,719,719,719,719,719,719,719,719,719,719,720,720,720,720,721,723,725,725,725,724,724,724,724,725,725,724,724,724,724,724,724,724,723,723,723,723,722,722,722,722,722,722,722,721,721,720,721,722,722,721,721,722,721,723,725,725,723,721,720,721];
+
+function gsRenderPotenciaFcCadenciaAltitudeTeste(row){
+  const mid = `<div style="position:relative;height:210px;"><canvas id="gsChartPfcAltTeste"></canvas></div>
+    <div id="gsLegendaPfcAltTeste" style="display:flex;gap:16px;font-size:12px;margin-top:8px;flex-wrap:wrap;"></div>`;
+  let html = gsCardWrapOpen('potencia-fc-cadencia-teste-altitude');
+  html += gsSwipeChrome(gsCard3Inner(null, '[TESTE] Mesmo gráfico, com altitude real', 'Versão experimental — mostrar pro Igor comparar com o card oficial acima', ['calc'], null, mid,
+    'Mesmas 3 curvas do card oficial (potência, cadência, potência/FC, normalizadas em % do início). Adicionada uma 4ª linha real de altitude (metros, eixo à direita), calculada em blocos de 30s do stream do Strava — igual ao gráfico de altitude por intensidade. Card de teste, visível só nesta sessão.'));
+  html += `<div class="gs-cap">TESTE (2026-09) — não é oficial ainda. Card visível só na sessão de 25/08, pra comparação com o card acima antes de decidir com o Igor.</div>`;
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitPotenciaFcCadenciaAltitudeTeste(d){
+  const ref = d.referencia_janela0;
+  const minutos = d.janelas.map(j=>j.minuto_inicio);
+  const potencia = d.janelas.map(j=> ref.potencia_media_w ? j.potencia_media_w/ref.potencia_media_w*100 : null);
+  const cadencia = d.janelas.map(j=> (j.cadencia_provenance==='Ausente'||!ref.cadencia_media_rpm) ? null : j.cadencia_media_rpm/ref.cadencia_media_rpm*100);
+  const pwfc = d.janelas.map(j=> ref.pw_fc_ratio ? j.pw_fc_ratio/ref.pw_fc_ratio*100 : null);
+  const corPotencia='#378ADD', corCadencia='#639922', corPwFc='#D98A2B', corAlt='#6250D6';
+  const ctx = document.getElementById('gsChartPfcAltTeste');
+  const altPts = GS_TESTE_ALT_TINI_S.map((t,i)=>({x:t/60, y:GS_TESTE_ALT_M[i]}));
+  const potPts = minutos.map((m,i)=>({x:m,y:potencia[i]}));
+  const cadPts = minutos.map((m,i)=>({x:m,y:cadencia[i]}));
+  const pwfcPts = minutos.map((m,i)=>({x:m,y:pwfc[i]}));
+  gsChartInstances.push(new Chart(ctx, {data:{datasets:[
+    {type:'line',label:'Altitude',data:altPts,yAxisID:'yAlt',borderColor:corAlt,backgroundColor:corAlt,pointRadius:0,borderWidth:1.5,tension:0.2,order:2},
+    {type:'line',label:'Potência',data:potPts,yAxisID:'y',borderColor:corPotencia,backgroundColor:corPotencia,tension:0.25,spanGaps:false,pointRadius:2,order:1},
+    {type:'line',label:'Cadência',data:cadPts,yAxisID:'y',borderColor:corCadencia,backgroundColor:corCadencia,tension:0.25,spanGaps:false,pointRadius:2,order:1},
+    {type:'line',label:'Potência/FC',data:pwfcPts,yAxisID:'y',borderColor:corPwFc,backgroundColor:corPwFc,tension:0.25,spanGaps:false,pointRadius:2,order:1}
+  ]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+    scales:{
+      x:{type:'linear',min:0,max:155,ticks:{color:gsTextMuted,font:{size:10},stepSize:10,callback:v=>v+' min'},grid:{color:gsGridColor}},
+      y:{position:'left',ticks:{color:gsTextMuted,font:{size:10},callback:v=>v+'%'},grid:{color:gsGridColor}},
+      yAlt:{position:'right',min:700,max:800,ticks:{color:gsTextMuted,font:{size:10},callback:v=>v+'m'},grid:{display:false}}
+    }}}));
+  document.getElementById('gsLegendaPfcAltTeste').innerHTML = [['Potência',corPotencia],['Cadência',corCadencia],['Potência/FC',corPwFc],['Altitude',corAlt]]
+    .map(([l,c])=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c};margin-right:6px;"></span>${l}</span>`).join('');
+}
+
 function gsRenderFcCadenciaSemPotencia(row){
   const mid = `<div style="position:relative;height:210px;"><canvas id="gsChartFcCadSp"></canvas></div>
     <div id="gsLegendaFcCadSp" style="display:flex;gap:16px;font-size:12px;margin-top:8px;flex-wrap:wrap;"></div>`;
@@ -2656,7 +2702,10 @@ async function carregarGraficosTreino(activityId){
       else if (renderAs === 'custo-cardiovascular') html += gsRenderCustoCardiovascular(row);
       else if (renderAs === 'fadiga-plano-subida') html += gsRenderFadigaPlanoSubida(row);
       else if (renderAs === 'fadiga-plano-subida-sem-potencia') html += gsRenderFadigaPlanoSubidaSemPotencia(row);
-      else if (renderAs === 'potencia-fc-cadencia') html += gsRenderPotenciaFcCadencia(row);
+      else if (renderAs === 'potencia-fc-cadencia') {
+        html += gsRenderPotenciaFcCadencia(row);
+        if (activityId === GS_TESTE_ALT_ACTIVITY_ID) html += gsRenderPotenciaFcCadenciaAltitudeTeste(row);
+      }
       else if (renderAs === 'fc-cadencia-sem-potencia') html += gsRenderFcCadenciaSemPotencia(row);
       else if (renderAs === 'matriz-nivel-fc-terreno-sem-potencia') html += gsRenderMatrizNivelFcTerrenoSemPotencia(row);
       else if (renderAs === 'matriz-fc-cadencia-sem-potencia') html += gsRenderMatrizFcCadenciaSemPotencia(row);
@@ -2674,7 +2723,10 @@ async function carregarGraficosTreino(activityId){
     else if (byId['fc-altitude-sem-potencia']) gsInitFcAltitudeSemPotencia(byId['fc-altitude-sem-potencia'].dados, byId['terreno-metricas-sem-potencia']);
     if (byId['sincronia-potencia-fc']) gsInitSincronia(byId['sincronia-potencia-fc'].dados);
     if (byId['custo-cardiovascular']) gsInitCustoCardiovascular(byId['custo-cardiovascular'].dados);
-    if (byId['potencia-fc-cadencia']) gsInitPotenciaFcCadencia(byId['potencia-fc-cadencia'].dados);
+    if (byId['potencia-fc-cadencia']) {
+      gsInitPotenciaFcCadencia(byId['potencia-fc-cadencia'].dados);
+      if (activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitPotenciaFcCadenciaAltitudeTeste(byId['potencia-fc-cadencia'].dados);
+    }
     else if (byId['fc-cadencia-sem-potencia']) gsInitFcCadenciaSemPotencia(byId['fc-cadencia-sem-potencia'].dados);
     if (byId['repetibilidade-segmento']) gsInitRepetibilidade(byId['repetibilidade-segmento'].dados, activityId);
     if (byId['durabilidade-kj']) gsInitDurabilidadeKj(byId['durabilidade-kj'].dados);
@@ -3796,6 +3848,12 @@ async function comentarRevisao(id){
 async function boot(){
   const { data: { session: s } } = await sb.auth.getSession();
   session = s;
+  // Deep-link: ?treino={activity_id} na URL abre direto na página daquele treino
+  // (usado pelo link enviado no Telegram via notificar-treino-pronto) — sem isso,
+  // o app sempre abria na home e ignorava querystring.
+  const paramsUrl = new URLSearchParams(location.search);
+  const treinoParam = paramsUrl.get('treino');
+  if(treinoParam) state = {v:'treino', id:treinoParam};
   await carregarDados();
   reindexSkills();
   reindexSkillsGrafico();
