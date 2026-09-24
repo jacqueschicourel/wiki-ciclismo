@@ -1849,25 +1849,41 @@ function gsInitIfAltitude(d, terrenoRow){
 // Remover este bloco + as 2 chamadas condicionais (render e init) se o Igor não aprovar.
 const GS_TESTE_FC_ALT_HR = [108.4,116.6,114.7,122.8,120.1,112.3,116,124.1,127.8,125.4,127.5,129.3,125.8,117.8,119.5,109.7,116.8,111.1,103.3,110.7,111.8,113.5,116.2,131.8,131.9,143,146.6,142,137.1,136.9,138.1,140,130.8,118.4,113.4,107.2,107.6,110.1,110.7,124.8,127.1,138.2,145.9,144.8,140,138.9,137.4,139,138.8,127.6,116.1,111.8,110.7,109.4,118.2,130.6,134.8,146.3,149.1,142.6,142.2,139.8,139,140.7,131.5,118.9,113.4,108.5,108.2,112.8,127.1,129.9,136.3,146.2,147.9,144.4,139.4,136.8,136,136.4,133.3,120.5,114.1,110.8,106.5,108.2,115.3,126.9,126.7,137.2,144.4,146,140.6,136.6,136.7,141.3,144.4,130.9,118.3,113.5,111.1,111.8,115.3,125.4,125.4,133.3,145.8,148.1,144.1,145.5,144,145.7,146.4,135.6,121.3,116.3,117.9,117.2,123.7,130.3,131.9,140,145.9,142.1,143.5,145,146.6,148.1,140.3,125.7,116,117.2,117.5,122,130.7,131,139.9,145,143,140.6,141.3,142.8,147.6,139.4,124.6,113.5,110.4,111.8,113.5,124.3,126.6,126.4,136,142.5,140.6,139.5,139,139.4,141.9,136.7,122.9,113.4,107.4,110.6,109.4,118.3,128.1,123.1,132.1,140.5,142.6,138.8,136,134.4,137.9,143.1,134.7,118.6,113.1,108.8,109.5,113.1,119.7,124.8,122.4,131.2,140.2,142.6,142.2,140.1,138.2,141,144.2,136.6,122.6,113.8,115,116.7,126.9,133.2,132.8,142,145.5,144,144.1,140.7,140.8,146.1,144.4,130.8,117.2,112.7,109.6,109.5,113.8,112.9,110.5,112.3,113,109.1,105.2,111.2,126.4,121.5,106.7,103.2,104.9,128.9,143,134.7,129.4,122.5,119.2,120.3,116.4,115.9,113.8,125.5,119.1,118.8,117.7,117.7,116.4,118.7,119.1,119.8,121.8,116.7,116.9,116.9,116.6,114.1,120.6,119.3,117.4,116.5,120.7,131.4,148,148.2,144.9,140.8,136.8,135.6,135.6,138.9,137,138.7,136.6,134,132.4,133.2,135.1,132.5,131.7,131.7,133.2,132.1,134.5,136,133.2,131.3,128.4,119.6,114.4,119.9,122.7,122.4,120.5,118.7,121,130.2,137.5,148.3,155.7,157,151.7,149.6,150.8,148.9,155,162.5,157.2,145,133.1,122,119.8,116.3];
 
+const GS_TESTE_FC_COR = '#262626';
 function gsRenderIfAltitudeFcTeste(row){
-  const mid = `<div id="gsLegendaCores-if-altitude-fc-teste" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;font-size:10.5px;"></div>
-    <div style="position:relative;height:225px;"><canvas id="gsChart-if-altitude-fc-teste"></canvas></div>`;
+  const mid = `<div id="gsLegendaCores-if-altitude-fc-teste" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;font-size:10.5px;"></div>
+    <div id="gsLegendaFc-if-altitude-fc-teste" style="display:flex;gap:8px;margin-bottom:8px;font-size:10.5px;"></div>
+    <div style="display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;">
+    <div style="flex:1;min-width:220px;"><div style="position:relative;height:225px;"><canvas id="gsChart-if-altitude-fc-teste"></canvas></div></div>
+    <div style="flex:0 0 150px;">
+      <div style="position:relative;width:112px;height:112px;margin:0 auto;">
+        <canvas id="gsDonut-if-altitude-fc-teste"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <span style="font-size:9px;color:${gsTextMuted};">IF médio</span>
+          <span id="gsDonutCentro-if-altitude-fc-teste" style="font-size:16px;font-weight:700;"></span>
+        </div>
+      </div>
+      <div id="gsLegendaDonut-if-altitude-fc-teste" style="display:flex;flex-direction:column;gap:7px;font-size:11px;margin-top:12px;"></div>
+    </div>
+  </div>`;
   let html = gsCardWrapOpen('if-altitude-fc-teste');
   html += gsSwipeChrome(gsCard3Inner(null, '[TESTE] Mesma faixa de altitude, com linha de FC', 'Versão experimental — mostrar pro Igor comparar com o card oficial acima', ['calc'], null, mid,
-    'Mesmos blocos de altitude e IF do card oficial (30s, cor por faixa de intensidade). Adicionada uma linha de FC por cima, com eixo próprio à direita. Card de teste, visível só nesta sessão.'));
+    'Mesmos blocos de altitude e IF do card oficial (30s, cor por faixa de intensidade). Adicionada uma linha de FC por cima, em grafite, com eixo próprio à direita. Card de teste, visível só nesta sessão.'));
   html += `<div class="gs-cap">TESTE (2026-09) — não é oficial ainda. Card visível só na sessão de 25/08, pra comparação com o card acima antes de decidir com o Igor.</div>`;
   html += gsCardWrapClose();
   return html;
 }
-function gsInitIfAltitudeFcTeste(d){
+function gsInitIfAltitudeFcTeste(d, terrenoRow){
   const blocos = (d && Array.isArray(d.blocos)) ? d.blocos : null;
   if (!blocos || !blocos.length) return;
   function labelFor(s){ const h=Math.floor(s/3600), m=Math.floor((s%3600)/60); return h+':'+String(m).padStart(2,'0'); }
   const legendaEl = document.getElementById('gsLegendaCores-if-altitude-fc-teste');
+  const legendaFcEl = document.getElementById('gsLegendaFc-if-altitude-fc-teste');
   const ctx = document.getElementById('gsChart-if-altitude-fc-teste');
   if (!ctx) return;
-  if (legendaEl) legendaEl.innerHTML = [['IF < 60%',gsCorVerde],['IF 60–75%',gsCorAmarelo],['IF 75–90%',gsCorLaranja],['IF > 90%',gsCorVermelho],['FC (novo)','#2454E0']]
+  if (legendaEl) legendaEl.innerHTML = [['IF < 60%',gsCorVerde],['IF 60–75%',gsCorAmarelo],['IF 75–90%',gsCorLaranja],['IF > 90%',gsCorVermelho]]
     .map(([l,c])=>`<span style="color:${gsTextMuted};"><i style="display:inline-block;width:9px;height:9px;background:${c};border-radius:2px;margin-right:4px;vertical-align:middle;"></i>${escapeHtml(l)}</span>`).join('');
+  if (legendaFcEl) legendaFcEl.innerHTML = `<span style="color:${gsTextMuted};">Linha adicionada: <i style="display:inline-block;width:14px;height:2px;background:${GS_TESTE_FC_COR};margin:0 4px;vertical-align:middle;"></i>FC (bpm, eixo à direita)</span>`;
   const labels = blocos.map(b=>labelFor(b.tempo_inicio_s));
   const ifPct = blocos.map(b=>b.sem_amostra?null:b.if_pct_ponto);
   const alt = blocos.map(b=>b.sem_amostra?null:b.altitude_m);
@@ -1879,7 +1895,7 @@ function gsInitIfAltitudeFcTeste(d){
         backgroundColor: c2 => { const v = gsCorPorIF((ifPct[c2.p0DataIndex]+ifPct[c2.p1DataIndex])/2); return v ? v+'77' : 'transparent'; }
       }
     },
-    {label:'FC (bpm)', data:hr, yAxisID:'yHr', fill:false, pointRadius:0, borderWidth:2, tension:0.25, spanGaps:false, borderColor:'#2454E0', backgroundColor:'#2454E0'}
+    {label:'FC (bpm)', data:hr, yAxisID:'yHr', fill:false, pointRadius:0, borderWidth:2, tension:0.25, spanGaps:false, borderColor:GS_TESTE_FC_COR, backgroundColor:GS_TESTE_FC_COR}
   ]}, options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
     plugins:{legend:{display:false}, tooltip:{callbacks:{
       title:(items)=>'tempo em movimento: '+items[0].label+'h',
@@ -1887,8 +1903,24 @@ function gsInitIfAltitudeFcTeste(d){
     }}},
     scales:{x:{ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}},
       y:{position:'left',ticks:{color:gsTextMuted,font:{size:10}}, grid:{color:gsGridColor}},
-      yHr:{position:'right',min:90,max:165,ticks:{color:'#2454E0',font:{size:10},callback:v=>v+' bpm'}, grid:{display:false}}}}
+      yHr:{position:'right',min:90,max:165,ticks:{color:gsTextMuted,font:{size:10},callback:v=>v+' bpm'}, grid:{display:false}}}}
   }));
+  const donutCtx = document.getElementById('gsDonut-if-altitude-fc-teste');
+  if (donutCtx && terrenoRow && terrenoRow.dados) {
+    const td = terrenoRow.dados;
+    document.getElementById('gsDonutCentro-if-altitude-fc-teste').textContent = (td.if_oficial_sessao!=null) ? (td.if_oficial_sessao*100).toFixed(0)+'%' : '—';
+    const terrenos = [
+      {label:'Subida', dados: td.terrenos.subida},
+      {label:'Plano', dados: td.terrenos.plano},
+      {label:'Descida', dados: td.terrenos.descida}
+    ].filter(t=>t.dados).map(t=>({...t, cor: gsCorPorIF(t.dados.if_pct) || gsCorAusenteIF}));
+    gsChartInstances.push(new Chart(donutCtx, {type:'doughnut', data:{labels:terrenos.map(t=>t.label), datasets:[{data:terrenos.map(t=>t.dados.pct_tempo), backgroundColor:terrenos.map(t=>t.cor), borderWidth:0}]},
+      options:{responsive:true, maintainAspectRatio:false, cutout:'70%', plugins:{legend:{display:false}}}}));
+    const leg = document.getElementById('gsLegendaDonut-if-altitude-fc-teste');
+    if (leg) leg.innerHTML = terrenos.map(t=>`<span style="color:${gsTextMain};"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${t.cor};margin-right:5px;"></span><b>${escapeHtml(t.label)}</b> — ${t.dados.pct_tempo}% (${gsFmtHMS(t.dados.tempo_s)}) · IF ${t.dados.if_pct}%</span>`).join('');
+  } else if (donutCtx) {
+    donutCtx.parentElement.parentElement.style.display = 'none';
+  }
 }
 
 function gsRenderFcAltitudeSemPotencia(row){
@@ -2833,7 +2865,7 @@ async function carregarGraficosTreino(activityId){
     const ifAltitudeUsavel = byId['if-altitude'] && byId['if-altitude'].dados && byId['if-altitude'].dados.blocos != null;
     if (ifAltitudeUsavel) {
       gsInitIfAltitude(byId['if-altitude'].dados, byId['terreno-metricas']);
-      if (activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitIfAltitudeFcTeste(byId['if-altitude'].dados);
+      if (activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitIfAltitudeFcTeste(byId['if-altitude'].dados, byId['terreno-metricas']);
     }
     else if (byId['fc-altitude-sem-potencia']) gsInitFcAltitudeSemPotencia(byId['fc-altitude-sem-potencia'].dados, byId['terreno-metricas-sem-potencia']);
     if (byId['sincronia-potencia-fc']) gsInitSincronia(byId['sincronia-potencia-fc'].dados);
