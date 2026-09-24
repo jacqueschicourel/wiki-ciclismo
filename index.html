@@ -1883,7 +1883,7 @@ function gsInitIfAltitudeFcTeste(d, terrenoRow){
   if (!ctx) return;
   if (legendaEl) legendaEl.innerHTML = [['IF < 60%',gsCorVerde],['IF 60–75%',gsCorAmarelo],['IF 75–90%',gsCorLaranja],['IF > 90%',gsCorVermelho]]
     .map(([l,c])=>`<span style="color:${gsTextMuted};"><i style="display:inline-block;width:9px;height:9px;background:${c};border-radius:2px;margin-right:4px;vertical-align:middle;"></i>${escapeHtml(l)}</span>`).join('');
-  if (legendaFcEl) legendaFcEl.innerHTML = `<span style="color:${gsTextMuted};">Linha adicionada: <i style="display:inline-block;width:14px;height:2px;background:${GS_TESTE_FC_COR};margin:0 4px;vertical-align:middle;"></i>FC (bpm, eixo à direita)</span>`;
+  if (legendaFcEl) legendaFcEl.innerHTML = `<span style="color:${gsTextMuted};"><i style="display:inline-block;width:14px;height:2px;background:${GS_TESTE_FC_COR};margin-right:4px;vertical-align:middle;"></i>FC (bpm, eixo à direita)</span>`;
   const labels = blocos.map(b=>labelFor(b.tempo_inicio_s));
   const ifPct = blocos.map(b=>b.sem_amostra?null:b.if_pct_ponto);
   const alt = blocos.map(b=>b.sem_amostra?null:b.altitude_m);
