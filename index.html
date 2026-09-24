@@ -2153,8 +2153,8 @@ function gsInitCustoCardiovascular(d){
   document.getElementById('gsTabelaCusto').innerHTML = t;
 }
 
-function gsRenderMatrixCard(id, numero, row, capText){
-  const mid = `<div id="gsMatrixHolder-${id}"></div>`;
+function gsRenderMatrixCard(id, numero, row, capText, extraTopHtml){
+  const mid = `${extraTopHtml||''}<div id="gsMatrixHolder-${id}"></div>`;
   let html = gsCardWrapOpen(id);
   html += gsSwipeChrome(gsCard3Inner(numero, GS_META[id].titulo, GS_META[id].pergunta, ['ia','calc'], row.resumo, mid, row.interpretacao));
   if (capText) html += `<div class="gs-cap">${capText}</div>`;
@@ -2195,6 +2195,36 @@ function gsInitMatrixCard(id, dados, rowKeys, colKeys, rowLabelFn, colLabelFn, c
   let foot = '<tr><td style="color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totals[ck])}</td>`).join('') + '</tr>';
   const holder = document.getElementById('gsMatrixHolder-'+id);
   if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+// ===== TESTE (2026-09) — pedido do Igor: resumo de tempo por terreno, dentro do card da matriz de
+// intensidade × terreno (não é card separado — o pedido foi que ficasse junto, acima da tabela).
+// Ativo só pra activity_id 19891077606 (sessão de 25/08). Reaproveita os mesmos dados de
+// 'terreno-metricas' (tempo_s/pct_tempo por terreno) já usados no donut de outros cards — sem SQL
+// nova, sem SKILL.md, sem graficos_sessao novo. Cor: tom único neutro (cinza-pedra) em 3 graduações,
+// de propósito — a matriz é quem deve carregar a cor (IF); a barra é só suporte de proporção/tempo,
+// não uma segunda informação disputando atenção. Remover este bloco + a passagem de extraTopHtml no
+// dispatch se o Igor não aprovar.
+function gsResumoTerrenoTesteHtml(){
+  return `<div style="font-size:11px;margin-bottom:5px;color:${gsTextMuted};opacity:0.75;">tempo por terreno (teste)</div>
+    <div id="gsResumoTerrenoBarraTeste" style="display:flex;width:100%;height:14px;border-radius:4px;overflow:hidden;background:${gsGridColor};margin-bottom:6px;"></div>
+    <div id="gsResumoTerrenoLegendaTeste" style="display:flex;gap:14px;margin-bottom:16px;font-size:11px;color:${gsTextMuted};flex-wrap:wrap;"></div>`;
+}
+function gsInitResumoTerrenoTeste(terrenoRow){
+  const barra = document.getElementById('gsResumoTerrenoBarraTeste');
+  const leg = document.getElementById('gsResumoTerrenoLegendaTeste');
+  if (!barra || !leg || !terrenoRow || !terrenoRow.dados) return;
+  const td = terrenoRow.dados;
+  const tons = ['#c7c5bb','#a6a49a','#7c7a70'];
+  const terrenos = [
+    {label:'Descida', dados: td.terrenos.descida},
+    {label:'Plano', dados: td.terrenos.plano},
+    {label:'Subida', dados: td.terrenos.subida}
+  ].filter(t=>t.dados);
+  let totalS = 0;
+  terrenos.forEach(t=>{ totalS += t.dados.tempo_s; });
+  barra.innerHTML = terrenos.map((t,i)=>`<div style="width:${t.dados.pct_tempo}%;background:${tons[i%tons.length]};${i<terrenos.length-1?'border-right:1.5px solid #fff;':''}"></div>`).join('');
+  leg.innerHTML = terrenos.map(t=>`<span>${escapeHtml(t.label)} ${gsFmtHMS(t.dados.tempo_s)} (${t.dados.pct_tempo}%)</span>`).join('')
+    + `<span style="color:${gsTextMuted};opacity:0.7;">· total ${gsFmtHMS(totalS)}</span>`;
 }
 // ===== TESTE (2026-09) — pedido do Igor: coluna de Total à direita na matriz de zona × terreno.
 // Ativo só pra activity_id 19891077606 (sessão de 25/08), card extra logo abaixo do oficial pra comparar.
@@ -2855,6 +2885,11 @@ async function carregarGraficosTreino(activityId){
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
         if (activityId === GS_TESTE_ALT_ACTIVITY_ID) html += gsRenderMatrizZonaTerrenoTotalTeste(row);
       }
+      else if (renderAs === 'matriz-intensidade-terreno') {
+        const cfg = GS_MATRIX_CONFIGS[renderAs];
+        const extraTop = (activityId === GS_TESTE_ALT_ACTIVITY_ID) ? gsResumoTerrenoTesteHtml() : '';
+        html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap, extraTop);
+      }
       else if (GS_MATRIX_CONFIGS[renderAs]) {
         const cfg = GS_MATRIX_CONFIGS[renderAs];
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
@@ -2883,6 +2918,7 @@ async function carregarGraficosTreino(activityId){
       if (byId[id]) { const cfg = GS_MATRIX_CONFIGS[id]; gsInitMatrixCard(id, byId[id].dados, cfg.rowKeys, cfg.colKeys, cfg.rowLabelFn, cfg.colLabelFn, cfg.cellGetter, cfg.rowColorFn); }
     });
     if (byId['matriz-zona-terreno'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitMatrizZonaTerrenoTotalTeste(byId['matriz-zona-terreno'].dados);
+    if (byId['matriz-intensidade-terreno'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitResumoTerrenoTeste(byId['terreno-metricas']);
     gsInitSwipeCarousels();
   } catch (err) {
     console.error('Erro ao carregar gráficos da sessão', err);
