@@ -2282,6 +2282,87 @@ function gsInitMatrizZonaTerrenoTotalTeste(dados){
   if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
 }
 
+// ===== TESTE (2026-09) — pedido do Igor: FC na matriz de potência × cadência, em 2 formatos pra
+// ele comparar. Ativo só pra activity_id 19891077606 (sessão de 25/08), 2 cards de teste logo
+// abaixo do oficial. NÃO é skill: a FC por célula/coluna foi calculada à parte via SQL ad hoc
+// (mesmos bins de potência de 90W e cadência 75/95/110rpm já usados na função oficial), reaproveitando
+// os streams brutos da sessão — sem função SQL nova permanente, sem SKILL.md, sem graficos_sessao novo.
+// Remover os 2 blocos + as chamadas condicionais (render e init) se o Igor não aprovar nenhum formato.
+const GS_TESTE_POTCAD_FC_CELULA = {
+  '450-539W': {'< 75 rpm':135, '75-94 rpm':141, '95-109 rpm':130, '>= 110 rpm':null},
+  '360-449W': {'< 75 rpm':126, '75-94 rpm':134, '95-109 rpm':135, '>= 110 rpm':null},
+  '270-359W': {'< 75 rpm':136, '75-94 rpm':134, '95-109 rpm':134, '>= 110 rpm':128},
+  '180-269W': {'< 75 rpm':138, '75-94 rpm':131, '95-109 rpm':124, '>= 110 rpm':128},
+  '90-179W':  {'< 75 rpm':129, '75-94 rpm':126, '95-109 rpm':127, '>= 110 rpm':121},
+  '0-89W':    {'< 75 rpm':121, '75-94 rpm':125, '95-109 rpm':139, '>= 110 rpm':114}
+};
+const GS_TESTE_POTCAD_FC_COLUNA = {'< 75 rpm':129, '75-94 rpm':128, '95-109 rpm':128, '>= 110 rpm':119};
+
+function gsRenderMatrizPotCadFcCelulaTeste(row){
+  const mid = `<div id="gsMatrixHolder-matriz-potcad-fc-celula-teste"></div>`;
+  let html = gsCardWrapOpen('matriz-potcad-fc-celula-teste');
+  html += gsSwipeChrome(gsCard3Inner(null, '[TESTE] Matriz potência×cadência, com FC por célula', 'Versão experimental — mostrar pro Igor comparar com o card oficial acima', ['calc'], null, mid,
+    'Mesma matriz oficial de potência × cadência. Adicionada a FC média de cada combinação, abaixo do tempo, em cinza. Card de teste, visível só nesta sessão.'));
+  html += `<div class="gs-cap">TESTE (2026-09) — não é oficial ainda. Repare que células com pouquíssima amostra (ex: menos de 1min) têm FC pouco confiável.</div>`;
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrizPotCadFcCelulaTeste(dados){
+  const cfg = GS_MATRIX_CONFIGS['matriz-potencia-cadencia'];
+  const celulas = dados.celulas;
+  const rowKeys = cfg.rowKeys, colKeys = cfg.colKeys;
+  let maxMin = 0;
+  rowKeys.forEach(rk=>colKeys.forEach(ck=>{ const c = cfg.cellGetter(celulas,rk,ck); const m = c?c.minutos:0; if (m>maxMin) maxMin=m; }));
+  function color(m){ if(!m||m<=0) return 'transparent'; const t=Math.min(m/maxMin,1); return `rgba(55,138,221,${(0.12+t*0.65).toFixed(2)})`; }
+  function colorTxt(m){ const t = maxMin>0?Math.min((m||0)/maxMin,1):0; return t>0.45 ? '#fff' : gsTextMain; }
+  function fcTxt(m,fc){ if(!m||m<=0||fc==null) return ''; const claro = colorTxt(m)==='#fff'; return `<br><span style="font-size:10px;color:${claro?'rgba(255,255,255,0.85)':gsTextMuted};">${fc}bpm</span>`; }
+  let thead = '<tr><th></th>' + colKeys.map(ck=>`<th style="text-align:center;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(cfg.colLabelFn(ck))}</th>`).join('') + '</tr>';
+  const totals = {}; colKeys.forEach(ck=>totals[ck]=0);
+  let body = rowKeys.map(rk=>{
+    const cells = colKeys.map(ck=>{
+      const c = cfg.cellGetter(celulas,rk,ck); const n = c?c.n_amostras:0; const m = c?c.minutos:0; totals[ck]+=n;
+      const fc = (GS_TESTE_POTCAD_FC_CELULA[rk]||{})[ck];
+      return `<td style="text-align:center;border-bottom:0.5px solid ${gsGridColor};background:${color(m)};color:${colorTxt(m)};font-weight:500;">${gsFmtDur(n)}${fcTxt(m,fc)}</td>`;
+    }).join('');
+    return `<tr><td style="color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(cfg.rowLabelFn(rk))}</td>${cells}</tr>`;
+  }).join('');
+  let foot = '<tr><td style="color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totals[ck])}</td>`).join('') + '</tr>';
+  const holder = document.getElementById('gsMatrixHolder-matriz-potcad-fc-celula-teste');
+  if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
+function gsRenderMatrizPotCadFcColunaTeste(row){
+  const mid = `<div id="gsMatrixHolder-matriz-potcad-fc-coluna-teste"></div>`;
+  let html = gsCardWrapOpen('matriz-potcad-fc-coluna-teste');
+  html += gsSwipeChrome(gsCard3Inner(null, '[TESTE] Matriz potência×cadência, com linha de FC média', 'Versão experimental — mostrar pro Igor comparar com o card oficial acima', ['calc'], null, mid,
+    'Mesma matriz oficial de potência × cadência, sem mudar nenhuma célula. Adicionada uma linha extra embaixo do Total com a FC média de cada coluna de cadência (agregada, mais confiável que célula a célula). Card de teste, visível só nesta sessão.'));
+  html += `<div class="gs-cap">TESTE (2026-09) — não é oficial ainda.</div>`;
+  html += gsCardWrapClose();
+  return html;
+}
+function gsInitMatrizPotCadFcColunaTeste(dados){
+  const cfg = GS_MATRIX_CONFIGS['matriz-potencia-cadencia'];
+  const celulas = dados.celulas;
+  const rowKeys = cfg.rowKeys, colKeys = cfg.colKeys;
+  let maxMin = 0;
+  rowKeys.forEach(rk=>colKeys.forEach(ck=>{ const c = cfg.cellGetter(celulas,rk,ck); const m = c?c.minutos:0; if (m>maxMin) maxMin=m; }));
+  function color(m){ if(!m||m<=0) return 'transparent'; const t=Math.min(m/maxMin,1); return `rgba(55,138,221,${(0.12+t*0.65).toFixed(2)})`; }
+  function colorTxt(m){ const t = maxMin>0?Math.min((m||0)/maxMin,1):0; return t>0.45 ? '#fff' : gsTextMain; }
+  let thead = '<tr><th></th>' + colKeys.map(ck=>`<th style="text-align:center;color:${gsTextMuted};border-bottom:1px solid ${gsGridColor};font-weight:500;">${escapeHtml(cfg.colLabelFn(ck))}</th>`).join('') + '</tr>';
+  const totals = {}; colKeys.forEach(ck=>totals[ck]=0);
+  let body = rowKeys.map(rk=>{
+    const cells = colKeys.map(ck=>{
+      const c = cfg.cellGetter(celulas,rk,ck); const n = c?c.n_amostras:0; const m = c?c.minutos:0; totals[ck]+=n;
+      return `<td style="text-align:center;border-bottom:0.5px solid ${gsGridColor};background:${color(m)};color:${colorTxt(m)};font-weight:500;">${gsFmtDur(n)}</td>`;
+    }).join('');
+    return `<tr><td style="color:${gsTextMain};border-bottom:0.5px solid ${gsGridColor};">${escapeHtml(cfg.rowLabelFn(rk))}</td>${cells}</tr>`;
+  }).join('');
+  let foot = '<tr><td style="color:'+gsTextMain+';font-weight:600;border-top:1px solid '+gsGridColor+';">Total</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMain};font-weight:600;border-top:1px solid ${gsGridColor};">${gsFmtDur(totals[ck])}</td>`).join('') + '</tr>'
+    + '<tr><td style="color:'+gsTextMuted+';padding-top:2px;">FC média</td>' + colKeys.map(ck=>`<td style="text-align:center;color:${gsTextMuted};padding-top:2px;">${GS_TESTE_POTCAD_FC_COLUNA[ck]!=null?GS_TESTE_POTCAD_FC_COLUNA[ck]+'bpm':'—'}</td>`).join('') + '</tr>';
+  const holder = document.getElementById('gsMatrixHolder-matriz-potcad-fc-coluna-teste');
+  if (holder) holder.innerHTML = `<table class="gs-matrix"><thead>${thead}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+}
+
 const GS_MATRIX_CONFIGS = {
   'matriz-cadencia-inclinacao': {
     rowKeys: ['6_subida forte (> 7%)','5_subida moderada (4% a 7%)','4_subida leve (2% a 4%)','3_plano (-2% a 2%)','2_descida leve (-4% a -2%)','1_descida forte (< -4%)'],
@@ -2892,6 +2973,14 @@ async function carregarGraficosTreino(activityId){
         const extraTop = (activityId === GS_TESTE_ALT_ACTIVITY_ID) ? gsResumoTerrenoTesteHtml() : '';
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap, extraTop);
       }
+      else if (renderAs === 'matriz-potencia-cadencia') {
+        const cfg = GS_MATRIX_CONFIGS[renderAs];
+        html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
+        if (activityId === GS_TESTE_ALT_ACTIVITY_ID) {
+          html += gsRenderMatrizPotCadFcCelulaTeste(row);
+          html += gsRenderMatrizPotCadFcColunaTeste(row);
+        }
+      }
       else if (GS_MATRIX_CONFIGS[renderAs]) {
         const cfg = GS_MATRIX_CONFIGS[renderAs];
         html += gsRenderMatrixCard(renderAs, GS_MATRIX_NUM[renderAs], row, cfg.cap);
@@ -2920,6 +3009,10 @@ async function carregarGraficosTreino(activityId){
       if (byId[id]) { const cfg = GS_MATRIX_CONFIGS[id]; gsInitMatrixCard(id, byId[id].dados, cfg.rowKeys, cfg.colKeys, cfg.rowLabelFn, cfg.colLabelFn, cfg.cellGetter, cfg.rowColorFn); }
     });
     if (byId['matriz-zona-terreno'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitMatrizZonaTerrenoTotalTeste(byId['matriz-zona-terreno'].dados);
+    if (byId['matriz-potencia-cadencia'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) {
+      gsInitMatrizPotCadFcCelulaTeste(byId['matriz-potencia-cadencia'].dados);
+      gsInitMatrizPotCadFcColunaTeste(byId['matriz-potencia-cadencia'].dados);
+    }
     if (byId['matriz-intensidade-terreno'] && activityId === GS_TESTE_ALT_ACTIVITY_ID) gsInitResumoTerrenoTeste(byId['terreno-metricas']);
     gsInitSwipeCarousels();
   } catch (err) {
